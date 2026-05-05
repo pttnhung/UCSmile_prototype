@@ -53,53 +53,55 @@ const ORIGINS = {
   can: { label: 'Canada', factor: 5.0 },
 };
 
+interface TreatmentCardProps {
+  t: Treatment;
+  selected: boolean;
+  onToggle: () => void;
+  quantity: number;
+  onUpdateQuantity: (val: number) => void;
+}
+
 const TreatmentCard = ({ 
   t, 
   selected, 
   onToggle, 
   quantity, 
   onUpdateQuantity 
-}: { 
-  t: Treatment, 
-  selected: boolean, 
-  onToggle: () => void, 
-  quantity: number, 
-  onUpdateQuantity: (val: number) => void 
-}) => (
+}: TreatmentCardProps) => (
   <div
-    className={`flex flex-col p-4 rounded-xl border transition-all duration-300 text-left ${
+    className={`flex flex-col p-3 rounded-xl border transition-all duration-300 text-left ${
       selected 
       ? 'bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20 scale-[1.02]' 
       : 'bg-white/[0.02] border-white/5 hover:border-brand-primary/40 text-white/90 hover:bg-white/[0.05]'
     }`}
   >
-    <div className="flex items-center justify-between mb-2">
+    <div className="flex items-center justify-between mb-1.5">
       <div onClick={onToggle} className="cursor-pointer flex-grow pr-2">
-        <div className={`text-sm font-bold leading-tight ${selected ? 'text-white' : 'text-white/90'}`}>{t.name}</div>
-        <div className={`text-[10px] font-bold transition-colors mt-0.5 ${selected ? 'text-white/70' : 'text-brand-primary/80'}`}>
+        <div className={`text-xs font-bold leading-tight ${selected ? 'text-white' : 'text-white/90'}`}>{t.name}</div>
+        <div className={`text-[9px] font-bold transition-colors mt-0.5 ${selected ? 'text-white/70' : 'text-brand-primary/80'}`}>
           VN from ${t.vietnamPrice}
         </div>
       </div>
       <button 
         onClick={onToggle} 
-        className={`p-1.5 rounded-full transition-colors ${selected ? 'bg-white/20 text-white' : 'bg-white/5 text-brand-primary hover:bg-brand-primary hover:text-white'}`}
+        className={`p-1 rounded-full transition-colors ${selected ? 'bg-white/20 text-white' : 'bg-white/5 text-brand-primary hover:bg-brand-primary hover:text-white'}`}
       >
         {selected ? (
-          <Minus className="w-3.5 h-3.5" />
+          <Minus className="w-3 h-3" />
         ) : (
-          <Plus className="w-3.5 h-3.5" />
+          <Plus className="w-3 h-3" />
         )}
       </button>
     </div>
     
     {t.hasQuantity && selected && (
-      <div className="flex items-center gap-3 mt-2 bg-white/10 rounded-lg p-1.5 self-start ring-1 ring-white/20">
-        <button onClick={() => onUpdateQuantity(-1)} className="p-1 hover:bg-white/20 rounded transition-colors">
-          <Minus className="w-2.5 h-2.5 text-white" />
+      <div className="flex items-center gap-2 mt-1.5 bg-white/10 rounded-lg p-1 self-start ring-1 ring-white/20">
+        <button onClick={() => onUpdateQuantity(-1)} className="p-0.5 hover:bg-white/20 rounded transition-colors">
+          <Minus className="w-2 h-2 text-white" />
         </button>
-        <span className="text-[11px] font-black min-w-[0.75rem] text-center">{quantity}</span>
-        <button onClick={() => onUpdateQuantity(1)} className="p-1 hover:bg-white/20 rounded transition-colors">
-          <Plus className="w-2.5 h-2.5 text-white" />
+        <span className="text-[10px] font-black min-w-[0.5rem] text-center">{quantity}</span>
+        <button onClick={() => onUpdateQuantity(1)} className="p-0.5 hover:bg-white/20 rounded transition-colors">
+          <Plus className="w-2 h-2 text-white" />
         </button>
       </div>
     )}
@@ -190,42 +192,42 @@ export default function LandingPage() {
       <section id="price-comparison" className="pb-32 px-4 max-w-7xl mx-auto">
         <div className="bg-white rounded-[3rem] overflow-hidden flex flex-col lg:flex-row shadow-[0_30px_80px_rgba(15,23,42,0.08)] border border-gray-100">
           {/* Selector Pane */}
-          <div className="p-8 md:p-14 lg:w-3/5 bg-brand-section text-white">
-            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-brand-primary mb-4">PRICE COMPARISON</p>
-            <h2 className="font-serif text-3xl md:text-5xl font-black mb-10 leading-tight text-white">Compare treatments at a glance.</h2>
+          <div className="p-6 md:p-10 lg:w-3/5 bg-brand-section text-white">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-primary mb-3">PRICE COMPARISON</p>
+            <h2 className="font-serif text-2xl md:text-4xl font-black mb-6 leading-tight text-white">Compare treatments at a glance.</h2>
             
-            <div className="space-y-6 bg-white/5 p-6 rounded-[2rem] backdrop-blur-sm border border-white/5">
-              <div className="bg-white/5 rounded-2xl p-6 text-white border border-white/10 shadow-sm">
-                <label className="text-xs font-black uppercase tracking-[0.18em] text-gray-400 mb-2 block">FROM</label>
+            <div className="space-y-4 bg-white/5 p-5 rounded-[1.5rem] backdrop-blur-sm border border-white/5">
+              <div className="bg-white/5 rounded-xl p-4 text-white border border-white/10 shadow-sm">
+                <label className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 mb-1.5 block">FROM</label>
                 <div className="relative">
                   <select 
                     value={pricingFrom}
                     onChange={(e) => setPricingFrom(e.target.value as keyof typeof ORIGINS)}
-                    className="w-full bg-transparent border border-white/10 rounded-xl px-4 py-4 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                    className="w-full bg-transparent border border-white/10 rounded-lg px-3 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
                   >
                     {Object.entries(ORIGINS).map(([key, val]) => (
                       <option key={key} value={key}>{val.label}</option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
                 </div>
               </div>
 
-              <div className="bg-white/5 rounded-2xl p-6 text-white border border-white/10 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div className="bg-white/5 rounded-xl p-4 text-white border border-white/10 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                   <div>
-                    <label className="text-xs font-black uppercase tracking-[0.18em] text-gray-400 block mb-1">TREATMENTS</label>
-                    <span className="text-[11px] font-bold text-white/50">{selectedTreatments.length} SELECTED</span>
+                    <label className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 block mb-0.5">TREATMENTS</label>
+                    <span className="text-[10px] font-bold text-white/50">{selectedTreatments.length} SELECTED</span>
                   </div>
                 </div>
 
                 {/* Category Pills */}
-                <div className="flex flex-wrap gap-2 mb-6">
+                <div className="flex flex-wrap gap-1.5 mb-4">
                   {CATEGORIES.map(cat => (
                     <button
                       key={cat}
                       onClick={() => setActiveCategory(cat)}
-                      className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all duration-300 ${
+                      className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider transition-all duration-300 ${
                         activeCategory === cat 
                         ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' 
                         : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/5'
@@ -236,7 +238,7 @@ export default function LandingPage() {
                   ))}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                   {filteredTreatments.length > 0 ? (
                     filteredTreatments.map(t => (
                       <TreatmentCard 
@@ -259,15 +261,15 @@ export default function LandingPage() {
           </div>
 
           {/* Breakdown Pane */}
-          <div className="p-8 md:p-10 lg:w-[42%] md:border-l border-gray-200">
-            <div className="h-full rounded-[2rem] border border-brand-secondary/60 bg-white p-6 sm:p-8 shadow-[0_20px_50px_rgba(14,90,99,0.08)]">
-              <div className="flex items-center justify-between mb-8">
-                <span className="text-[11px] font-black uppercase tracking-[0.25em] text-brand-secondary">PRICE BREAKDOWN</span>
-                <span className="text-[11px] bg-brand-secondary/10 px-3 py-1 rounded-full uppercase font-black text-brand-secondary border border-brand-secondary/20">APPROXIMATE</span>
+          <div className="p-6 md:p-8 lg:w-[42%] md:border-l border-gray-200">
+            <div className="h-full rounded-[1.5rem] border border-brand-secondary/60 bg-white p-5 sm:p-6 shadow-[0_20px_50px_rgba(14,90,99,0.08)]">
+              <div className="flex items-center justify-between mb-6">
+                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-brand-secondary">PRICE BREAKDOWN</span>
+                <span className="text-[10px] bg-brand-secondary/10 px-2.5 py-0.5 rounded-full uppercase font-black text-brand-secondary border border-brand-secondary/20">APPROXIMATE</span>
               </div>
 
-              <div className="space-y-6 mb-12">
-                <div className="grid grid-cols-12 text-[10px] font-black text-gray-400 pb-3 border-b border-gray-100 uppercase tracking-widest">
+              <div className="space-y-4 mb-8">
+                <div className="grid grid-cols-12 text-[9px] font-black text-gray-400 pb-2 border-b border-gray-100 uppercase tracking-widest">
                   <div className="col-span-6">TREATMENT</div>
                   <div className="col-span-3 text-right">{ORIGINS[pricingFrom].label}</div>
                   <div className="col-span-3 text-right">VIETNAM</div>
@@ -310,13 +312,13 @@ export default function LandingPage() {
                 )}
               </div>
 
-              <div className="bg-brand-bg rounded-3xl p-6 border border-gray-100">
-                <span className="text-[11px] font-black text-brand-secondary uppercase tracking-[0.25em] block mb-3">ESTIMATED SAVINGS</span>
-                <div className="flex items-end gap-2 mb-4">
-                  <span className="text-5xl font-black tracking-tight text-brand-text">~${Math.round(totalSavings).toLocaleString()}</span>
-                  <span className="text-sm font-bold text-gray-400 uppercase tracking-widest pb-1">USD</span>
+              <div className="bg-brand-bg rounded-2xl p-5 border border-gray-100">
+                <span className="text-[10px] font-black text-brand-secondary uppercase tracking-[0.25em] block mb-2">ESTIMATED SAVINGS</span>
+                <div className="flex items-end gap-2 mb-3">
+                  <span className="text-4xl font-black tracking-tight text-brand-text">~${Math.round(totalSavings).toLocaleString()}</span>
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-widest pb-1">USD</span>
                 </div>
-                <p className="text-xs text-gray-500 leading-relaxed font-medium">
+                <p className="text-[11px] text-gray-500 leading-relaxed font-medium">
                   {selectedTreatments.length > 0 ? "Estimated savings for selected treatments." : "Choose one or more treatments to compare."}
                 </p>
               </div>

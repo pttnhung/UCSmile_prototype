@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Search, 
@@ -45,7 +45,7 @@ function Layout() {
   }, []);
 
   useEffect(() => {
-    if (location.hash) {
+    if (location.hash && location.pathname === '/') {
       const id = location.hash.replace('#', '');
       const element = document.getElementById(id);
       if (element) {
@@ -54,7 +54,7 @@ function Layout() {
         }, 100);
       }
     }
-  }, [location]);
+  }, [location.hash, location.pathname]);
 
   return (
     <div className="min-h-screen">
