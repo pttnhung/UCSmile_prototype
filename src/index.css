@@ -5,9 +5,9 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Cormorant Garamond", serif;
 
-  /* Updated colors from the reference image */
-  --color-brand-primary: #c5a059;      /* Elegant Gold */
-  --color-brand-secondary: #d7b55b;    /* Lighter Brass */
+  /* Updated colors for a brighter, fresher 'smile' feel */
+  --color-brand-primary: #FFD151;      /* Bright Fresh Gold */
+  --color-brand-secondary: #FFB800;    /* Vibrant Amber */
   --color-brand-bg: #fbfaf6;          /* Light Cream background */
   --color-brand-section: #1a1c1e;     /* Deep Charcoal background */
   --color-brand-text: #1a1c1e;        /* Deep Slate for text on light */

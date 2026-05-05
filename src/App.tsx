@@ -31,7 +31,6 @@ const ScrollToTop = () => {
 };
 
 function Layout() {
-  const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
@@ -104,58 +103,9 @@ function Layout() {
         </div>
       </footer>
 
-      {/* WhatsApp & AI Chat Buttons */}
+      {/* AI Chat Button */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
         <AnimatePresence>
-          {isChatOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.9 }}
-              className="w-[min(92vw,22rem)] overflow-hidden rounded-[2rem] border border-gray-100 bg-brand-bg shadow-[0_25px_80px_rgba(14,90,99,0.22)] mb-2"
-            >
-              <div className="bg-brand-primary p-6 text-white">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-secondary mb-1">WhatsApp Support</p>
-                    <h3 className="text-xl font-black font-serif italic">Chat with concierge</h3>
-                  </div>
-                  <button onClick={() => setIsChatOpen(false)} className="text-white/60 hover:text-white transition-colors">
-                    <Plus className="w-5 h-5 rotate-45" />
-                  </button>
-                </div>
-                <p className="mt-3 text-sm text-white/70 font-medium leading-relaxed">
-                  Pick a topic or type your own message. Clicking send will open WhatsApp with your text ready.
-                </p>
-              </div>
-              <div className="p-4 space-y-2 max-h-96 overflow-y-auto text-left">
-                {[
-                  { title: "Dental consultation", desc: "General advice and clinic matching", msg: "Hi, I need a dental consultation in Da Nang." },
-                  { title: "Price check", desc: "Compare treatment costs", msg: "I want to know pricing for implants / veneers / cleaning." },
-                  { title: "Book + transfer", desc: "Schedule and travel support", msg: "Please help me book a clinic and arrange airport pickup." }
-                ].map((item, idx) => (
-                  <button
-                    key={idx}
-                    className="w-full text-left p-4 rounded-2xl border border-gray-100 hover:border-brand-secondary/40 hover:bg-brand-secondary/5 transition-all group"
-                  >
-                    <span className="block text-sm font-bold text-brand-text group-hover:text-brand-primary">{item.title}</span>
-                    <span className="block text-[11px] text-gray-500 font-medium">{item.desc}</span>
-                  </button>
-                ))}
-                <div className="pt-2">
-                  <input 
-                    type="text" 
-                    placeholder="Type your message..." 
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                  />
-                </div>
-                <button className="btn-luxury w-full py-4 rounded-xl font-black text-xs tracking-widest flex items-center justify-center gap-2">
-                  <MessageCircle className="w-4 h-4" /> SEND TO WHATSAPP
-                </button>
-              </div>
-            </motion.div>
-          )}
-
           {isAIChatOpen && (
             <motion.div
               initial={{ opacity: 0, y: 20, scale: 0.9 }}
@@ -220,19 +170,10 @@ function Layout() {
           <motion.button 
             whileHover={{ scale: 1.1, y: -5 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => { setIsAIChatOpen(!isAIChatOpen); setIsChatOpen(false); }}
+            onClick={() => setIsAIChatOpen(!isAIChatOpen)}
             className={`w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all ${isAIChatOpen ? 'bg-brand-text text-brand-secondary ring-2 ring-brand-secondary/50' : 'bg-white border border-gray-100 text-brand-text hover:bg-brand-section'}`}
           >
             <Headset className="w-6 h-6" />
-          </motion.button>
-          
-          <motion.button 
-            whileHover={{ scale: 1.1, y: -5 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => { setIsChatOpen(!isChatOpen); setIsAIChatOpen(false); }}
-            className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all bg-[#25D366] text-white hover:bg-[#128C7E] ${isChatOpen ? 'ring-4 ring-brand-secondary/40' : ''}`}
-          >
-            {isChatOpen ? <Plus className="w-8 h-8 rotate-45" /> : <MessageCircle className="w-8 h-8" />}
           </motion.button>
         </div>
       </div>

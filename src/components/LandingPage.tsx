@@ -54,6 +54,7 @@ const ORIGINS = {
 };
 
 interface TreatmentCardProps {
+  key?: string;
   t: Treatment;
   selected: boolean;
   onToggle: () => void;
@@ -61,52 +62,51 @@ interface TreatmentCardProps {
   onUpdateQuantity: (val: number) => void;
 }
 
-const TreatmentCard = ({ 
+function TreatmentCard({ 
   t, 
   selected, 
   onToggle, 
   quantity, 
   onUpdateQuantity 
-}: TreatmentCardProps) => (
-  <div
-    className={`flex flex-col p-3 rounded-xl border transition-all duration-300 text-left ${
-      selected 
-      ? 'bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20 scale-[1.02]' 
-      : 'bg-white/[0.02] border-white/5 hover:border-brand-primary/40 text-white/90 hover:bg-white/[0.05]'
-    }`}
-  >
-    <div className="flex items-center justify-between mb-1.5">
-      <div onClick={onToggle} className="cursor-pointer flex-grow pr-2">
-        <div className={`text-xs font-bold leading-tight ${selected ? 'text-white' : 'text-white/90'}`}>{t.name}</div>
-        <div className={`text-[9px] font-bold transition-colors mt-0.5 ${selected ? 'text-white/70' : 'text-brand-primary/80'}`}>
-          VN from ${t.vietnamPrice}
+}: TreatmentCardProps) {
+  return (
+    <div
+      className={`flex flex-col p-3 rounded-xl border transition-all duration-300 text-left ${
+        selected 
+        ? 'bg-brand-primary text-brand-text border-brand-primary shadow-lg shadow-brand-primary/20 scale-[1.02]' 
+        : 'bg-white border-gray-100 hover:border-brand-primary/40 text-brand-text hover:bg-gray-50 shadow-sm'
+      }`}
+    >
+      <div className="flex items-center justify-between mb-1.5">
+        <div onClick={onToggle} className="cursor-pointer flex-grow pr-2">
+          <div className={`text-xs font-bold leading-tight ${selected ? 'text-brand-text' : 'text-brand-text/90'}`}>{t.name}</div>
         </div>
+        <button 
+          onClick={onToggle} 
+          className={`p-1 rounded-full transition-colors ${selected ? 'bg-black/10 text-brand-text' : 'bg-gray-50 text-brand-primary hover:bg-brand-primary hover:text-brand-text'}`}
+        >
+          {selected ? (
+            <Minus className="w-3 h-3" />
+          ) : (
+            <Plus className="w-3 h-3" />
+          )}
+        </button>
       </div>
-      <button 
-        onClick={onToggle} 
-        className={`p-1 rounded-full transition-colors ${selected ? 'bg-white/20 text-white' : 'bg-white/5 text-brand-primary hover:bg-brand-primary hover:text-white'}`}
-      >
-        {selected ? (
-          <Minus className="w-3 h-3" />
-        ) : (
-          <Plus className="w-3 h-3" />
-        )}
-      </button>
+      
+      {t.hasQuantity && selected && (
+        <div className="flex items-center gap-2 mt-1.5 bg-black/5 rounded-lg p-1 self-start ring-1 ring-black/5">
+          <button onClick={() => onUpdateQuantity(-1)} className="p-0.5 hover:bg-black/10 rounded transition-colors">
+            <Minus className="w-2 h-2 text-brand-text" />
+          </button>
+          <span className="text-[10px] font-black min-w-[0.5rem] text-center text-brand-text">{quantity}</span>
+          <button onClick={() => onUpdateQuantity(1)} className="p-0.5 hover:bg-black/10 rounded transition-colors">
+            <Plus className="w-2 h-2 text-brand-text" />
+          </button>
+        </div>
+      )}
     </div>
-    
-    {t.hasQuantity && selected && (
-      <div className="flex items-center gap-2 mt-1.5 bg-white/10 rounded-lg p-1 self-start ring-1 ring-white/20">
-        <button onClick={() => onUpdateQuantity(-1)} className="p-0.5 hover:bg-white/20 rounded transition-colors">
-          <Minus className="w-2 h-2 text-white" />
-        </button>
-        <span className="text-[10px] font-black min-w-[0.5rem] text-center">{quantity}</span>
-        <button onClick={() => onUpdateQuantity(1)} className="p-0.5 hover:bg-white/20 rounded transition-colors">
-          <Plus className="w-2 h-2 text-white" />
-        </button>
-      </div>
-    )}
-  </div>
-);
+  );
+}
 
 export default function LandingPage() {
   const [selectedTreatments, setSelectedTreatments] = useState<string[]>(['cleaning', 'whitening']);
@@ -190,20 +190,20 @@ export default function LandingPage() {
 
       {/* Calculator Section */}
       <section id="price-comparison" className="pb-32 px-4 max-w-7xl mx-auto">
-        <div className="bg-white rounded-[3rem] overflow-hidden flex flex-col lg:flex-row shadow-[0_30px_80px_rgba(15,23,42,0.08)] border border-gray-100">
+        <div className="bg-white rounded-[3rem] overflow-hidden flex flex-col lg:flex-row shadow-[0_40px_100px_rgba(0,0,0,0.03)] border border-gray-100">
           {/* Selector Pane */}
-          <div className="p-6 md:p-10 lg:w-3/5 bg-brand-section text-white">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-primary mb-3">PRICE COMPARISON</p>
-            <h2 className="font-serif text-2xl md:text-4xl font-black mb-6 leading-tight text-white">Compare treatments at a glance.</h2>
+          <div className="p-6 md:p-10 lg:w-3/5 bg-gray-50/50">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-secondary mb-3">PRICE COMPARISON</p>
+            <h2 className="font-serif text-2xl md:text-4xl font-black mb-6 leading-tight text-brand-text">Compare treatments at a glance.</h2>
             
-            <div className="space-y-4 bg-white/5 p-5 rounded-[1.5rem] backdrop-blur-sm border border-white/5">
-              <div className="bg-white/5 rounded-xl p-4 text-white border border-white/10 shadow-sm">
-                <label className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 mb-1.5 block">FROM</label>
+            <div className="space-y-4 bg-white p-5 rounded-[1.5rem] border border-gray-100 shadow-sm">
+              <div className="bg-gray-50/80 rounded-xl p-4 border border-gray-100 shadow-sm">
+                <label className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-500 mb-1.5 block">FROM</label>
                 <div className="relative">
                   <select 
                     value={pricingFrom}
                     onChange={(e) => setPricingFrom(e.target.value as keyof typeof ORIGINS)}
-                    className="w-full bg-transparent border border-white/10 rounded-lg px-3 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
+                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm font-semibold text-brand-text"
                   >
                     {Object.entries(ORIGINS).map(([key, val]) => (
                       <option key={key} value={key}>{val.label}</option>
@@ -213,11 +213,11 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="bg-white/5 rounded-xl p-4 text-white border border-white/10 shadow-sm">
+              <div className="bg-gray-50/80 rounded-xl p-4 border border-gray-100 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 block mb-0.5">TREATMENTS</label>
-                    <span className="text-[10px] font-bold text-white/50">{selectedTreatments.length} SELECTED</span>
+                    <label className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-500 block mb-0.5">TREATMENTS</label>
+                    <span className="text-[10px] font-bold text-gray-400">{selectedTreatments.length} SELECTED</span>
                   </div>
                 </div>
 
@@ -229,8 +229,8 @@ export default function LandingPage() {
                       onClick={() => setActiveCategory(cat)}
                       className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider transition-all duration-300 ${
                         activeCategory === cat 
-                        ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' 
-                        : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/5'
+                        ? 'bg-brand-primary text-brand-text shadow-lg shadow-brand-primary/20' 
+                        : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-200'
                       }`}
                     >
                       {cat}
@@ -251,7 +251,7 @@ export default function LandingPage() {
                       />
                     ))
                   ) : (
-                    <div className="col-span-full py-12 text-center text-gray-400 text-sm">
+                    <div className="col-span-full py-12 text-center text-gray-400 text-xs font-bold uppercase tracking-widest">
                       No treatments found in this category
                     </div>
                   )}
@@ -261,11 +261,11 @@ export default function LandingPage() {
           </div>
 
           {/* Breakdown Pane */}
-          <div className="p-6 md:p-8 lg:w-[42%] md:border-l border-gray-200">
-            <div className="h-full rounded-[1.5rem] border border-brand-secondary/60 bg-white p-5 sm:p-6 shadow-[0_20px_50px_rgba(14,90,99,0.08)]">
+          <div className="p-6 md:p-8 lg:w-[42%] md:border-l border-gray-100 bg-white text-left">
+            <div className="lg:mt-32 h-full rounded-[1.5rem] bg-gray-50/30 p-5 sm:p-6 border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)]">
               <div className="flex items-center justify-between mb-6">
                 <span className="text-[10px] font-black uppercase tracking-[0.25em] text-brand-secondary">PRICE BREAKDOWN</span>
-                <span className="text-[10px] bg-brand-secondary/10 px-2.5 py-0.5 rounded-full uppercase font-black text-brand-secondary border border-brand-secondary/20">APPROXIMATE</span>
+                <span className="text-[10px] bg-brand-primary/10 px-2.5 py-0.5 rounded-full uppercase font-black text-brand-secondary">APPROXIMATE</span>
               </div>
 
               <div className="space-y-4 mb-8">
@@ -312,7 +312,7 @@ export default function LandingPage() {
                 )}
               </div>
 
-              <div className="bg-brand-bg rounded-2xl p-5 border border-gray-100">
+              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
                 <span className="text-[10px] font-black text-brand-secondary uppercase tracking-[0.25em] block mb-2">ESTIMATED SAVINGS</span>
                 <div className="flex items-end gap-2 mb-3">
                   <span className="text-4xl font-black tracking-tight text-brand-text">~${Math.round(totalSavings).toLocaleString()}</span>
@@ -429,8 +429,8 @@ export default function LandingPage() {
                     <span className="text-[14px] font-black text-brand-text">{partner.price}</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between border-t border-gray-50 pt-6">
-                   <div className="text-brand-text font-black text-sm uppercase tracking-tighter hover:text-brand-primary transition-colors">Details &rarr;</div>
+                <div className="flex items-center justify-between border-t border-gray-50 pt-6 text-brand-secondary font-black text-[10px] uppercase tracking-widest">
+                   <span>CONTACT CONCIERGE TO BOOK</span>
                 </div>
               </div>
             </div>
@@ -527,15 +527,7 @@ export default function LandingPage() {
                 <p>We’ll help you book a time that works.</p>
               </div>
             </div>
-            <div className="mt-12 pt-10 border-t border-white/5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-                <Headset className="w-5 h-5 text-brand-primary" />
-              </div>
-              <div className="text-xs">
-                <p className="font-black text-brand-primary uppercase tracking-widest mb-1">WhatsApp Now</p>
-                <p className="opacity-60 font-bold tracking-widest">+84 XXX XXX XXX</p>
-              </div>
-            </div>
+
           </div>
 
           <div className="p-10 md:p-14 bg-brand-bg flex-grow">
