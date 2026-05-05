@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Cormorant+Garamond:wght@500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+
+  /* Updated colors from the reference image */
+  --color-brand-primary: #c5a059;      /* Elegant Gold */
+  --color-brand-secondary: #d7b55b;    /* Lighter Brass */
+  --color-brand-bg: #fbfaf6;          /* Light Cream background */
+  --color-brand-section: #1a1c1e;     /* Deep Charcoal background */
+  --color-brand-text: #1a1c1e;        /* Deep Slate for text on light */
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(197, 160, 89, 0.2);
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(197, 160, 89, 0.4);
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-brand-bg text-brand-text font-sans antialiased;
+    /* Subtle cream gradient inspired by the top of the image */
+    background: linear-gradient(180deg, #fbfaf6 0%, #f7f3e8 100%);
+  }
+}
+
+.text-gold-gradient {
+  background: linear-gradient(135deg, #f7e8ac 0%, #c5a059 52%, #fff3c9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.btn-luxury {
+  @apply bg-brand-primary text-white border border-white/20 shadow-lg transition-all hover:bg-white hover:text-brand-primary active:scale-[0.98];
+}
