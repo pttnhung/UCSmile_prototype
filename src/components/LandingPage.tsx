@@ -169,9 +169,8 @@ export default function LandingPage() {
           transition={{ duration: 0.6 }}
         >
           <h1 className="font-serif text-5xl md:text-[84px] leading-[0.98] mb-8 tracking-tighter text-brand-text">
-            Expert Dental <br />
-            Care. Designed <br />
-            for <span className="text-brand-text border-b-4 border-brand-primary/20">Travel.</span>
+            Expert Dental Care. <br className="hidden md:block" />
+            Designed for <span className="text-brand-text border-b-4 border-brand-primary/20">Travel.</span>
           </h1>
           <p className="text-gray-500 max-w-xl mx-auto mb-12 text-lg md:text-xl font-medium leading-relaxed">
             Premium care in Da Nang. We connect international patients with JCI-standard clinics and local concierge support.
