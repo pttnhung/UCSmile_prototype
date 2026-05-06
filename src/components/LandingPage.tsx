@@ -176,10 +176,10 @@ export default function LandingPage() {
             Premium care in Da Nang. We connect international patients with JCI-standard clinics and local concierge support.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="#book-now" className="bg-white/95 backdrop-blur-md border-2 border-brand-primary px-10 py-5 rounded-2xl font-bold text-lg text-brand-text hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all text-center">
+            <a href="#book-now" className="btn-luxury px-10 py-5">
               Send Your Request
             </a>
-            <a href="#book-now" className="bg-white/95 backdrop-blur border border-gray-200 px-10 py-5 rounded-2xl font-bold text-lg text-brand-text hover:bg-gray-100 transition-all flex items-center gap-2">
+            <a href="#book-now" className="bg-white/95 backdrop-blur border border-gray-200 px-10 py-5 rounded-2xl font-bold text-lg text-brand-text hover:bg-gray-100 transition-all flex items-center gap-2 uppercase tracking-[0.1em]">
               Chat Now
             </a>
           </div>
@@ -562,7 +562,7 @@ export default function LandingPage() {
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2">FURTHER DETAILS (OPTIONAL)</label>
                 <textarea rows={3} placeholder="Any specific requirements or questions?" className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm resize-none"></textarea>
               </div>
-              <button className="btn-luxury w-full py-5 rounded-2xl font-black text-lg tracking-[0.2em] shadow-xl shadow-brand-primary/10">
+              <button className="btn-luxury w-full py-5 !shadow-brand-primary/10">
                 SUBMIT TO CONCIERGE
               </button>
             </form>

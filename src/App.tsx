@@ -72,7 +72,7 @@ function Layout() {
             <Link to="/#clinics" className="hover:text-gray-500 transition-colors">Top Clinics</Link>
             <Link to="/#travel" className="hover:text-gray-500 transition-colors">Travel</Link>
             <Link to="/blogs" className={`hover:text-gray-500 transition-colors ${location.pathname === '/blogs' ? 'text-gray-900' : ''}`}>Blogs</Link>
-            <Link to="/#book-now" className="inline-flex items-center gap-2 rounded-full border-2 border-brand-primary bg-white/80 px-6 py-2.5 shadow-sm transition hover:bg-gray-900 hover:text-white hover:border-gray-900">
+            <Link to="/#book-now" className="btn-luxury px-6 py-2.5 !text-[11px] !tracking-[0.2em]">
               BOOK NOW
             </Link>
           </div>

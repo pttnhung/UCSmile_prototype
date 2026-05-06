@@ -8,7 +8,7 @@
   /* Updated colors for a brighter, fresher 'smile' feel */
   --color-brand-primary: #FFD151;      /* Bright Fresh Gold */
   --color-brand-secondary: #FFB800;    /* Vibrant Amber */
-  --color-brand-bg: #fbfaf6;          /* Light Cream background */
+  --color-brand-bg: #fdfdfd;          /* Brighter off-white background */
   --color-brand-section: #1a1c1e;     /* Deep Charcoal background */
   --color-brand-text: #1a1c1e;        /* Deep Slate for text on light */
 }
@@ -32,8 +32,8 @@
 @layer base {
   body {
     @apply bg-brand-bg text-brand-text font-sans antialiased;
-    /* Subtle cream gradient inspired by the top of the image */
-    background: linear-gradient(180deg, #fbfaf6 0%, #f7f3e8 100%);
+    /* Brighter background gradient */
+    background: linear-gradient(180deg, #fdfdfd 0%, #f9f9f9 100%);
   }
 }
 
@@ -44,5 +44,5 @@
 }
 
 .btn-luxury {
-  @apply bg-brand-primary text-white border border-white/20 shadow-lg transition-all hover:bg-gray-900 hover:text-white hover:border-gray-900 active:scale-[0.98];
+  @apply bg-brand-primary text-white border border-white/20 shadow-xl transition-all hover:bg-gray-900 hover:text-white hover:border-gray-900 active:scale-[0.98] rounded-2xl font-black text-lg tracking-[0.2em] uppercase text-center flex items-center justify-center;
 }
