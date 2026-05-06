@@ -177,10 +177,10 @@ export default function LandingPage() {
             Premium care in Da Nang. We connect international patients with JCI-standard clinics and local concierge support.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="#book-now" className="btn-luxury px-10 py-5 rounded-2xl font-bold text-lg hover:scale-105 transition-transform text-center">
+            <a href="#book-now" className="bg-white/95 backdrop-blur-md border-2 border-brand-primary px-10 py-5 rounded-2xl font-bold text-lg text-brand-text hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all text-center">
               Send Your Request
             </a>
-            <a href="#book-now" className="bg-white/95 backdrop-blur border border-gray-200 px-10 py-5 rounded-2xl font-bold text-lg text-brand-text hover:bg-white transition-all flex items-center gap-2">
+            <a href="#book-now" className="bg-white/95 backdrop-blur border border-gray-200 px-10 py-5 rounded-2xl font-bold text-lg text-brand-text hover:bg-gray-100 transition-all flex items-center gap-2">
               Chat Now
             </a>
           </div>
