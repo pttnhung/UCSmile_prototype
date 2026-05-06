@@ -363,7 +363,7 @@ export default function LandingPage() {
               whileHover={{ y: -8 }}
               className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all group text-left"
             >
-              <div className={`w-14 h-14 ${feature.color} rounded-2xl flex items-center justify-center mb-8 border border-white/10 transition-colors group-hover:bg-brand-primary group-hover:text-white`}>
+              <div className={`w-14 h-14 ${feature.color} rounded-2xl flex items-center justify-center mb-8 border border-white/10 transition-colors group-hover:bg-gray-900 group-hover:text-white`}>
                 <feature.icon className="w-7 h-7" />
               </div>
               <h3 className="text-2xl font-bold mb-4 text-brand-text">{feature.title}</h3>
@@ -389,14 +389,14 @@ export default function LandingPage() {
               address: "Son Tra district, near My Khe beach", 
               specialty: "Implants & Crowns", 
               price: "$30 - $800",
-              img: "https://images.unsplash.com/photo-1629909613654-28a3a7c45701?auto=format&fit=crop&w=400&q=80"
+              img: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=800&q=80"
             },
             { 
               name: "Serenity International", 
               address: "Hai Chau, central city access", 
               specialty: "Smile Aesthetics", 
               price: "$150 - $4500",
-              img: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=400&q=80"
+              img: "https://images.unsplash.com/photo-1629909613654-28a3a7c45701?auto=format&fit=crop&w=800&q=80"
             }
           ].map((partner, idx) => (
             <div key={idx} className="bg-white rounded-[2.5rem] overflow-hidden group border border-gray-100 shadow-sm hover:shadow-2xl hover:border-brand-primary/20 transition-all cursor-pointer">
@@ -410,7 +410,7 @@ export default function LandingPage() {
               </div>
               <div className="p-8">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 font-black">PARTNER CLINIC</p>
-                <h3 className="font-bold text-brand-text text-2xl mb-5 group-hover:text-brand-primary transition-colors h-14 flex items-center leading-tight">{partner.name}</h3>
+                <h3 className="font-bold text-brand-text text-2xl mb-5 group-hover:text-gray-900 transition-colors h-14 flex items-center leading-tight">{partner.name}</h3>
                 <div className="space-y-3 mb-8">
                   <div className="flex items-start gap-2 text-[12px] font-semibold text-gray-500 leading-tight">
                     <span className="mt-1 w-2 h-2 rounded-full bg-gray-200 flex-shrink-0"></span>
@@ -457,25 +457,25 @@ export default function LandingPage() {
                 name: "My Khe Beach", 
                 desc: "Golden sands & crystal waters.",
                 tag: "BEACHES",
-                img: "https://images.unsplash.com/photo-1540202404-a2f290328292?auto=format&fit=crop&q=80" 
+                img: "https://images.unsplash.com/photo-1559592413-7cea83781fab?auto=format&fit=crop&w=800&q=80" 
               },
               { 
                 name: "Ba Na Hills", 
                 desc: "European flair in the clouds.",
                 tag: "ADVENTURE",
-                img: "https://images.unsplash.com/photo-1599385559639-6f9037cba4ca?auto=format&fit=crop&q=80" 
+                img: "https://images.unsplash.com/photo-1580983231364-7546ccf76d49?auto=format&fit=crop&w=800&q=80" 
               },
               { 
                 name: "Dragon Bridge", 
                 desc: "The heartbeat of the city.",
                 tag: "CITY LIFE",
-                img: "https://images.unsplash.com/photo-1582233479373-add29e612edb?auto=format&fit=crop&q=80" 
+                img: "https://images.unsplash.com/photo-1555940280-66bf87aa823d?auto=format&fit=crop&w=800&q=80" 
               },
               { 
                 name: "Hoi An Town", 
                 desc: "Ancient colors & lanterns.",
                 tag: "CULTURE",
-                img: "https://images.unsplash.com/photo-1596701062351-be129a18286c?auto=format&fit=crop&q=80" 
+                img: "https://images.unsplash.com/photo-1555930606-b6d13bd6e3a5?auto=format&fit=crop&w=800&q=80" 
               }
             ].map((loc, idx) => (
               <motion.div 

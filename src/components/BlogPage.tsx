@@ -49,14 +49,14 @@ export default function BlogPage() {
                   <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {post.readTime}</span>
                   <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {post.date}</span>
                 </div>
-                <h3 className="text-2xl font-bold text-brand-text mb-4 leading-tight group-hover:text-brand-primary transition-colors">
+                <h3 className="text-2xl font-bold text-brand-text mb-4 leading-tight group-hover:text-gray-900 transition-colors">
                   {post.title}
                 </h3>
                 <p className="text-gray-500 text-sm font-medium leading-relaxed line-clamp-3 mb-8">
                   {post.subtitle}
                 </p>
                 <div className="flex items-center justify-between border-t border-gray-50 pt-6">
-                  <span className="text-brand-text font-black text-xs uppercase tracking-widest flex items-center gap-2 group-hover:text-brand-primary transition-colors">
+                  <span className="text-brand-text font-black text-xs uppercase tracking-widest flex items-center gap-2 group-hover:text-gray-900 transition-colors">
                     READ ARTICLE <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                   </span>
                 </div>

@@ -44,5 +44,5 @@
 }
 
 .btn-luxury {
-  @apply bg-brand-primary text-white border border-white/20 shadow-lg transition-all hover:bg-white hover:text-brand-primary active:scale-[0.98];
+  @apply bg-brand-primary text-white border border-white/20 shadow-lg transition-all hover:bg-gray-900 hover:text-white hover:border-gray-900 active:scale-[0.98];
 }

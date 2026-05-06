@@ -72,7 +72,7 @@ function Layout() {
             <Link to="/#clinics" className="hover:text-gray-500 transition-colors">Top Clinics</Link>
             <Link to="/#travel" className="hover:text-gray-500 transition-colors">Travel</Link>
             <Link to="/blogs" className={`hover:text-gray-500 transition-colors ${location.pathname === '/blogs' ? 'text-gray-900' : ''}`}>Blogs</Link>
-            <Link to="/#book-now" className="inline-flex items-center gap-2 rounded-full border-2 border-brand-primary bg-white/80 px-6 py-2.5 shadow-sm transition hover:bg-brand-primary hover:text-brand-text">
+            <Link to="/#book-now" className="inline-flex items-center gap-2 rounded-full border-2 border-brand-primary bg-white/80 px-6 py-2.5 shadow-sm transition hover:bg-gray-900 hover:text-white hover:border-gray-900">
               BOOK NOW
             </Link>
           </div>
@@ -166,6 +166,16 @@ function Layout() {
         </AnimatePresence>
         
         <div className="flex items-center gap-3">
+          <motion.a 
+            href="https://wa.me/84905000000" 
+            target="_blank"
+            rel="noopener noreferrer"
+            whileHover={{ scale: 1.1, y: -5 }}
+            whileTap={{ scale: 0.9 }}
+            className="w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-[0_10px_30px_rgba(37,211,102,0.3)] hover:bg-[#20ba5a] transition-colors"
+          >
+            <MessageCircle className="w-6 h-6 fill-current" />
+          </motion.a>
           <motion.button 
             whileHover={{ scale: 1.1, y: -5 }}
             whileTap={{ scale: 0.9 }}

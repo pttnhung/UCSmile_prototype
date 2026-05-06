@@ -40,7 +40,7 @@ export const blogData: BlogPost[] = [
     date: 'April 2026',
     angle: 'Cost clarity',
     author: 'UCsmile Editorial Team',
-    coverImage: 'https://images.unsplash.com/photo-1526256262350-7da7584cf5eb?auto=format&fit=crop&w=1200&q=80',
+    coverImage: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=1200&q=80',
     subtitle: 'Lower treatment prices matter, but the hidden value is often faster scheduling and clearer support during the trip.',
     body: [
       'A cheap treatment quote can still become expensive once you add extra visits, hotel nights, airport transfers, and unexpected revisions. The useful question is not “what is the lowest number?” but “what will the whole trip actually require?”',
@@ -82,7 +82,7 @@ export const blogData: BlogPost[] = [
     date: 'April 2026',
     angle: 'Clinic selection',
     author: 'UCsmile Editorial Team',
-    coverImage: 'https://images.unsplash.com/photo-1582893561942-d61cc6b2ad8a?auto=format&fit=crop&w=1200&q=80',
+    coverImage: 'https://images.unsplash.com/photo-1629909613654-28a3a7c45701?auto=format&fit=crop&w=1200&q=80',
     subtitle: 'The best clinic is not always the biggest one. It is the one that communicates clearly and matches your treatment plan.',
     body: [
       'Start with the basics: address, hours, clinic type, and what services are actually available. If those are missing, the rest of the listing is not useful. Good clinic profiles should make practical decision-making easy.',
@@ -120,7 +120,7 @@ export const blogData: BlogPost[] = [
     date: 'April 2026',
     angle: 'Travel',
     author: 'UCsmile Travel Team',
-    coverImage: 'https://images.unsplash.com/photo-1599385559639-6f9037cba4ca?auto=format&fit=crop&w=1200&q=80',
+    coverImage: 'https://images.unsplash.com/photo-1580983231364-7546ccf76d49?auto=format&fit=crop&w=1200&q=80',
     subtitle: 'Take the world\'s longest cable car to a French-inspired village and the famous Golden Bridge.',
     body: [
       'If you have a gap between your treatment days, Ba Na Hills offers a complete change of scenery. Located 1,487 meters above sea level, the temperature is significantly cooler than the city center.',
@@ -154,7 +154,7 @@ export const blogData: BlogPost[] = [
     date: 'April 2026',
     angle: 'Travel',
     author: 'UCsmile Travel Team',
-    coverImage: 'https://images.unsplash.com/photo-1555930606-2c938f32ac30?auto=format&fit=crop&w=1200&q=80',
+    coverImage: 'https://images.unsplash.com/photo-1555930606-b6d13bd6e3a5?auto=format&fit=crop&w=1200&q=80',
     subtitle: 'Just 30 minutes from Da Nang, this UNESCO World Heritage site is famous for its lanterns and history.',
     body: [
       'Hoi An is a must-visit. Its narrow streets, yellow-walled merchant houses, and colorful lanterns create an atmosphere that feels truly timeless.',
