@@ -25,32 +25,31 @@ interface Treatment {
 
 const TREATMENTS: Treatment[] = [
   { id: 'cleaning', name: 'Cleaning + Exam', vietnamPrice: 45, category: 'General' },
-  { id: 'whitening', name: 'Professional Whitening', vietnamPrice: 150, category: 'General' },
+  { id: 'whitening', name: 'Professional Whitening', vietnamPrice: 180, category: 'General' },
   { id: 'filling', name: 'Composite Filling', vietnamPrice: 40, hasQuantity: true, category: 'General' },
-  { id: 'extraction', name: 'Simple Extraction', vietnamPrice: 50, hasQuantity: true, category: 'General' },
-  { id: 'surgical-extraction', name: 'Surgical Extraction', vietnamPrice: 120, hasQuantity: true, category: 'General' },
-  { id: 'root-canal', name: 'Root Canal + Crown', vietnamPrice: 420, category: 'Restorative' },
-  { id: 'porcelain-crown', name: 'Porcelain Crown (Zirconia)', vietnamPrice: 350, hasQuantity: true, category: 'Restorative' },
-  { id: 'veneer', name: 'Premium Veneers (per tooth)', vietnamPrice: 280, hasQuantity: true, category: 'Cosmetic' },
-  { id: 'implant', name: 'Single Implant (incl. Crown)', vietnamPrice: 780, hasQuantity: true, category: 'Implants' },
-  { id: 'all-on-4', name: 'All-on-4 Full Arch', vietnamPrice: 7500, category: 'Implants' },
-  { id: 'all-on-6', name: 'All-on-6 Full Arch', vietnamPrice: 9500, category: 'Implants' },
-  { id: 'invisalign', name: 'Invisalign (Full Package)', vietnamPrice: 1800, category: 'Orthodontics' },
-  { id: 'braces', name: 'Braces / Orthodontics', vietnamPrice: 1200, category: 'Orthodontics' },
-  { id: 'smile-makeover', name: 'Full Smile Makeover', vietnamPrice: 2200, category: 'Cosmetic' },
+  { id: 'extraction', name: 'Simple Extraction', vietnamPrice: 60, hasQuantity: true, category: 'General' },
+  { id: 'surgical-extraction', name: 'Surgical Extraction', vietnamPrice: 150, hasQuantity: true, category: 'General' },
+  { id: 'root-canal', name: 'Root Canal + Crown', vietnamPrice: 450, category: 'Restorative' },
+  { id: 'porcelain-crown', name: 'Porcelain Crown (Zirconia)', vietnamPrice: 380, hasQuantity: true, category: 'Restorative' },
+  { id: 'veneer', name: 'Premium Veneers (per tooth)', vietnamPrice: 350, hasQuantity: true, category: 'Cosmetic' },
+  { id: 'implant', name: 'Single Implant (incl. Crown)', vietnamPrice: 950, hasQuantity: true, category: 'Implants' },
+  { id: 'all-on-4', name: 'All-on-4 Full Arch', vietnamPrice: 8500, category: 'Implants' },
+  { id: 'all-on-6', name: 'All-on-6 Full Arch', vietnamPrice: 11000, category: 'Implants' },
+  { id: 'invisalign', name: 'Invisalign (Full Package)', vietnamPrice: 2800, category: 'Orthodontics' },
+  { id: 'braces', name: 'Braces / Orthodontics', vietnamPrice: 1500, category: 'Orthodontics' },
+  { id: 'smile-makeover', name: 'Full Smile Makeover', vietnamPrice: 3500, category: 'Cosmetic' },
   { id: 'sinus-lift', name: 'Sinus Lift (Support)', vietnamPrice: 800, category: 'Implants' },
 ];
 
 const CATEGORIES = ['General', 'Restorative', 'Implants', 'Orthodontics', 'Cosmetic'];
 
 const ORIGINS = {
-  aus: { label: 'Australia', factor: 4.8 },
-  usa: { label: 'USA', factor: 5.5 },
-  kor: { label: 'South Korea', factor: 3.4 },
-  jpn: { label: 'Japan', factor: 4.1 },
-  chn: { label: 'China', factor: 3.0 },
-  rus: { label: 'Russia', factor: 3.2 },
-  can: { label: 'Canada', factor: 5.0 },
+  aus: { label: 'Australia', factor: 5.2 },
+  usa: { label: 'USA', factor: 6.8 },
+  nzl: { label: 'New Zealand', factor: 5.0 },
+  gbr: { label: 'UK', factor: 5.8 },
+  jpn: { label: 'Japan', factor: 4.5 },
+  can: { label: 'Canada', factor: 6.0 },
 };
 
 interface TreatmentCardProps {
@@ -71,19 +70,19 @@ function TreatmentCard({
 }: TreatmentCardProps) {
   return (
     <div
-      className={`flex flex-col p-3 rounded-xl border transition-all duration-300 text-left ${
+      className={`flex flex-col p-3 rounded-xl border-2 transition-all duration-300 text-left relative group ${
         selected 
-        ? 'bg-brand-primary text-brand-text border-brand-primary shadow-lg shadow-brand-primary/20 scale-[1.02]' 
-        : 'bg-white border-gray-100 hover:border-brand-primary/40 text-brand-text hover:bg-gray-50 shadow-sm'
+        ? 'border-brand-primary bg-white shadow-md scale-[1.02]' 
+        : 'bg-white border-gray-100 hover:border-gray-200 text-brand-text hover:bg-gray-50/50 shadow-sm'
       }`}
     >
       <div className="flex items-center justify-between mb-1.5">
         <div onClick={onToggle} className="cursor-pointer flex-grow pr-2">
-          <div className={`text-xs font-bold leading-tight ${selected ? 'text-brand-text' : 'text-brand-text/90'}`}>{t.name}</div>
+          <div className={`text-xs font-bold leading-tight ${selected ? 'text-brand-text' : 'text-gray-800'}`}>{t.name}</div>
         </div>
         <button 
           onClick={onToggle} 
-          className={`p-1 rounded-full transition-colors ${selected ? 'bg-black/10 text-brand-text' : 'bg-gray-50 text-brand-primary hover:bg-brand-primary hover:text-brand-text'}`}
+          className={`p-1 rounded-full transition-colors ${selected ? 'bg-brand-primary text-brand-text' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'}`}
         >
           {selected ? (
             <Minus className="w-3 h-3" />
@@ -94,13 +93,13 @@ function TreatmentCard({
       </div>
       
       {t.hasQuantity && selected && (
-        <div className="flex items-center gap-2 mt-1.5 bg-black/5 rounded-lg p-1 self-start ring-1 ring-black/5">
-          <button onClick={() => onUpdateQuantity(-1)} className="p-0.5 hover:bg-black/10 rounded transition-colors">
-            <Minus className="w-2 h-2 text-brand-text" />
+        <div className="flex items-center gap-2 mt-1.5 bg-white rounded-lg p-1 self-start border border-brand-primary/30 shadow-sm">
+          <button onClick={() => onUpdateQuantity(-1)} className="p-0.5 hover:bg-gray-100 rounded transition-colors">
+            <Minus className="w-2 h-2 text-gray-600" />
           </button>
-          <span className="text-[10px] font-black min-w-[0.5rem] text-center text-brand-text">{quantity}</span>
-          <button onClick={() => onUpdateQuantity(1)} className="p-0.5 hover:bg-black/10 rounded transition-colors">
-            <Plus className="w-2 h-2 text-brand-text" />
+          <span className="text-[10px] font-bold min-w-[0.5rem] text-center text-brand-text">{quantity}</span>
+          <button onClick={() => onUpdateQuantity(1)} className="p-0.5 hover:bg-gray-100 rounded transition-colors">
+            <Plus className="w-2 h-2 text-gray-600" />
           </button>
         </div>
       )}
@@ -172,7 +171,7 @@ export default function LandingPage() {
           <h1 className="font-serif text-5xl md:text-[84px] leading-[0.98] mb-8 tracking-tighter text-brand-text">
             Expert Dental <br />
             Care. Designed <br />
-            for <span className="text-brand-secondary">Travel.</span>
+            for <span className="text-brand-text border-b-4 border-brand-primary/20">Travel.</span>
           </h1>
           <p className="text-gray-500 max-w-xl mx-auto mb-12 text-lg md:text-xl font-medium leading-relaxed">
             Premium care in Da Nang. We connect international patients with JCI-standard clinics and local concierge support.
@@ -192,12 +191,12 @@ export default function LandingPage() {
       <section id="price-comparison" className="pb-32 px-4 max-w-7xl mx-auto">
         <div className="bg-white rounded-[3rem] overflow-hidden flex flex-col lg:flex-row shadow-[0_40px_100px_rgba(0,0,0,0.03)] border border-gray-100">
           {/* Selector Pane */}
-          <div className="p-6 md:p-10 lg:w-3/5 bg-gray-50/50">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-secondary mb-3">PRICE COMPARISON</p>
+          <div className="p-6 md:p-10 lg:w-3/5 bg-gray-50/30">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-3">PRICE COMPARISON</p>
             <h2 className="font-serif text-2xl md:text-4xl font-black mb-6 leading-tight text-brand-text">Compare treatments at a glance.</h2>
             
             <div className="space-y-4 bg-white p-5 rounded-[1.5rem] border border-gray-100 shadow-sm">
-              <div className="bg-gray-50/80 rounded-xl p-4 border border-gray-100 shadow-sm">
+              <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-100 shadow-sm">
                 <label className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-500 mb-1.5 block">FROM</label>
                 <div className="relative">
                   <select 
@@ -227,10 +226,10 @@ export default function LandingPage() {
                     <button
                       key={cat}
                       onClick={() => setActiveCategory(cat)}
-                      className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider transition-all duration-300 ${
+                      className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.1em] transition-all duration-300 ${
                         activeCategory === cat 
-                        ? 'bg-brand-primary text-brand-text shadow-lg shadow-brand-primary/20' 
-                        : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-200'
+                        ? 'bg-gray-100 text-brand-text border-2 border-brand-text' 
+                        : 'bg-white text-gray-400 hover:text-gray-600 border border-gray-100'
                       }`}
                     >
                       {cat}
@@ -262,48 +261,48 @@ export default function LandingPage() {
 
           {/* Breakdown Pane */}
           <div className="p-6 md:p-8 lg:w-[42%] md:border-l border-gray-100 bg-white text-left">
-            <div className="lg:mt-32 h-full rounded-[1.5rem] bg-gray-50/30 p-5 sm:p-6 border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)]">
+            <div className="lg:mt-32 h-full rounded-[1.5rem] bg-gray-50/20 p-5 sm:p-6 border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.01)]">
               <div className="flex items-center justify-between mb-6">
-                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-brand-secondary">PRICE BREAKDOWN</span>
-                <span className="text-[10px] bg-brand-primary/10 px-2.5 py-0.5 rounded-full uppercase font-black text-brand-secondary">APPROXIMATE</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">ESTIMATED COMPARISON</span>
+                <span className="text-[10px] bg-gray-100 px-2.5 py-0.5 rounded-full uppercase font-black text-gray-500">APPROXIMATE</span>
               </div>
 
               <div className="space-y-4 mb-8">
-                <div className="grid grid-cols-12 text-[9px] font-black text-gray-400 pb-2 border-b border-gray-100 uppercase tracking-widest">
+                <div className="grid grid-cols-12 text-[10px] font-black text-gray-400 pb-2 border-b border-gray-100 uppercase tracking-widest">
                   <div className="col-span-6">TREATMENT</div>
-                  <div className="col-span-3 text-right">{ORIGINS[pricingFrom].label}</div>
-                  <div className="col-span-3 text-right">VIETNAM</div>
+                  <div className="col-span-3 text-right">~{ORIGINS[pricingFrom].label}</div>
+                  <div className="col-span-3 text-right">~VIETNAM</div>
                 </div>
                 
                 {selectedTreatments.length === 0 ? (
-                  <p className="text-center py-8 text-gray-400 italic text-sm">Pick one or more services to compare</p>
+                  <p className="text-center py-12 text-gray-400 font-bold uppercase tracking-widest text-[10px]">Pick your services to compare</p>
                 ) : (
                   <div className="space-y-4 max-h-[450px] overflow-y-auto pr-1 custom-scrollbar">
                     {selectedTreatments.map(id => {
                       const t = TREATMENTS.find(item => item.id === id);
                       if (!t) return null;
                       return (
-                        <div key={id} className="grid grid-cols-12 items-center gap-2 group py-2 border-b border-gray-50 last:border-0 relative">
+                        <div key={id} className="grid grid-cols-12 items-center gap-2 group py-3 border-b border-gray-50 last:border-0 relative">
                           <div className="col-span-6 flex items-start gap-2 min-w-0">
                             <button 
                               onClick={() => toggleTreatment(id)}
-                              className="w-5 h-5 flex-shrink-0 mt-0.5 flex items-center justify-center rounded-md bg-brand-secondary/10 text-brand-secondary transition-all hover:bg-brand-secondary hover:text-white"
+                              className="w-5 h-5 flex-shrink-0 mt-0.5 flex items-center justify-center rounded-md bg-gray-100 text-gray-400 transition-all hover:bg-red-50 hover:text-red-500"
                               title="Remove treatment"
                             >
                               <X className="w-3 h-3" />
                             </button>
                             <div className="min-w-0 pr-1">
-                                <div className="text-[12px] font-bold text-brand-text leading-tight md:leading-snug">
+                                <div className="text-[13px] font-bold text-gray-900 leading-tight">
                                   {t.name}
                                 </div>
                                 {(quantities[id] > 1) && <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Quantity: {quantities[id]}</p>}
                             </div>
                           </div>
                           <div className="col-span-3 text-right">
-                            <span className="text-[12px] font-black text-gray-400/80">~${Math.round(t.vietnamPrice * factor * (quantities[id] || 1)).toLocaleString()}</span>
+                            <span className="text-[13px] font-bold text-gray-400">~${Math.round(t.vietnamPrice * factor * (quantities[id] || 1)).toLocaleString()}</span>
                           </div>
                           <div className="col-span-3 text-right">
-                            <span className="text-[12px] font-black text-brand-primary uppercase tracking-tight">${Math.round(t.vietnamPrice * (quantities[id] || 1)).toLocaleString()}</span>
+                            <span className="text-[13px] font-black text-brand-text tracking-tight">~${Math.round(t.vietnamPrice * (quantities[id] || 1)).toLocaleString()}</span>
                           </div>
                         </div>
                       );
@@ -312,14 +311,15 @@ export default function LandingPage() {
                 )}
               </div>
 
-              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-                <span className="text-[10px] font-black text-brand-secondary uppercase tracking-[0.25em] block mb-2">ESTIMATED SAVINGS</span>
-                <div className="flex items-end gap-2 mb-3">
-                  <span className="text-4xl font-black tracking-tight text-brand-text">~${Math.round(totalSavings).toLocaleString()}</span>
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-brand-primary/5 rounded-full -mr-12 -mt-12" />
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] block mb-2 relative z-10">ESTIMATED SAVINGS</span>
+                <div className="flex items-end gap-2 mb-4 relative z-10">
+                  <span className="text-4xl font-black tracking-tight text-brand-secondary">~${Math.round(totalSavings).toLocaleString()}</span>
                   <span className="text-xs font-bold text-gray-400 uppercase tracking-widest pb-1">USD</span>
                 </div>
-                <p className="text-[11px] text-gray-500 leading-relaxed font-medium">
-                  {selectedTreatments.length > 0 ? "Estimated savings for selected treatments." : "Choose one or more treatments to compare."}
+                <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest leading-tight border-t border-gray-50 pt-3 italic">
+                  * Market average estimates. Final costs vary by materials and clinical complexity.
                 </p>
               </div>
             </div>
@@ -328,7 +328,7 @@ export default function LandingPage() {
       </section>
 
       <section id="why-us" className="py-32 px-4 max-w-7xl mx-auto text-center">
-        <span className="text-brand-primary font-bold tracking-[0.2em] mb-4 block uppercase text-sm">THE PLATFORM ADVANTAGE</span>
+        <span className="text-gray-400 font-bold tracking-[0.2em] mb-4 block uppercase text-sm">THE PLATFORM ADVANTAGE</span>
         <h2 className="font-serif text-3xl md:text-5xl font-black mb-20 text-brand-text">Why smart travelers choose us.</h2>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -377,7 +377,7 @@ export default function LandingPage() {
 
       {/* Verified Partners */}
       <section id="clinics" className="py-32 px-4 max-w-7xl mx-auto">
-        <div className="mb-16 border-l-4 border-brand-secondary pl-6">
+        <div className="mb-16 border-l-4 border-gray-100 pl-6">
           <h2 className="text-3xl md:text-5xl font-black text-brand-text mb-2 uppercase tracking-tighter">Verified Partners</h2>
           <p className="text-gray-400 font-bold uppercase tracking-[0.2em] text-xs">Top Rated Clinics in Da Nang</p>
         </div>
@@ -400,20 +400,20 @@ export default function LandingPage() {
             }
           ].map((partner, idx) => (
             <div key={idx} className="bg-white rounded-[2.5rem] overflow-hidden group border border-gray-100 shadow-sm hover:shadow-2xl hover:border-brand-primary/20 transition-all cursor-pointer">
-              <div className="h-64 bg-gray-100 relative overflow-hidden p-3">
+                <div className="h-64 bg-gray-100 relative overflow-hidden p-3">
                 <img 
                   src={partner.img} 
                   alt={partner.name}
                   className="w-full h-full object-cover rounded-[2rem] transition-transform duration-500 group-hover:scale-110"
                 />
-                <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md text-brand-secondary px-3 py-1 rounded-lg text-[10px] font-black border border-brand-secondary/30 uppercase tracking-widest italic">VETTED</div>
+                <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md text-gray-500 px-3 py-1 rounded-lg text-[10px] font-black border border-gray-100 uppercase tracking-widest italic">VETTED</div>
               </div>
               <div className="p-8">
-                <p className="text-[10px] font-black text-brand-secondary uppercase tracking-[0.2em] mb-2 font-black">PARTNER CLINIC</p>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 font-black">PARTNER CLINIC</p>
                 <h3 className="font-bold text-brand-text text-2xl mb-5 group-hover:text-brand-primary transition-colors h-14 flex items-center leading-tight">{partner.name}</h3>
                 <div className="space-y-3 mb-8">
                   <div className="flex items-start gap-2 text-[12px] font-semibold text-gray-500 leading-tight">
-                    <span className="mt-1 w-2 h-2 rounded-full bg-brand-secondary flex-shrink-0"></span>
+                    <span className="mt-1 w-2 h-2 rounded-full bg-gray-200 flex-shrink-0"></span>
                     {partner.address}
                   </div>
                   <div className="flex items-center gap-3">
@@ -429,7 +429,7 @@ export default function LandingPage() {
                     <span className="text-[14px] font-black text-brand-text">{partner.price}</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between border-t border-gray-50 pt-6 text-brand-secondary font-black text-[10px] uppercase tracking-widest">
+                <div className="flex items-center justify-between border-t border-gray-50 pt-6 text-gray-400 font-black text-[10px] uppercase tracking-widest group-hover:text-brand-text transition-colors">
                    <span>CONTACT CONCIERGE TO BOOK</span>
                 </div>
               </div>
@@ -443,7 +443,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8 text-left">
             <div className="max-w-2xl">
-              <span className="text-brand-primary font-bold tracking-[0.2em] mb-4 block uppercase text-sm">LOCAL EXPERIENCE</span>
+              <span className="text-gray-400 font-bold tracking-[0.2em] mb-4 block uppercase text-sm font-sans">TRAVEL & EXPERIENCE</span>
               <h2 className="font-serif text-4xl md:text-6xl font-black leading-tight text-white italic">Explore Da Nang while you heal.</h2>
             </div>
             <p className="text-white/60 max-w-sm text-lg leading-relaxed font-medium">
@@ -493,7 +493,7 @@ export default function LandingPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
                 
                 <div className="absolute inset-0 p-8 flex flex-col justify-end text-left">
-                  <span className="text-[10px] font-black tracking-[0.2em] text-brand-primary mb-2 block bg-white/10 w-fit px-2 py-1 rounded backdrop-blur-sm">
+                  <span className="text-[10px] font-black tracking-[0.2em] text-white mb-2 block bg-white/20 w-fit px-2 py-1 rounded backdrop-blur-sm">
                     {loc.tag}
                   </span>
                   <h3 className="font-serif text-3xl font-black text-white mb-2 leading-tight">{loc.name}</h3>
@@ -511,19 +511,19 @@ export default function LandingPage() {
       <section id="book-now" className="py-32 px-4">
         <div className="max-w-7xl mx-auto bg-white rounded-[3rem] overflow-hidden shadow-[0_30px_80px_rgba(15,23,42,0.08)] border border-gray-100 flex flex-col md:flex-row">
           <div className="bg-brand-section p-10 md:p-14 text-white md:w-[35%]">
-            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-brand-primary mb-4">BOOKING SUPPORT</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-gray-400 mb-4">BOOKING SUPPORT</p>
             <h2 className="text-3xl md:text-4xl font-black mb-8 leading-tight">Dental Advice. Booking Support.</h2>
             <div className="space-y-6 text-sm text-white/70 font-medium">
               <div className="flex gap-4 items-start">
-                <span className="mt-1.5 w-2 h-2 rounded-full bg-brand-primary flex-shrink-0"></span>
+                <span className="mt-1.5 w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
                 <p>Tell us what treatment you need.</p>
               </div>
               <div className="flex gap-4 items-start">
-                <span className="mt-1.5 w-2 h-2 rounded-full bg-brand-primary flex-shrink-0"></span>
+                <span className="mt-1.5 w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
                 <p>We’ll suggest suitable clinics and next steps.</p>
               </div>
               <div className="flex gap-4 items-start">
-                <span className="mt-1.5 w-2 h-2 rounded-full bg-brand-primary flex-shrink-0"></span>
+                <span className="mt-1.5 w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
                 <p>We’ll help you book a time that works.</p>
               </div>
             </div>

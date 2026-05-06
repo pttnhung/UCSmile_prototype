@@ -66,13 +66,13 @@ function Layout() {
             <Logo size="md" />
             <span className="text-brand-text font-black text-2xl tracking-tighter uppercase">UC<span className="text-brand-primary">SMILE</span></span>
           </Link>
-          <div className="hidden md:flex items-center gap-10 text-[13px] font-black uppercase tracking-widest text-brand-text">
-            <Link to="/#why-us" className="hover:text-brand-secondary transition-colors">Why Us</Link>
-            <Link to="/#price-comparison" className="hover:text-brand-secondary transition-colors">Compare</Link>
-            <Link to="/#clinics" className="hover:text-brand-secondary transition-colors">Top Clinics</Link>
-            <Link to="/#travel" className="hover:text-brand-secondary transition-colors">Travel</Link>
-            <Link to="/blogs" className={`hover:text-brand-secondary transition-colors ${location.pathname === '/blogs' ? 'text-brand-secondary' : ''}`}>Blogs</Link>
-            <Link to="/#book-now" className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white/80 px-6 py-2.5 shadow-sm transition hover:border-brand-secondary hover:bg-brand-section">
+          <div className="hidden md:flex items-center gap-10 text-[13px] font-black uppercase tracking-widest text-gray-900">
+            <Link to="/#why-us" className="hover:text-gray-500 transition-colors">Why Us</Link>
+            <Link to="/#price-comparison" className="hover:text-gray-500 transition-colors">Compare</Link>
+            <Link to="/#clinics" className="hover:text-gray-500 transition-colors">Top Clinics</Link>
+            <Link to="/#travel" className="hover:text-gray-500 transition-colors">Travel</Link>
+            <Link to="/blogs" className={`hover:text-gray-500 transition-colors ${location.pathname === '/blogs' ? 'text-gray-900' : ''}`}>Blogs</Link>
+            <Link to="/#book-now" className="inline-flex items-center gap-2 rounded-full border-2 border-brand-primary bg-white/80 px-6 py-2.5 shadow-sm transition hover:bg-brand-primary hover:text-brand-text">
               BOOK NOW
             </Link>
           </div>
@@ -95,9 +95,8 @@ function Layout() {
           </Link>
           <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-gray-400 text-center">UCsmile PLATFORM PROTOTYPE.</p>
           <div className="flex items-center gap-10 text-[10px] uppercase tracking-[0.2em] font-black text-gray-500">
-             <a href="#" className="hover:text-brand-primary transition-colors">Privacy</a>
-             <a href="#" className="hover:text-brand-primary transition-colors">Terms</a>
-             <a href="#" className="hover:text-brand-primary transition-colors">Clinics Login</a>
+             <a href="#" className="hover:text-gray-900 transition-colors">Privacy</a>
+             <a href="#" className="hover:text-gray-900 transition-colors">Terms</a>
           </div>
           <div className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center text-[8px] font-bold tracking-tighter">G</div>
         </div>

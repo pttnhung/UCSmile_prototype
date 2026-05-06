@@ -13,7 +13,7 @@ export default function BlogPage() {
       {/* Blog Hero */}
       <section className="px-6 mb-20">
         <div className="max-w-7xl mx-auto text-center">
-          <p className="text-brand-secondary font-bold tracking-[0.2em] uppercase text-sm mb-4">UCSMILE EDITORIAL</p>
+          <p className="text-gray-400 font-bold tracking-[0.2em] uppercase text-sm mb-4">UCSMILE EDITORIAL</p>
           <h1 className="font-serif text-4xl md:text-7xl font-black tracking-tighter text-brand-text mb-6">
             Guides for travel <br />
             & <span className="text-brand-secondary">treatment.</span>
@@ -40,7 +40,7 @@ export default function BlogPage() {
                   alt={post.title}
                   className="w-full h-full object-cover rounded-[2rem] transition-transform duration-700 group-hover:scale-110"
                 />
-                <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-black text-brand-secondary uppercase tracking-widest border border-brand-secondary/20">
+                <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-black text-gray-500 uppercase tracking-widest border border-gray-100">
                   {post.category}
                 </div>
               </div>
@@ -56,7 +56,7 @@ export default function BlogPage() {
                   {post.subtitle}
                 </p>
                 <div className="flex items-center justify-between border-t border-gray-50 pt-6">
-                  <span className="text-brand-primary font-black text-xs uppercase tracking-widest flex items-center gap-2">
+                  <span className="text-brand-text font-black text-xs uppercase tracking-widest flex items-center gap-2 group-hover:text-brand-primary transition-colors">
                     READ ARTICLE <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                   </span>
                 </div>
