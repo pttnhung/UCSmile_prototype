@@ -9,47 +9,270 @@ import {
   Star,
   Plus,
   Minus,
-  X
+  X,
+  Plane
 } from 'lucide-react';
 import { blogData, BlogPost } from '../constants/blogData';
 import BlogModal from './BlogModal';
 
 // Types
+interface PriceRange {
+  min: number;
+  max: number;
+}
+
 interface Treatment {
   id: string;
   name: string;
-  vietnamPrice: number;
+  prices: Record<string, PriceRange>;
   hasQuantity?: boolean;
   category: string;
 }
 
 const TREATMENTS: Treatment[] = [
-  { id: 'cleaning', name: 'Cleaning + Exam', vietnamPrice: 45, category: 'General' },
-  { id: 'whitening', name: 'Professional Whitening', vietnamPrice: 180, category: 'General' },
-  { id: 'filling', name: 'Composite Filling', vietnamPrice: 40, hasQuantity: true, category: 'General' },
-  { id: 'extraction', name: 'Simple Extraction', vietnamPrice: 60, hasQuantity: true, category: 'General' },
-  { id: 'surgical-extraction', name: 'Surgical Extraction', vietnamPrice: 150, hasQuantity: true, category: 'General' },
-  { id: 'root-canal', name: 'Root Canal + Crown', vietnamPrice: 450, category: 'Restorative' },
-  { id: 'porcelain-crown', name: 'Porcelain Crown (Zirconia)', vietnamPrice: 380, hasQuantity: true, category: 'Restorative' },
-  { id: 'veneer', name: 'Premium Veneers (per tooth)', vietnamPrice: 350, hasQuantity: true, category: 'Cosmetic' },
-  { id: 'implant', name: 'Single Implant (incl. Crown)', vietnamPrice: 950, hasQuantity: true, category: 'Implants' },
-  { id: 'all-on-4', name: 'All-on-4 Full Arch', vietnamPrice: 8500, category: 'Implants' },
-  { id: 'all-on-6', name: 'All-on-6 Full Arch', vietnamPrice: 11000, category: 'Implants' },
-  { id: 'invisalign', name: 'Invisalign (Full Package)', vietnamPrice: 2800, category: 'Orthodontics' },
-  { id: 'braces', name: 'Braces / Orthodontics', vietnamPrice: 1500, category: 'Orthodontics' },
-  { id: 'smile-makeover', name: 'Full Smile Makeover', vietnamPrice: 3500, category: 'Cosmetic' },
-  { id: 'sinus-lift', name: 'Sinus Lift (Support)', vietnamPrice: 800, category: 'Implants' },
+  { 
+    id: 'cleaning', 
+    name: 'Cleaning + Exam', 
+    category: 'General',
+    prices: {
+      vn: { min: 10, max: 40 },
+      th: { min: 90, max: 120 },
+      au: { min: 270, max: 300 },
+      sg: { min: 220, max: 250 },
+      kr: { min: 120, max: 150 },
+      jp: { min: 150, max: 180 },
+      cn: { min: 145, max: 175 },
+      ru: { min: 60, max: 90 },
+      us: { min: 370, max: 400 },
+    }
+  },
+  { 
+    id: 'whitening', 
+    name: 'Professional Whitening', 
+    category: 'General',
+    prices: {
+      vn: { min: 60, max: 180 },
+      th: { min: 480, max: 600 },
+      au: { min: 880, max: 1000 },
+      sg: { min: 1080, max: 1200 },
+      kr: { min: 580, max: 700 },
+      jp: { min: 780, max: 900 },
+      cn: { min: 365, max: 485 },
+      ru: { min: 380, max: 500 },
+      us: { min: 1080, max: 1200 },
+    }
+  },
+  { 
+    id: 'filling', 
+    name: 'Composite Filling', 
+    hasQuantity: true, 
+    category: 'General',
+    prices: {
+      vn: { min: 10, max: 60 },
+      th: { min: 130, max: 180 },
+      au: { min: 400, max: 450 },
+      sg: { min: 300, max: 350 },
+      kr: { min: 170, max: 220 },
+      jp: { min: 250, max: 300 },
+      cn: { min: 95, max: 145 },
+      ru: { min: 130, max: 180 },
+      us: { min: 650, max: 700 },
+    }
+  },
+  { 
+    id: 'extraction', 
+    name: 'Simple Extraction', 
+    hasQuantity: true, 
+    category: 'General',
+    prices: {
+      vn: { min: 12, max: 98 },
+      th: { min: 94, max: 180 },
+      au: { min: 264, max: 350 },
+      sg: { min: 214, max: 300 },
+      kr: { min: 94, max: 180 },
+      jp: { min: 134, max: 220 },
+      cn: { min: 132, max: 218 },
+      ru: { min: 34, max: 120 },
+      us: { min: 414, max: 500 },
+    }
+  },
+  { 
+    id: 'surgical-extraction', 
+    name: 'Surgical Extraction', 
+    hasQuantity: true, 
+    category: 'General',
+    prices: {
+      vn: { min: 40, max: 200 },
+      th: { min: 290, max: 450 },
+      au: { min: 640, max: 800 },
+      sg: { min: 740, max: 900 },
+      kr: { min: 340, max: 500 },
+      jp: { min: 490, max: 650 },
+      cn: { min: 345, max: 505 },
+      ru: { min: 190, max: 350 },
+      us: { min: 1040, max: 1200 },
+    }
+  },
+  { 
+    id: 'root-canal', 
+    name: 'Root Canal + Crown', 
+    category: 'Restorative',
+    prices: {
+      vn: { min: 80, max: 925 },
+      th: { min: 955, max: 1800 },
+      au: { min: 3155, max: 4000 },
+      sg: { min: 2655, max: 3500 },
+      kr: { min: 1355, max: 2200 },
+      jp: { min: 1955, max: 2800 },
+      cn: { min: 1378, max: 2223 },
+      ru: { min: 655, max: 1500 },
+      us: { min: 4155, max: 5000 },
+    }
+  },
+  { 
+    id: 'porcelain-crown', 
+    name: 'Porcelain Crown (Zirconia)', 
+    hasQuantity: true, 
+    category: 'Restorative',
+    prices: {
+      vn: { min: 157, max: 394 },
+      th: { min: 663, max: 900 },
+      au: { min: 1963, max: 2200 },
+      sg: { min: 1763, max: 2000 },
+      kr: { min: 763, max: 1000 },
+      jp: { min: 1263, max: 1500 },
+      cn: { min: 682, max: 919 },
+      ru: { min: 563, max: 800 },
+      us: { min: 2763, max: 3000 },
+    }
+  },
+  { 
+    id: 'veneer', 
+    name: 'Premium Veneers (per tooth)', 
+    hasQuantity: true, 
+    category: 'Cosmetic',
+    prices: {
+      vn: { min: 394, max: 551 },
+      th: { min: 1043, max: 1200 },
+      au: { min: 2343, max: 2500 },
+      sg: { min: 2043, max: 2200 },
+      kr: { min: 1043, max: 1200 },
+      jp: { min: 1343, max: 1500 },
+      cn: { min: 722, max: 879 },
+      ru: { min: 643, max: 800 },
+      us: { min: 2843, max: 3000 },
+    }
+  },
+  { 
+    id: 'implant', 
+    name: 'Single Implant (incl. Crown)', 
+    hasQuantity: true, 
+    category: 'Implants',
+    prices: {
+      vn: { min: 670, max: 2285 },
+      th: { min: 2385, max: 4000 },
+      au: { min: 5385, max: 7000 },
+      sg: { min: 4885, max: 6500 },
+      kr: { min: 1885, max: 3500 },
+      jp: { min: 3885, max: 5500 },
+      cn: { min: 2043, max: 3658 },
+      ru: { min: 1385, max: 3000 },
+      us: { min: 6385, max: 8000 },
+    }
+  },
+  { 
+    id: 'all-on-4', 
+    name: 'All-on-4 Full Arch', 
+    category: 'Implants',
+    prices: {
+      vn: { min: 4724, max: 7874 },
+      th: { min: 14850, max: 18000 },
+      au: { min: 36850, max: 40000 },
+      sg: { min: 34850, max: 38000 },
+      kr: { min: 14850, max: 18000 },
+      jp: { min: 31850, max: 35000 },
+      cn: { min: 11425, max: 14575 },
+      ru: { min: 14850, max: 18000 },
+      us: { min: 41850, max: 45000 },
+    }
+  },
+  { 
+    id: 'invisalign', 
+    name: 'Invisalign (Full Package)', 
+    category: 'Orthodontics',
+    prices: {
+      vn: { min: 4724, max: 5905 },
+      th: { min: 5819, max: 7000 },
+      au: { min: 7819, max: 9000 },
+      sg: { min: 8819, max: 10000 },
+      kr: { min: 5319, max: 6500 },
+      jp: { min: 7319, max: 8500 },
+      cn: { min: 5910, max: 7091 },
+      ru: { min: 4819, max: 6000 },
+      us: { min: 7819, max: 9000 },
+    }
+  },
+  { 
+    id: 'braces', 
+    name: 'Braces / Orthodontics', 
+    category: 'Orthodontics',
+    prices: {
+      vn: { min: 984, max: 2755 },
+      th: { min: 2729, max: 4500 },
+      au: { min: 6229, max: 8000 },
+      sg: { min: 6229, max: 8000 },
+      kr: { min: 3229, max: 5000 },
+      jp: { min: 5229, max: 7000 },
+      cn: { min: 3315, max: 5086 },
+      ru: { min: 2229, max: 4000 },
+      us: { min: 6229, max: 8000 },
+    }
+  },
+  { 
+    id: 'smile-makeover', 
+    name: 'Full Smile Makeover', 
+    category: 'Cosmetic',
+    prices: {
+      vn: { min: 3780, max: 11020 },
+      th: { min: 17760, max: 25000 },
+      au: { min: 52760, max: 60000 },
+      sg: { min: 47760, max: 55000 },
+      kr: { min: 17760, max: 25000 },
+      jp: { min: 37760, max: 45000 },
+      cn: { min: 17380, max: 24620 },
+      ru: { min: 10760, max: 18000 },
+      us: { min: 62760, max: 70000 },
+    }
+  },
+  { 
+    id: 'sinus-lift', 
+    name: 'Sinus Lift (Support)', 
+    category: 'Implants',
+    prices: {
+      vn: { min: 197, max: 590 },
+      th: { min: 807, max: 1200 },
+      au: { min: 2607, max: 3000 },
+      sg: { min: 2107, max: 2500 },
+      kr: { min: 1107, max: 1500 },
+      jp: { min: 1407, max: 1800 },
+      cn: { min: 1204, max: 1597 },
+      ru: { min: 507, max: 900 },
+      us: { min: 3607, max: 4000 },
+    }
+  },
 ];
 
 const CATEGORIES = ['General', 'Restorative', 'Implants', 'Orthodontics', 'Cosmetic'];
 
 const ORIGINS = {
-  aus: { label: 'Australia', factor: 5.2 },
-  usa: { label: 'USA', factor: 6.8 },
-  nzl: { label: 'New Zealand', factor: 5.0 },
-  gbr: { label: 'UK', factor: 5.8 },
-  jpn: { label: 'Japan', factor: 4.5 },
-  can: { label: 'Canada', factor: 6.0 },
+  au: { label: 'Australia' },
+  us: { label: 'USA' },
+  th: { label: 'Thailand' },
+  sg: { label: 'Singapore' },
+  kr: { label: 'South Korea' },
+  jp: { label: 'Japan' },
+  cn: { label: 'China' },
+  ru: { label: 'Russia' },
 };
 
 interface TreatmentCardProps {
@@ -110,24 +333,26 @@ function TreatmentCard({
 export default function LandingPage() {
   const [selectedTreatments, setSelectedTreatments] = useState<string[]>(['cleaning', 'whitening']);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
-  const [pricingFrom, setPricingFrom] = useState<keyof typeof ORIGINS>('aus');
+  const [pricingFrom, setPricingFrom] = useState<keyof typeof ORIGINS>('au');
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [activeCategory, setActiveCategory] = useState('General');
 
   const filteredTreatments = TREATMENTS.filter(t => t.category === activeCategory);
 
-  const factor = ORIGINS[pricingFrom].factor;
+  const originKey = pricingFrom;
 
   const totalOrigin = selectedTreatments.reduce((acc, id) => {
     const t = TREATMENTS.find(t => t.id === id);
     const qty = quantities[id] || 1;
-    return acc + ((t?.vietnamPrice || 0) * factor * qty);
+    const price = t?.prices[originKey]?.min || 0;
+    return acc + (price * qty);
   }, 0);
 
   const totalVietnam = selectedTreatments.reduce((acc, id) => {
     const t = TREATMENTS.find(t => t.id === id);
     const qty = quantities[id] || 1;
-    return acc + ((t?.vietnamPrice || 0) * qty);
+    const price = t?.prices.vn.min || 0;
+    return acc + (price * qty);
   }, 0);
 
   const totalSavings = totalOrigin - totalVietnam;
@@ -298,10 +523,14 @@ export default function LandingPage() {
                             </div>
                           </div>
                           <div className="col-span-3 text-right">
-                            <span className="text-[13px] font-bold text-gray-400">~${Math.round(t.vietnamPrice * factor * (quantities[id] || 1)).toLocaleString()}</span>
+                            <span className="text-[13px] font-bold text-gray-400">
+                              ~${Math.round((t.prices[originKey]?.min || 0) * (quantities[id] || 1)).toLocaleString()} - ${Math.round((t.prices[originKey]?.max || 0) * (quantities[id] || 1)).toLocaleString()}
+                            </span>
                           </div>
                           <div className="col-span-3 text-right">
-                            <span className="text-[13px] font-black text-brand-text tracking-tight">~${Math.round(t.vietnamPrice * (quantities[id] || 1)).toLocaleString()}</span>
+                            <span className="text-[13px] font-black text-brand-text tracking-tight">
+                              ~${Math.round((t.prices.vn.min || 0) * (quantities[id] || 1)).toLocaleString()} - ${Math.round((t.prices.vn.max || 0) * (quantities[id] || 1)).toLocaleString()}
+                            </span>
                           </div>
                         </div>
                       );
@@ -317,6 +546,28 @@ export default function LandingPage() {
                   <span className="text-4xl font-black tracking-tight text-brand-secondary">~${Math.round(totalSavings).toLocaleString()}</span>
                   <span className="text-xs font-bold text-gray-400 uppercase tracking-widest pb-1">USD</span>
                 </div>
+                {totalSavings > 0 && (
+                  <div className="relative z-10 mb-6 group">
+                    <div className="absolute -inset-2 bg-brand-primary/10 rounded-2xl blur-lg transition-all group-hover:bg-brand-primary/20" />
+                    <div className="relative bg-white/60 backdrop-blur-sm border border-brand-primary/20 rounded-xl p-4 shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-brand-primary flex items-center justify-center shrink-0">
+                          <Plane className="w-4 h-4 text-brand-text" />
+                        </div>
+                        <p className="text-[12px] text-brand-text font-bold leading-snug italic">
+                          {totalSavings < 100 && "Enough for an ocean-view stay or a luxury spa experience in Vietnam."}
+                          {totalSavings >= 100 && totalSavings < 300 && "Enough for 1–2 days of spa treatments, fine dining, and premium local experiences in Vietnam."}
+                          {totalSavings >= 300 && totalSavings < 800 && "Enough for a 2–4 night beachfront resort escape in Da Nang or Nha Trang."}
+                          {totalSavings >= 800 && totalSavings < 1500 && "Enough for a 4–7 day Vietnam getaway with flights and luxury hotel stays included."}
+                          {totalSavings >= 1500 && totalSavings < 3000 && "Enough to cover most of a 1–2 week Vietnam vacation with beachfront resorts and unforgettable experiences."}
+                          {totalSavings >= 3000 && totalSavings < 5000 && "Enough for a 2–3 week luxury journey across Vietnam with premium resorts and private tours."}
+                          {totalSavings >= 5000 && totalSavings < 10000 && "Enough for a 3–4 week luxury Southeast Asia holiday across multiple destinations."}
+                          {totalSavings >= 10000 && "Enough for a once-in-a-lifetime luxury Asia travel experience."}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest leading-tight border-t border-gray-50 pt-3 italic">
                   * Market average estimates. Final costs vary by materials and clinical complexity.
                 </p>
@@ -388,14 +639,14 @@ export default function LandingPage() {
               address: "Son Tra district, near My Khe beach", 
               specialty: "Implants & Crowns", 
               price: "$30 - $800",
-              img: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=800&q=80"
+              img: "https://scontent.fdad3-6.fna.fbcdn.net/v/t39.30808-1/560651685_799475406335450_1769819398433378863_n.jpg?stp=c68.12.1875.1875a_dst-jpg_s480x480_tt6&_nc_cat=110&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=jZJT5R0BJRYQ7kNvwHev9CM&_nc_oc=Adq0biRuLEJcn4YUMaKEsPGVFGvTHeq1iHl4DQ08x2xBa4OrchGbrT91CghqF6DgnuqaeJjvsCJf8zw26gBkMq6h&_nc_zt=24&_nc_ht=scontent.fdad3-6.fna&_nc_gid=ChosV_fkPMeYfmTBB1MzPg&_nc_ss=7b289&oh=00_Af7Vy_w3en3W_16Yp77WMtq21swHOY1HS6jobYWnRG3HiA&oe=6A07EF21"
             },
             { 
               name: "Serenity International", 
               address: "Hai Chau, central city access", 
               specialty: "Smile Aesthetics", 
               price: "$150 - $4500",
-              img: "https://images.unsplash.com/photo-1629909613654-28a3a7c45701?auto=format&fit=crop&w=800&q=80"
+              img: "https://lh3.googleusercontent.com/p/AF1QipOYhj3gOtFlLBbfeQKOoXKa_95YDHaAH9SffXBN=s1360-w1360-h1020-rw"
             }
           ].map((partner, idx) => (
             <div key={idx} className="bg-white rounded-[2.5rem] overflow-hidden group border border-gray-100 shadow-sm hover:shadow-2xl hover:border-brand-primary/20 transition-all cursor-pointer">
@@ -507,7 +758,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer Form */}
-      <section id="book-now" className="py-32 px-4">
+      <section id="book-now" className="py-32 px-4 scroll-mt-24">
         <div className="max-w-7xl mx-auto bg-white rounded-[3rem] overflow-hidden shadow-[0_30px_80px_rgba(15,23,42,0.08)] border border-gray-100 flex flex-col md:flex-row">
           <div className="bg-brand-section p-10 md:p-14 text-white md:w-[35%]">
             <p className="text-[11px] font-black uppercase tracking-[0.22em] text-gray-400 mb-4">BOOKING SUPPORT</p>
