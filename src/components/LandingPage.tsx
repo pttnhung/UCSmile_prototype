@@ -10,7 +10,8 @@ import {
   Plus,
   Minus,
   X,
-  Plane
+  Plane,
+  Search
 } from 'lucide-react';
 import { blogData, BlogPost } from '../constants/blogData';
 import BlogModal from './BlogModal';
@@ -265,14 +266,14 @@ const TREATMENTS: Treatment[] = [
 const CATEGORIES = ['General', 'Restorative', 'Implants', 'Orthodontics', 'Cosmetic'];
 
 const ORIGINS = {
-  au: { label: 'Australia' },
-  us: { label: 'USA' },
-  th: { label: 'Thailand' },
-  sg: { label: 'Singapore' },
-  kr: { label: 'South Korea' },
-  jp: { label: 'Japan' },
-  cn: { label: 'China' },
-  ru: { label: 'Russia' },
+  au: { label: 'Australia', short: 'AUS' },
+  us: { label: 'USA', short: 'USA' },
+  th: { label: 'Thailand', short: 'THA' },
+  sg: { label: 'Singapore', short: 'SGP' },
+  kr: { label: 'South Korea', short: 'KOR' },
+  jp: { label: 'Japan', short: 'JPN' },
+  cn: { label: 'China', short: 'CHN' },
+  ru: { label: 'Russia', short: 'RUS' },
 };
 
 interface TreatmentCardProps {
@@ -293,39 +294,45 @@ function TreatmentCard({
 }: TreatmentCardProps) {
   return (
     <div
-      className={`flex flex-col p-3 rounded-xl border-2 transition-all duration-300 text-left relative group ${
+      onClick={onToggle}
+      className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all duration-300 cursor-pointer group relative ${
         selected 
-        ? 'border-brand-primary bg-white shadow-md scale-[1.02]' 
-        : 'bg-white border-gray-100 hover:border-gray-200 text-brand-text hover:bg-gray-50/50 shadow-sm'
+        ? 'border-brand-primary bg-brand-primary/5 shadow-sm' 
+        : 'bg-white border-gray-100 hover:border-gray-200 text-brand-text'
       }`}
     >
-      <div className="flex items-center justify-between mb-1.5">
-        <div onClick={onToggle} className="cursor-pointer flex-grow pr-2">
-          <div className={`text-xs font-bold leading-tight ${selected ? 'text-brand-text' : 'text-gray-800'}`}>{t.name}</div>
+      <div className="flex flex-col flex-grow pr-2">
+        <div className={`text-[12px] sm:text-[13px] font-bold leading-tight uppercase tracking-tight transition-colors ${selected ? 'text-brand-text' : 'text-gray-800'}`}>
+          {t.name}
         </div>
-        <button 
-          onClick={onToggle} 
-          className={`p-1 rounded-full transition-colors ${selected ? 'bg-brand-primary text-brand-text' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'}`}
-        >
-          {selected ? (
-            <Minus className="w-3 h-3" />
-          ) : (
-            <Plus className="w-3 h-3" />
-          )}
-        </button>
+        
+        {t.hasQuantity && selected && (
+          <div 
+            onClick={(e) => e.stopPropagation()} 
+            className="flex items-center gap-3 mt-2 bg-white rounded-full px-2 py-0.5 self-start border border-brand-primary/30 shadow-sm"
+          >
+            <button onClick={() => onUpdateQuantity(-1)} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+              <Minus className="w-3 h-3 text-gray-600" />
+            </button>
+            <span className="text-[11px] font-black min-w-[0.8rem] text-center text-brand-text">{quantity}</span>
+            <button onClick={() => onUpdateQuantity(1)} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+              <Plus className="w-3 h-3 text-gray-600" />
+            </button>
+          </div>
+        )}
       </div>
-      
-      {t.hasQuantity && selected && (
-        <div className="flex items-center gap-2 mt-1.5 bg-white rounded-lg p-1 self-start border border-brand-primary/30 shadow-sm">
-          <button onClick={() => onUpdateQuantity(-1)} className="p-0.5 hover:bg-gray-100 rounded transition-colors">
-            <Minus className="w-2 h-2 text-gray-600" />
-          </button>
-          <span className="text-[10px] font-bold min-w-[0.5rem] text-center text-brand-text">{quantity}</span>
-          <button onClick={() => onUpdateQuantity(1)} className="p-0.5 hover:bg-gray-100 rounded transition-colors">
-            <Plus className="w-2 h-2 text-gray-600" />
-          </button>
-        </div>
-      )}
+
+      <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 shrink-0 ${
+        selected 
+        ? 'bg-brand-text text-white' 
+        : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'
+      }`}>
+        {selected ? (
+          <X className="w-3.5 h-3.5" />
+        ) : (
+          <Plus className="w-3.5 h-3.5" />
+        )}
+      </div>
     </div>
   );
 }
@@ -336,8 +343,12 @@ export default function LandingPage() {
   const [pricingFrom, setPricingFrom] = useState<keyof typeof ORIGINS>('au');
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [activeCategory, setActiveCategory] = useState('General');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredTreatments = TREATMENTS.filter(t => t.category === activeCategory);
+  const filteredTreatments = TREATMENTS.filter(t => 
+    (activeCategory === 'All' || t.category === activeCategory) &&
+    t.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const originKey = pricingFrom;
 
@@ -437,31 +448,44 @@ export default function LandingPage() {
               </div>
 
               <div className="bg-gray-50/80 rounded-xl p-4 border border-gray-100 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-                  <div>
-                    <label className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-500 block mb-0.5">TREATMENTS</label>
-                    <span className="text-[10px] font-bold text-gray-400">{selectedTreatments.length} SELECTED</span>
+                <div className="flex flex-col gap-3 mb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-[9px] font-black uppercase tracking-[0.18em] text-gray-500 block mb-0.5">TREATMENTS</label>
+                      <span className="text-[9px] font-bold text-gray-400">{selectedTreatments.length} SELECTED</span>
+                    </div>
+                  </div>
+                  {/* Category Selection - Grid for clarity on mobile */}
+                  <div className="grid grid-cols-2 xs:grid-cols-3 sm:flex sm:flex-wrap gap-1.5">
+                    {CATEGORIES.map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => setActiveCategory(cat)}
+                        className={`px-2 py-2 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-[0.05em] transition-all duration-300 text-center ${
+                          activeCategory === cat 
+                          ? 'bg-brand-text text-white border-2 border-brand-text shadow-md transform scale-[1.01]' 
+                          : 'bg-white text-gray-400 hover:text-gray-600 border border-gray-100'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                    <input 
+                      type="text"
+                      placeholder="Search dental treatments..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-white border-2 border-gray-50 rounded-xl pl-9 pr-3 py-2 text-xs font-bold text-brand-text focus:outline-none focus:border-brand-primary/30 transition-all shadow-sm placeholder:text-gray-300"
+                    />
                   </div>
                 </div>
 
-                {/* Category Pills */}
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                  {CATEGORIES.map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => setActiveCategory(cat)}
-                      className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.1em] transition-all duration-300 ${
-                        activeCategory === cat 
-                        ? 'bg-gray-100 text-brand-text border-2 border-brand-text' 
-                        : 'bg-white text-gray-400 hover:text-gray-600 border border-gray-100'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-full">
                   {filteredTreatments.length > 0 ? (
                     filteredTreatments.map(t => (
                       <TreatmentCard 
@@ -474,8 +498,8 @@ export default function LandingPage() {
                       />
                     ))
                   ) : (
-                    <div className="col-span-full py-12 text-center text-gray-400 text-xs font-bold uppercase tracking-widest">
-                      No treatments found in this category
+                    <div className="col-span-full py-12 text-center text-gray-400 text-[10px] font-black uppercase tracking-widest bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-100">
+                      No matches found
                     </div>
                   )}
                 </div>
@@ -492,44 +516,44 @@ export default function LandingPage() {
               </div>
 
               <div className="space-y-4 mb-8">
-                <div className="grid grid-cols-12 text-[10px] font-black text-gray-400 pb-2 border-b border-gray-100 uppercase tracking-widest">
-                  <div className="col-span-6">TREATMENT</div>
-                  <div className="col-span-3 text-right">~{ORIGINS[pricingFrom].label}</div>
-                  <div className="col-span-3 text-right">~VIETNAM</div>
+                <div className="grid grid-cols-12 text-[9px] sm:text-[10px] font-black text-gray-400 pb-2 border-b border-gray-100 uppercase tracking-widest gap-2">
+                  <div className="col-span-4 text-left">TREATMENT</div>
+                  <div className="col-span-4 text-right truncate">~{ORIGINS[pricingFrom].short}</div>
+                  <div className="col-span-4 text-right">~VIETNAM</div>
                 </div>
                 
                 {selectedTreatments.length === 0 ? (
                   <p className="text-center py-12 text-gray-400 font-bold uppercase tracking-widest text-[10px]">Pick your services to compare</p>
                 ) : (
-                  <div className="space-y-4 max-h-[450px] overflow-y-auto pr-1 custom-scrollbar">
+                  <div className="space-y-0">
                     {selectedTreatments.map(id => {
                       const t = TREATMENTS.find(item => item.id === id);
                       if (!t) return null;
                       return (
                         <div key={id} className="grid grid-cols-12 items-center gap-2 group py-3 border-b border-gray-50 last:border-0 relative">
-                          <div className="col-span-6 flex items-start gap-2 min-w-0">
+                          <div className="col-span-4 flex items-start gap-1.5 min-w-0 text-left">
                             <button 
                               onClick={() => toggleTreatment(id)}
-                              className="w-5 h-5 flex-shrink-0 mt-0.5 flex items-center justify-center rounded-md bg-gray-100 text-gray-400 transition-all hover:bg-red-50 hover:text-red-500"
-                              title="Remove treatment"
+                              className="w-4 h-4 flex-shrink-0 mt-0.5 flex items-center justify-center rounded-md bg-gray-100 text-gray-400 transition-all hover:bg-red-50 hover:text-red-500"
+                              title="Remove"
                             >
-                              <X className="w-3 h-3" />
+                              <X className="w-2.5 h-2.5" />
                             </button>
-                            <div className="min-w-0 pr-1">
-                                <div className="text-[13px] font-bold text-gray-900 leading-tight">
+                            <div className="min-w-0 pr-0.5">
+                                <div className="text-[11px] sm:text-[13px] font-bold text-gray-900 leading-tight">
                                   {t.name}
                                 </div>
-                                {(quantities[id] > 1) && <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Quantity: {quantities[id]}</p>}
+                                {(quantities[id] > 1) && <p className="text-[8px] text-gray-400 font-bold uppercase tracking-wider mt-0.5 text-left">Qty: {quantities[id]}</p>}
                             </div>
                           </div>
-                          <div className="col-span-3 text-right">
-                            <span className="text-[13px] font-bold text-gray-400">
-                              ~${Math.round((t.prices[originKey]?.min || 0) * (quantities[id] || 1)).toLocaleString()} - ${Math.round((t.prices[originKey]?.max || 0) * (quantities[id] || 1)).toLocaleString()}
+                          <div className="col-span-4 text-right">
+                            <span className="text-[10px] sm:text-[12px] md:text-[13px] font-bold text-gray-400 leading-tight block whitespace-nowrap">
+                              ${Math.round((t.prices[originKey]?.min || 0) * (quantities[id] || 1)).toLocaleString()} - ${Math.round((t.prices[originKey]?.max || 0) * (quantities[id] || 1)).toLocaleString()}
                             </span>
                           </div>
-                          <div className="col-span-3 text-right">
-                            <span className="text-[13px] font-black text-brand-text tracking-tight">
-                              ~${Math.round((t.prices.vn.min || 0) * (quantities[id] || 1)).toLocaleString()} - ${Math.round((t.prices.vn.max || 0) * (quantities[id] || 1)).toLocaleString()}
+                          <div className="col-span-4 text-right">
+                            <span className="text-[10px] sm:text-[12px] md:text-[13px] font-black text-brand-text tracking-tight block whitespace-nowrap">
+                              ${Math.round((t.prices.vn.min || 0) * (quantities[id] || 1)).toLocaleString()} - ${Math.round((t.prices.vn.max || 0) * (quantities[id] || 1)).toLocaleString()}
                             </span>
                           </div>
                         </div>
@@ -636,16 +660,16 @@ export default function LandingPage() {
           {[
             { 
               name: "East Meets West Dental", 
-              address: "Son Tra district, near My Khe beach", 
+              address: "Da Nang", 
               specialty: "Implants & Crowns", 
-              price: "$30 - $800",
+              price: "~$30 - $800",
               img: "https://scontent.fdad3-6.fna.fbcdn.net/v/t39.30808-1/560651685_799475406335450_1769819398433378863_n.jpg?stp=c68.12.1875.1875a_dst-jpg_s480x480_tt6&_nc_cat=110&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=jZJT5R0BJRYQ7kNvwHev9CM&_nc_oc=Adq0biRuLEJcn4YUMaKEsPGVFGvTHeq1iHl4DQ08x2xBa4OrchGbrT91CghqF6DgnuqaeJjvsCJf8zw26gBkMq6h&_nc_zt=24&_nc_ht=scontent.fdad3-6.fna&_nc_gid=ChosV_fkPMeYfmTBB1MzPg&_nc_ss=7b289&oh=00_Af7Vy_w3en3W_16Yp77WMtq21swHOY1HS6jobYWnRG3HiA&oe=6A07EF21"
             },
             { 
               name: "Serenity International", 
-              address: "Hai Chau, central city access", 
+              address: "Da Nang", 
               specialty: "Smile Aesthetics", 
-              price: "$150 - $4500",
+              price: "~$150 - $4500",
               img: "https://lh3.googleusercontent.com/p/AF1QipOYhj3gOtFlLBbfeQKOoXKa_95YDHaAH9SffXBN=s1360-w1360-h1020-rw"
             }
           ].map((partner, idx) => (
@@ -756,6 +780,21 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Mobile Floating Progress Summary */}
+      {selectedTreatments.length > 0 && (
+        <div className="fixed bottom-6 left-4 right-4 z-50 md:hidden animate-in fade-in slide-in-from-bottom-5 duration-500">
+          <div className="bg-brand-text text-white p-4 rounded-3xl shadow-2xl flex items-center justify-between border border-white/10 backdrop-blur-xl">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mb-0.5">ESTIMATED TOTAL SAVINGS</p>
+              <p className="text-xl font-black text-brand-primary tracking-tight">~${Math.round(totalSavings).toLocaleString()}</p>
+            </div>
+            <a href="#book-now" className="bg-brand-primary text-brand-text px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all">
+              SEND REQUEST
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* Footer Form */}
       <section id="book-now" className="py-32 px-4 scroll-mt-24">
