@@ -424,10 +424,11 @@ export default function LandingPage() {
     ]
   };
 
-  const filteredTreatments = TREATMENTS.filter(t => 
-    (activeCategory === 'All' || t.category === activeCategory || t.secondaryCategory === activeCategory) &&
-    t.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTreatments = TREATMENTS.filter(t => {
+    const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase());
+    if (searchQuery.trim() !== "") return matchesSearch;
+    return (activeCategory === 'All' || t.category === activeCategory || t.secondaryCategory === activeCategory) && matchesSearch;
+  });
 
   const originKey = pricingFrom;
 
