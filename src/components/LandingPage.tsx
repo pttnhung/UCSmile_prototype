@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { motion } from 'motion/react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   ChevronDown, 
   ShieldCheck, 
@@ -345,7 +345,27 @@ export default function LandingPage() {
   const [activeCategory, setActiveCategory] = useState('General');
   const [searchQuery, setSearchQuery] = useState('');
   const [travelCity, setTravelCity] = useState<'danang' | 'hcm'>('danang');
-  const [showMobileSavings, setShowMobileSavings] = useState(true);
+  const [isComparisonVisible, setIsComparisonVisible] = useState(false);
+  const comparisonRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsComparisonVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+
+    if (comparisonRef.current) {
+      observer.observe(comparisonRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [selectedTreatments]);
+
+  const scrollToComparison = () => {
+    comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
 
   const TRAVEL_DATA = {
     danang: [
@@ -428,7 +448,6 @@ export default function LandingPage() {
   const toggleTreatment = (id: string) => {
     setSelectedTreatments(prev => {
       const isSelected = prev.includes(id);
-      if (!isSelected) setShowMobileSavings(true); // Re-show if new treatment added
       if (isSelected) {
         const next = prev.filter(t => t !== id);
         const nextQuantities = { ...quantities };
@@ -566,7 +585,7 @@ export default function LandingPage() {
           </div>
 
           {/* Breakdown Pane */}
-          <div className="p-6 md:p-8 lg:w-[42%] md:border-l border-gray-100 bg-white text-left">
+          <div ref={comparisonRef} id="comparison-details" className="p-6 md:p-8 lg:w-[42%] md:border-l border-gray-100 bg-white text-left">
             <div className="lg:mt-32 h-full rounded-[1.5rem] bg-gray-50/20 p-5 sm:p-6 border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.01)]">
               <div className="flex items-center justify-between mb-6">
                 <span className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">ESTIMATED COMPARISON</span>
@@ -836,27 +855,28 @@ export default function LandingPage() {
       </section>
 
       {/* Mobile Floating Progress Summary */}
-      {selectedTreatments.length > 0 && showMobileSavings && (
-        <div className="fixed bottom-6 left-4 right-4 z-50 md:hidden animate-in fade-in slide-in-from-bottom-5 duration-500">
-          <div className="bg-brand-text text-white p-4 py-5 rounded-3xl shadow-2xl flex items-center justify-between border border-white/10 backdrop-blur-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-brand-primary/5 rounded-full -mr-12 -mt-12" />
-            
-            <div className="relative z-10 pl-2">
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">ESTIMATED TOTAL SAVINGS</p>
-              <div className="flex items-baseline gap-2">
-                <p className="text-2xl font-black text-brand-primary tracking-tight">~${Math.round(totalSavings).toLocaleString()}</p>
+      <AnimatePresence>
+        {selectedTreatments.length > 0 && !isComparisonVisible && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20, x: -10 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-6 left-4 right-24 z-50 md:hidden"
+          >
+            <div 
+              onClick={scrollToComparison}
+              className="bg-brand-text text-white p-2.5 px-5 rounded-2xl shadow-2xl flex items-center border border-white/10 backdrop-blur-xl relative overflow-hidden cursor-pointer active:scale-95 transition-transform"
+            >
+              <div className="absolute top-0 right-0 w-16 h-16 bg-brand-primary/5 rounded-full -mr-8 -mt-8" />
+              
+              <div className="relative z-10">
+                <p className="text-[7px] font-black uppercase tracking-[0.2em] text-gray-500 mb-0.5">EST. SAVINGS</p>
+                <p className="text-base font-black text-brand-primary tracking-tight leading-none">~${Math.round(totalSavings).toLocaleString()}</p>
               </div>
             </div>
-
-            <button 
-              onClick={() => setShowMobileSavings(false)}
-              className="relative z-10 w-10 h-10 flex items-center justify-center rounded-2xl bg-white/5 text-white/40 hover:bg-white/10 transition-all border border-white/5"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Footer Form */}
       <section id="book-now" className="py-32 px-4 scroll-mt-24">

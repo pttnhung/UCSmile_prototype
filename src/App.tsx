@@ -31,7 +31,6 @@ const ScrollToTop = () => {
 };
 
 function Layout() {
-  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
 
@@ -102,89 +101,17 @@ function Layout() {
         </div>
       </footer>
 
-      {/* AI Chat Button */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
-        <AnimatePresence>
-          {isAIChatOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.9 }}
-              className="w-[min(92vw,24rem)] h-[32rem] overflow-hidden rounded-[2rem] border border-gray-100 bg-white shadow-[0_25px_80px_rgba(14,90,99,0.3)] mb-2 flex flex-col"
-            >
-              <div className="bg-brand-text p-6 text-white flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-brand-secondary flex items-center justify-center text-brand-text">
-                    <Headset className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold uppercase tracking-widest">UCsmile AI</h3>
-                    <p className="text-[10px] text-brand-secondary font-black">ONLINE NOW</p>
-                  </div>
-                </div>
-                <button onClick={() => setIsAIChatOpen(false)} className="text-white/60 hover:text-white transition-colors">
-                  <Plus className="w-5 h-5 rotate-45" />
-                </button>
-              </div>
-              <div className="flex-grow p-6 space-y-4 overflow-y-auto bg-brand-bg/50">
-                <div className="flex gap-2">
-                  <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-500">
-                    <Headset className="w-3 h-3" />
-                  </div>
-                  <div className="bg-white border border-gray-100 p-4 rounded-2xl rounded-tl-none shadow-sm text-sm text-left">
-                    Hi! I'm your AI assistant. I can help you understand dental treatments and costs in Da Nang.
-                  </div>
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <div className="bg-brand-primary text-white p-4 rounded-2xl rounded-tr-none shadow-sm text-sm text-left">
-                    What are the costs for dental implants?
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-500">
-                    <Headset className="w-3 h-3" />
-                  </div>
-                  <div className="bg-white border border-gray-100 p-4 rounded-2xl rounded-tl-none shadow-sm text-sm text-left">
-                    Dental implants in Da Nang typically start around $780 USD including the abutment and crown. This is roughly 70-80% cheaper than in Australia or the US.
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 border-t border-gray-100">
-                <div className="relative">
-                  <input 
-                    type="text" 
-                    placeholder="Ask me anything..." 
-                    className="w-full rounded-2xl border border-gray-200 pl-4 pr-12 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm"
-                  />
-                  <button className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl bg-brand-primary text-white flex items-center justify-center">
-                    <Search className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        <div className="flex items-center gap-3">
-          <motion.a 
-            href="https://wa.me/84905000000" 
-            target="_blank"
-            rel="noopener noreferrer"
-            whileHover={{ scale: 1.1, y: -5 }}
-            whileTap={{ scale: 0.9 }}
-            className="w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-[0_10px_30px_rgba(37,211,102,0.3)] hover:bg-[#20ba5a] transition-colors"
-          >
-            <MessageCircle className="w-6 h-6 fill-current" />
-          </motion.a>
-          <motion.button 
-            whileHover={{ scale: 1.1, y: -5 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setIsAIChatOpen(!isAIChatOpen)}
-            className={`w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all ${isAIChatOpen ? 'bg-brand-text text-brand-secondary ring-2 ring-brand-secondary/50' : 'bg-white border border-gray-100 text-brand-text hover:bg-brand-section'}`}
-          >
-            <Headset className="w-6 h-6" />
-          </motion.button>
-        </div>
+      <div className="fixed bottom-6 right-6 z-50">
+        <motion.a 
+          href="https://wa.me/84905000000" 
+          target="_blank"
+          rel="noopener noreferrer"
+          whileHover={{ scale: 1.1, y: -5 }}
+          whileTap={{ scale: 0.9 }}
+          className="w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-[0_10px_30px_rgba(37,211,102,0.3)] hover:bg-[#20ba5a] transition-colors"
+        >
+          <MessageCircle className="w-6 h-6 fill-current" />
+        </motion.a>
       </div>
     </div>
   );
