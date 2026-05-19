@@ -344,6 +344,63 @@ export default function LandingPage() {
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [activeCategory, setActiveCategory] = useState('General');
   const [searchQuery, setSearchQuery] = useState('');
+  const [travelCity, setTravelCity] = useState<'danang' | 'hcm'>('danang');
+  const [showMobileSavings, setShowMobileSavings] = useState(true);
+
+  const TRAVEL_DATA = {
+    danang: [
+      { 
+        name: "My Khe Beach", 
+        desc: "Golden sands & crystal waters.",
+        tag: "BEACHES",
+        img: "https://images.unsplash.com/photo-1559592413-7cea83781fab?auto=format&fit=crop&w=800&q=80" 
+      },
+      { 
+        name: "Ba Na Hills", 
+        desc: "European flair in the clouds.",
+        tag: "ADVENTURE",
+        img: "https://images.unsplash.com/photo-1580983231364-7546ccf76d49?auto=format&fit=crop&w=800&q=80" 
+      },
+      { 
+        name: "Dragon Bridge", 
+        desc: "The heartbeat of the city.",
+        tag: "CITY LIFE",
+        img: "https://images.unsplash.com/photo-1555940280-66bf87aa823d?auto=format&fit=crop&w=800&q=80" 
+      },
+      { 
+        name: "Hoi An Town", 
+        desc: "Ancient colors & lanterns.",
+        tag: "CULTURE",
+        img: "https://images.unsplash.com/photo-1555930606-b6d13bd6e3a5?auto=format&fit=crop&w=800&q=80" 
+      }
+    ],
+    hcm: [
+      { 
+        name: "Ben Thanh Market", 
+        desc: "Iconic market with local flavors.",
+        tag: "CULTURE",
+        img: "https://i.pinimg.com/736x/e7/0b/b3/e70bb3498307183e82385c13ce987d1f.jpg" 
+      },
+      { 
+        name: "Nguyen Hue Street", 
+        desc: "Vibrant pedestrian heart of the city.",
+        tag: "CITY LIFE",
+        img: "https://i.pinimg.com/1200x/df/a1/fe/dfa1fe84afd4ac5fc6922cae1d12ae61.jpg" 
+      },
+      { 
+        name: "Landmark 81", 
+        desc: "Modern skyline with panoramic views.",
+        tag: "LUXURY",
+        img: "https://i.pinimg.com/736x/1a/20/7c/1a207c5cda790f9bb0be0972963a7f2a.jpg" 
+      },
+      { 
+        name: "Saigon Opera House", 
+        desc: "French colonial architecture & art.",
+        tag: "ART",
+        img: "https://i.pinimg.com/1200x/d4/83/8f/d4838f5d61d6087e8087d539178908f9.jpg" 
+      }
+    ]
+  };
 
   const filteredTreatments = TREATMENTS.filter(t => 
     (activeCategory === 'All' || t.category === activeCategory) &&
@@ -371,6 +428,7 @@ export default function LandingPage() {
   const toggleTreatment = (id: string) => {
     setSelectedTreatments(prev => {
       const isSelected = prev.includes(id);
+      if (!isSelected) setShowMobileSavings(true); // Re-show if new treatment added
       if (isSelected) {
         const next = prev.filter(t => t !== id);
         const nextQuantities = { ...quantities };
@@ -517,9 +575,11 @@ export default function LandingPage() {
 
               <div className="space-y-4 mb-8">
                 <div className="grid grid-cols-12 text-[9px] sm:text-[10px] font-black text-gray-400 pb-2 border-b border-gray-100 uppercase tracking-widest gap-2">
-                  <div className="col-span-4 text-left">TREATMENT</div>
-                  <div className="col-span-4 text-right truncate">~{ORIGINS[pricingFrom].short}</div>
-                  <div className="col-span-4 text-right">~VIETNAM</div>
+                  <div className="col-span-3 text-left">TREATMENT</div>
+                  <div className="col-span-9 grid grid-cols-2 gap-2 text-right">
+                    <div className="truncate">~{ORIGINS[pricingFrom].short}</div>
+                    <div>~VIETNAM</div>
+                  </div>
                 </div>
                 
                 {selectedTreatments.length === 0 ? (
@@ -531,7 +591,7 @@ export default function LandingPage() {
                       if (!t) return null;
                       return (
                         <div key={id} className="grid grid-cols-12 items-center gap-2 group py-3 border-b border-gray-50 last:border-0 relative">
-                          <div className="col-span-4 flex items-start gap-1.5 min-w-0 text-left">
+                          <div className="col-span-3 flex items-start gap-1.5 min-w-0 text-left">
                             <button 
                               onClick={() => toggleTreatment(id)}
                               className="w-4 h-4 flex-shrink-0 mt-0.5 flex items-center justify-center rounded-md bg-gray-100 text-gray-400 transition-all hover:bg-red-50 hover:text-red-500"
@@ -546,12 +606,10 @@ export default function LandingPage() {
                                 {(quantities[id] > 1) && <p className="text-[8px] text-gray-400 font-bold uppercase tracking-wider mt-0.5 text-left">Qty: {quantities[id]}</p>}
                             </div>
                           </div>
-                          <div className="col-span-4 text-right">
+                          <div className="col-span-9 grid grid-cols-2 gap-2 text-right">
                             <span className="text-[10px] sm:text-[12px] md:text-[13px] font-bold text-gray-400 leading-tight block whitespace-nowrap">
                               ${Math.round((t.prices[originKey]?.min || 0) * (quantities[id] || 1)).toLocaleString()} - ${Math.round((t.prices[originKey]?.max || 0) * (quantities[id] || 1)).toLocaleString()}
                             </span>
-                          </div>
-                          <div className="col-span-4 text-right">
                             <span className="text-[10px] sm:text-[12px] md:text-[13px] font-black text-brand-text tracking-tight block whitespace-nowrap">
                               ${Math.round((t.prices.vn.min || 0) * (quantities[id] || 1)).toLocaleString()} - ${Math.round((t.prices.vn.max || 0) * (quantities[id] || 1)).toLocaleString()}
                             </span>
@@ -662,14 +720,12 @@ export default function LandingPage() {
               name: "East Meets West Dental", 
               address: "Da Nang", 
               specialty: "Implants & Crowns", 
-              price: "~$30 - $800",
               img: "https://scontent.fdad3-6.fna.fbcdn.net/v/t39.30808-1/560651685_799475406335450_1769819398433378863_n.jpg?stp=c68.12.1875.1875a_dst-jpg_s480x480_tt6&_nc_cat=110&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=jZJT5R0BJRYQ7kNvwHev9CM&_nc_oc=Adq0biRuLEJcn4YUMaKEsPGVFGvTHeq1iHl4DQ08x2xBa4OrchGbrT91CghqF6DgnuqaeJjvsCJf8zw26gBkMq6h&_nc_zt=24&_nc_ht=scontent.fdad3-6.fna&_nc_gid=ChosV_fkPMeYfmTBB1MzPg&_nc_ss=7b289&oh=00_Af7Vy_w3en3W_16Yp77WMtq21swHOY1HS6jobYWnRG3HiA&oe=6A07EF21"
             },
             { 
               name: "Serenity International", 
               address: "Da Nang", 
               specialty: "Smile Aesthetics", 
-              price: "~$150 - $4500",
               img: "https://lh3.googleusercontent.com/p/AF1QipOYhj3gOtFlLBbfeQKOoXKa_95YDHaAH9SffXBN=s1360-w1360-h1020-rw"
             }
           ].map((partner, idx) => (
@@ -696,12 +752,6 @@ export default function LandingPage() {
                     </div>
                     <span className="text-[13px] font-bold text-gray-600">{partner.specialty}</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full bg-gray-50 flex items-center justify-center text-gray-400">
-                      <DollarSign className="w-3 h-3" />
-                    </div>
-                    <span className="text-[14px] font-black text-brand-text">{partner.price}</span>
-                  </div>
                 </div>
                 <div className="flex items-center justify-between border-t border-gray-50 pt-6 text-gray-400 font-black text-[10px] uppercase tracking-widest group-hover:text-brand-text transition-colors">
                    <span>CONTACT CONCIERGE TO BOOK</span>
@@ -715,45 +765,49 @@ export default function LandingPage() {
       {/* Explore Da Nang */}
       <section id="travel" className="bg-brand-section py-24 px-4 rounded-t-[4rem]">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8 text-left">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8 text-left">
             <div className="max-w-2xl">
               <span className="text-gray-400 font-bold tracking-[0.2em] mb-4 block uppercase text-sm font-sans">TRAVEL & EXPERIENCE</span>
-              <h2 className="font-serif text-4xl md:text-6xl font-black leading-tight text-white italic">Explore Da Nang while you heal.</h2>
+              <h2 className="font-serif text-4xl md:text-6xl font-black leading-tight text-white italic">Explore {travelCity === 'danang' ? 'Da Nang' : 'Ho Chi Minh'} while you heal.</h2>
+              
+              <div className="flex gap-4 mt-8">
+                <button 
+                  onClick={() => setTravelCity('danang')}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                    travelCity === 'danang' 
+                    ? 'bg-brand-primary text-brand-text shadow-lg shadow-brand-primary/20' 
+                    : 'bg-white/5 text-white/40 hover:bg-white/10'
+                  }`}
+                >
+                  Da Nang
+                </button>
+                <button 
+                  onClick={() => setTravelCity('hcm')}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                    travelCity === 'hcm' 
+                    ? 'bg-brand-primary text-brand-text shadow-lg shadow-brand-primary/20' 
+                    : 'bg-white/5 text-white/40 hover:bg-white/10'
+                  }`}
+                >
+                  Ho Chi Minh
+                </button>
+              </div>
             </div>
             <p className="text-white/60 max-w-sm text-lg leading-relaxed font-medium">
-              Voted one of the most beautiful cities in the world. From white sands to ancient towns, your recovery is a vacation.
+              {travelCity === 'danang' 
+                ? "Voted one of the most beautiful cities in the world. From white sands to ancient towns, your recovery is a vacation."
+                : "The vibrant heartbeat of Vietnam. From historic markets to futuristic skyscrapers, experience the ultimate urban energy."
+              }
             </p>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { 
-                name: "My Khe Beach", 
-                desc: "Golden sands & crystal waters.",
-                tag: "BEACHES",
-                img: "https://images.unsplash.com/photo-1559592413-7cea83781fab?auto=format&fit=crop&w=800&q=80" 
-              },
-              { 
-                name: "Ba Na Hills", 
-                desc: "European flair in the clouds.",
-                tag: "ADVENTURE",
-                img: "https://images.unsplash.com/photo-1580983231364-7546ccf76d49?auto=format&fit=crop&w=800&q=80" 
-              },
-              { 
-                name: "Dragon Bridge", 
-                desc: "The heartbeat of the city.",
-                tag: "CITY LIFE",
-                img: "https://images.unsplash.com/photo-1555940280-66bf87aa823d?auto=format&fit=crop&w=800&q=80" 
-              },
-              { 
-                name: "Hoi An Town", 
-                desc: "Ancient colors & lanterns.",
-                tag: "CULTURE",
-                img: "https://images.unsplash.com/photo-1555930606-b6d13bd6e3a5?auto=format&fit=crop&w=800&q=80" 
-              }
-            ].map((loc, idx) => (
+            {TRAVEL_DATA[travelCity].map((loc, idx) => (
               <motion.div 
-                key={idx}
+                key={`${travelCity}-${idx}`}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
                 whileHover={{ y: -10 }}
                 className="group relative h-[450px] rounded-[2.5rem] overflow-hidden cursor-pointer shadow-2xl"
                 onClick={() => openDestinationBlog(loc.name)}
@@ -782,16 +836,24 @@ export default function LandingPage() {
       </section>
 
       {/* Mobile Floating Progress Summary */}
-      {selectedTreatments.length > 0 && (
+      {selectedTreatments.length > 0 && showMobileSavings && (
         <div className="fixed bottom-6 left-4 right-4 z-50 md:hidden animate-in fade-in slide-in-from-bottom-5 duration-500">
-          <div className="bg-brand-text text-white p-4 rounded-3xl shadow-2xl flex items-center justify-between border border-white/10 backdrop-blur-xl">
-            <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mb-0.5">ESTIMATED TOTAL SAVINGS</p>
-              <p className="text-xl font-black text-brand-primary tracking-tight">~${Math.round(totalSavings).toLocaleString()}</p>
+          <div className="bg-brand-text text-white p-4 py-5 rounded-3xl shadow-2xl flex items-center justify-between border border-white/10 backdrop-blur-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-brand-primary/5 rounded-full -mr-12 -mt-12" />
+            
+            <div className="relative z-10 pl-2">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">ESTIMATED TOTAL SAVINGS</p>
+              <div className="flex items-baseline gap-2">
+                <p className="text-2xl font-black text-brand-primary tracking-tight">~${Math.round(totalSavings).toLocaleString()}</p>
+              </div>
             </div>
-            <a href="#book-now" className="bg-brand-primary text-brand-text px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all">
-              SEND REQUEST
-            </a>
+
+            <button 
+              onClick={() => setShowMobileSavings(false)}
+              className="relative z-10 w-10 h-10 flex items-center justify-center rounded-2xl bg-white/5 text-white/40 hover:bg-white/10 transition-all border border-white/5"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         </div>
       )}
