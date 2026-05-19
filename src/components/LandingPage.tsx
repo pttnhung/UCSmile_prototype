@@ -28,6 +28,7 @@ interface Treatment {
   prices: Record<string, PriceRange>;
   hasQuantity?: boolean;
   category: string;
+  secondaryCategory?: string;
 }
 
 const TREATMENTS: Treatment[] = [
@@ -166,9 +167,10 @@ const TREATMENTS: Treatment[] = [
   },
   { 
     id: 'implant', 
-    name: 'Single Implant (incl. Crown)', 
+    name: 'Implant', 
     hasQuantity: true, 
     category: 'Implants',
+    secondaryCategory: 'General',
     prices: {
       vn: { min: 670, max: 2285 },
       th: { min: 2385, max: 4000 },
@@ -423,7 +425,7 @@ export default function LandingPage() {
   };
 
   const filteredTreatments = TREATMENTS.filter(t => 
-    (activeCategory === 'All' || t.category === activeCategory) &&
+    (activeCategory === 'All' || t.category === activeCategory || t.secondaryCategory === activeCategory) &&
     t.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -534,19 +536,31 @@ export default function LandingPage() {
                   </div>
                   {/* Category Selection - Grid for clarity on mobile */}
                   <div className="grid grid-cols-2 xs:grid-cols-3 sm:flex sm:flex-wrap gap-1.5">
-                    {CATEGORIES.map(cat => (
-                      <button
-                        key={cat}
-                        onClick={() => setActiveCategory(cat)}
-                        className={`px-2 py-2 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-[0.05em] transition-all duration-300 text-center ${
-                          activeCategory === cat 
-                          ? 'bg-brand-text text-white border-2 border-brand-text shadow-md transform scale-[1.01]' 
-                          : 'bg-white text-gray-400 hover:text-gray-600 border border-gray-100'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
+                    {CATEGORIES.map(cat => {
+                      const count = selectedTreatments.filter(id => {
+                        const t = TREATMENTS.find(item => item.id === id);
+                        return t?.category === cat || t?.secondaryCategory === cat;
+                      }).length;
+
+                      return (
+                        <button
+                          key={cat}
+                          onClick={() => setActiveCategory(cat)}
+                          className={`px-3 py-2 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-[0.05em] transition-all duration-300 text-center flex items-center justify-center gap-2 ${
+                            activeCategory === cat 
+                            ? 'bg-brand-text text-white border-2 border-brand-text shadow-md transform scale-[1.01]' 
+                            : 'bg-white text-gray-400 hover:text-gray-600 border border-gray-100'
+                          }`}
+                        >
+                          <span>{cat}</span>
+                          {count > 0 && (
+                            <span className="w-4 h-4 rounded-full bg-brand-primary text-brand-text flex items-center justify-center text-[8px] font-bold">
+                              {count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {/* Search Bar */}
