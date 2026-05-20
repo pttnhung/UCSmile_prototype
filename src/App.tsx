@@ -61,9 +61,8 @@ function Layout() {
         scrolled ? 'bg-brand-bg/95 backdrop-blur-md shadow-lg py-3' : 'bg-transparent'
       }`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <Logo size="md" />
-            <span className="text-brand-text font-black text-2xl tracking-tighter uppercase">UC<span className="text-brand-primary">SMILE</span></span>
+          <Link to="/" className="flex items-center">
+            <Logo size="md" variant="full" />
           </Link>
           <div className="hidden md:flex items-center gap-10 text-[13px] font-black uppercase tracking-widest text-gray-900">
             <Link to="/#why-us" className="hover:text-gray-500 transition-colors">Why Us</Link>
@@ -88,9 +87,8 @@ function Layout() {
       {/* Footer Rail */}
       <footer className="py-20 px-4 bg-brand-bg border-t border-gray-100">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-          <Link to="/" className="flex items-center gap-3">
-            <Logo size="sm" />
-            <span className="text-brand-text font-black text-xl tracking-tighter uppercase">UC<span className="text-brand-primary">SMILE</span></span>
+          <Link to="/" className="flex items-center">
+            <Logo size="sm" variant="full" />
           </Link>
           <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-gray-400 text-center">UCsmile PLATFORM PROTOTYPE.</p>
           <div className="flex items-center gap-10 text-[10px] uppercase tracking-[0.2em] font-black text-gray-500">
