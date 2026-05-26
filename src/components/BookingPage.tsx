@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { encodeBooking } from './codec';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
 import html2canvas from 'html2canvas';
@@ -148,7 +149,20 @@ export default function BookingPage() {
       const uniqueId = `UCS-${Math.floor(1000 + Math.random() * 9000)}-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`;
       
       // Web verification URL inside QR Code (so any standard scanner redirects to a sleek, beautiful check-in pass page)
-      const qrData = `${window.location.origin}${window.location.pathname || ''}#/verify?id=${encodeURIComponent(uniqueId)}&name=${encodeURIComponent(fullName)}&service=${encodeURIComponent(treatment)}&clinic=${encodeURIComponent(clinic)}&date=${encodeURIComponent(preferredDate)}&session=${encodeURIComponent(preferredSession === 'morning' ? 'Morning Session (08:00 - 12:00)' : 'Afternoon Session (13:30 - 17:30)')}&phone=${encodeURIComponent(whatsappPhone)}&nationality=${encodeURIComponent(nationality || '')}&destination=${encodeURIComponent(destination || '')}&notes=${encodeURIComponent(additionalDetails || '')}&email=${encodeURIComponent(email || '')}`;
+      const token = encodeBooking({
+        id: uniqueId,
+        name: fullName,
+        service: treatment,
+        clinic: clinic,
+        date: preferredDate,
+        session: preferredSession === 'morning' ? 'Morning Session (08:00 - 12:00)' : 'Afternoon Session (13:30 - 17:30)',
+        phone: whatsappPhone,
+        nationality: nationality || '',
+        destination: destination || '',
+        notes: additionalDetails || '',
+        email: email || ''
+      });
+      const qrData = `${window.location.origin}${window.location.pathname || ''}#/verify?p=${token}`;
 
       let generatedUrl = '';
       try {
@@ -341,12 +355,12 @@ export default function BookingPage() {
                 <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-[#FFD151]/5 to-transparent rounded-full -mr-20 -mt-20 pointer-events-none" />
                 
                 <div className="text-left relative z-10 space-y-4">
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#FFD151] block">BOOKING SUPPORT</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#FFD151] block">SECURE BOOKING</span>
                   <h1 className="font-serif text-4xl md:text-[2.75rem] leading-[1.1] font-bold text-white">
-                    Dental Advice.<br />Booking Support.
+                    Confirm Your<br />Dental Appointment.
                   </h1>
                   <p className="text-gray-400 text-xs font-semibold leading-relaxed max-w-sm pt-2">
-                    Enter your consultation or clinical visit requirements. We will secure priority local booking arrangements and coordinates.
+                    Enter your clinical booking requirements below. We will secure priority slot allocation and premium coordinator service on-site.
                   </p>
                 </div>
 
@@ -355,19 +369,19 @@ export default function BookingPage() {
                   <div className="flex items-start gap-4">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#FFD151] mt-2 flex-shrink-0 shadow-lg shadow-[#FFD151]/20" />
                     <p className="text-gray-300 text-[15px] md:text-base leading-relaxed font-semibold">
-                      Tell us what treatment you need.
+                      Specify your desired treatment and facility.
                     </p>
                   </div>
                   <div className="flex items-start gap-4">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#FFD151] mt-2 flex-shrink-0 shadow-lg shadow-[#FFD151]/20" />
                     <p className="text-gray-300 text-[15px] md:text-base leading-relaxed font-semibold">
-                      We'll suggest suitable clinics and next steps.
+                      Select your preferred calendar dates.
                     </p>
                   </div>
                   <div className="flex items-start gap-4">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#FFD151] mt-2 flex-shrink-0 shadow-lg shadow-[#FFD151]/20" />
                     <p className="text-gray-300 text-[15px] md:text-base leading-relaxed font-semibold">
-                      We'll help you book a time that works.
+                      Generate your high-priority check-in QR pass.
                     </p>
                   </div>
                 </div>
@@ -546,7 +560,7 @@ export default function BookingPage() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-2.5 border-b border-gray-100 pb-3 text-left">
                       <span className="text-[#FFB800] text-lg font-bold">🩺</span>
-                      <h3 className="font-bold text-lg text-gray-900">Select Services</h3>
+                      <h3 className="font-bold text-lg text-gray-900">Select Services <span className="text-red-500">*</span></h3>
                     </div>
 
                     <div className="text-left">
@@ -554,8 +568,9 @@ export default function BookingPage() {
                         value={treatment}
                         onChange={(e) => setTreatment(e.target.value)}
                         className="w-full bg-[#FAF9F6]/50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-brand-text focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 transition-all appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%20%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%239CA3AF%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.85rem_center] bg-no-repeat font-medium text-gray-700"
+                        required
                       >
-                        <option disabled>Choose your treatment</option>
+                        <option disabled value="Choose your treatment">Choose your treatment</option>
                         {TREATMENTS.map(t => (
                           <option key={t.id} value={t.name}>{t.name}</option>
                         ))}
@@ -651,26 +666,17 @@ export default function BookingPage() {
 
                 {/* Credentials list */}
                 <div className="p-8 space-y-6">
-                  <div className="grid grid-cols-2 gap-4 text-left border-b border-white/5 pb-4">
-                    <div>
-                      <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest block mb-0.5">Booking Code</span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-base font-black text-[#FFD151] tracking-tight">{bookingId}</span>
-                        <button 
-                          onClick={copyToClipboard}
-                          className="p-1 rounded bg-white/5 hover:bg-white/10 text-[#FFD151] cursor-pointer transition-colors"
-                          title="Copy Code"
-                        >
-                          {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest block mb-0.5">Verification</span>
-                      <div className="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-wide border border-emerald-500/20">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        VERIFIED
-                      </div>
+                  <div className="text-left border-b border-white/5 pb-4">
+                    <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest block mb-0.5">Booking Code</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-base font-black text-[#FFD151] tracking-tight">{bookingId}</span>
+                      <button 
+                        onClick={copyToClipboard}
+                        className="p-1 rounded bg-white/5 hover:bg-white/10 text-[#FFD151] cursor-pointer transition-colors"
+                        title="Copy Code"
+                      >
+                        {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      </button>
                     </div>
                   </div>
 
@@ -724,15 +730,6 @@ export default function BookingPage() {
                     Show this Booking QR Pass to the clinic's front desk upon check-in to instantly verify priority scheduling details.
                   </p>
                 </div>
-
-                {/* Secure match info timestamp */}
-                <div className="bg-white/5 py-4 px-6 flex items-center justify-between text-left text-xs border-t border-white/5">
-                  <div className="flex items-center gap-2 text-gray-400">
-                    <Clock className="w-4 h-4 text-[#FFD151]" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Booking Verified</span>
-                  </div>
-                  <span className="text-[10px] font-extrabold text-[#FFD151]">{String(new Date().getFullYear())} SECURITY MATCH</span>
-                </div>
               </div>
 
               {/* Action Buttons: Download controllers & reset */}
@@ -747,16 +744,6 @@ export default function BookingPage() {
                   <Download className="w-4.5 h-4.5 text-[#FFB800]" />
                   <span>Download Booking Pass Image (.PNG)</span>
                 </button>
-
-                <a 
-                  href={getWhatsAppLink()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-4.5 bg-[#25D366] hover:bg-[#1ebd5d] text-gray-900 shadow-md font-extrabold text-sm tracking-widest uppercase rounded-2xl flex items-center justify-center gap-3 transition-colors cursor-pointer"
-                >
-                  <MessageCircle className="w-5 h-5 fill-current text-gray-900" />
-                  <span>Connect Concierge via WhatsApp</span>
-                </a>
 
                 {/* State resets */}
                 <div className="grid grid-cols-2 gap-3 pt-4">

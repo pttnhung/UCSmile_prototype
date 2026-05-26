@@ -15,23 +15,28 @@ import {
   FileText 
 } from 'lucide-react';
 import Logo from './Logo';
+import { decodeBooking } from './codec';
 
 export default function VerifyPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [checkedIn, setCheckedIn] = React.useState(false);
 
-  // Parse parameters from verification URL
-  const bookingId = searchParams.get('id') || 'UCS-PENDING-XX';
-  const patientName = searchParams.get('name') || 'Valued Guest';
-  const service = searchParams.get('service') || 'Premium Dental Solution';
-  const clinic = searchParams.get('clinic') || 'Any Vetted Partner Clinic';
-  const date = searchParams.get('date') || 'To Be Arranged';
-  const session = searchParams.get('session') || 'Flexible Time Window';
-  const phone = searchParams.get('phone') || ''; 
-  const nationality = searchParams.get('nationality') || '';
-  const email = searchParams.get('email') || '';
-  const destination = searchParams.get('destination') || '';
-  const notes = searchParams.get('notes') || '';
+  // Parse parameters from verification URL (supporting compressed token 'p' first)
+  const token = searchParams.get('p');
+  const decoded = token ? decodeBooking(token) : null;
+
+  const bookingId = decoded ? decoded.id : (searchParams.get('id') || 'UCS-PENDING-XX');
+  const patientName = decoded ? decoded.name : (searchParams.get('name') || searchParams.get('nm') || 'Valued Guest');
+  const service = decoded ? decoded.service : (searchParams.get('service') || searchParams.get('sv') || 'Premium Dental Solution');
+  const clinic = decoded ? decoded.clinic : (searchParams.get('clinic') || searchParams.get('cl') || 'Any Vetted Partner Clinic');
+  const date = decoded ? decoded.date : (searchParams.get('date') || searchParams.get('dt') || 'To Be Arranged');
+  const session = decoded ? decoded.session : (searchParams.get('session') || searchParams.get('sn') || 'Flexible Time Window');
+  const phone = decoded ? decoded.phone : (searchParams.get('phone') || searchParams.get('ph') || ''); 
+  const nationality = decoded ? decoded.nationality : (searchParams.get('nationality') || searchParams.get('na') || '');
+  const email = decoded ? decoded.email : (searchParams.get('email') || searchParams.get('em') || '');
+  const destination = decoded ? decoded.destination : (searchParams.get('destination') || searchParams.get('ds') || '');
+  const notes = decoded ? decoded.notes : (searchParams.get('notes') || searchParams.get('ns') || '');
 
   // Format destination nice text
   const formattedDestination = destination.toLowerCase() === 'danang' 
@@ -99,7 +104,7 @@ export default function VerifyPage() {
 
           <div className="p-6 space-y-5">
             
-            {/* Top Row: Booking ID & Status */}
+            {/* Top Row: Booking ID & Dynamic Status */}
             <div className="flex justify-between items-center pb-4 border-b border-gray-100">
               <div className="text-left font-sans">
                 <span className="text-[9px] uppercase tracking-wider text-gray-400 font-extrabold block mb-0.5">Pass Code</span>
@@ -107,10 +112,17 @@ export default function VerifyPage() {
               </div>
               <div className="text-right flex flex-col items-end">
                 <span className="text-[9px] uppercase tracking-wider text-gray-400 font-extrabold block mb-1">Status</span>
-                <span className="inline-flex bg-emerald-50 border border-emerald-100 text-emerald-600 text-[9px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full items-center gap-1 shadow-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Active
-                </span>
+                {checkedIn ? (
+                  <span className="inline-flex bg-emerald-50 border border-emerald-100 text-emerald-600 text-[9px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full items-center gap-1 shadow-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    Checked-In
+                  </span>
+                ) : (
+                  <span className="inline-flex bg-amber-50 border border-amber-100 text-[#FFD151] dark:text-amber-600 text-[9px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full items-center gap-1 shadow-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    Confirmed
+                  </span>
+                )}
               </div>
             </div>
 
@@ -237,11 +249,32 @@ export default function VerifyPage() {
         </div>
 
         {/* Action button redirect */}
-        <div className="mt-8 flex flex-col items-center">
+        <div className="mt-8 flex flex-col items-center gap-3 w-full">
+          <button 
+            onClick={() => setCheckedIn(prev => !prev)}
+            className={`w-full py-3.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer ${
+              checkedIn 
+                ? 'bg-emerald-500 border-emerald-500 text-white shadow-emerald-500/10 hover:bg-emerald-600' 
+                : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            {checkedIn ? (
+              <>
+                <Check className="w-4 h-4 stroke-[3px]" />
+                <span>Patient Check-In Confirmed</span>
+              </>
+            ) : (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Confirm Patient Arrival</span>
+              </>
+            )}
+          </button>
+
           <button 
             id="go-home-footer-btn"
             onClick={() => navigate('/')}
-            className="px-8 py-3 bg-gray-950 text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-[#FFB800] hover:text-gray-950 transition-all shadow-[0_12px_25px_rgba(26,28,30,0.1)] flex items-center gap-1.5"
+            className="w-full py-3.5 bg-gray-950 text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-[#FFB800] hover:text-gray-950 transition-all shadow-[0_12px_25px_rgba(26,28,30,0.1)] flex items-center justify-center gap-1.5"
           >
             Return to UCSmile Home
           </button>

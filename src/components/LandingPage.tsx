@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { encodeBooking } from './codec';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -391,7 +392,20 @@ export default function LandingPage() {
     const uniqueId = `UCS-${randomNum}-${randomChars}`;
 
     // Construct elegant verification link
-    const qrData = `${window.location.origin}${window.location.pathname || ''}#/verify?id=${encodeURIComponent(uniqueId)}&name=${encodeURIComponent(fullName)}&service=${encodeURIComponent(treatment)}&clinic=Any%20Vetted%20Partner%20Clinic&date=${encodeURIComponent(preferredDate)}&session=morning&phone=${encodeURIComponent(whatsappPhone)}&nationality=${encodeURIComponent(nationality || 'N/A')}&destination=danang&notes=${encodeURIComponent(additionalDetails || '')}&email=`;
+    const token = encodeBooking({
+      id: uniqueId,
+      name: fullName,
+      service: treatment,
+      clinic: 'Any Vetted Partner Clinic',
+      date: preferredDate,
+      session: 'morning',
+      phone: whatsappPhone,
+      nationality: nationality || 'N/A',
+      destination: 'danang',
+      notes: additionalDetails || '',
+      email: ''
+    });
+    const qrData = `${window.location.origin}${window.location.pathname || ''}#/verify?p=${token}`;
     const generatedUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}`;
 
     const bookingSessionData = {
