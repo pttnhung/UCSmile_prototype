@@ -665,13 +665,7 @@ export default function BookingPage() {
                         </button>
                       </div>
                     </div>
-                    <div>
-                      <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest block mb-0.5">Verification</span>
-                      <div className="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-wide border border-emerald-500/20">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        VERIFIED
-                      </div>
-                    </div>
+                  
                   </div>
 
                   {/* Structured Patient and Booking details */}
