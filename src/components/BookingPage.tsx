@@ -147,19 +147,8 @@ export default function BookingPage() {
     setTimeout(async () => {
       const uniqueId = `UCS-${Math.floor(1000 + Math.random() * 9000)}-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`;
       
-      // Clear pure check-in pass payload
-      const qrData = JSON.stringify({
-        org: 'UCSMILE',
-        type: 'Dental Tourist Check-In Pass',
-        passId: uniqueId,
-        patientName: fullName,
-        service: treatment,
-        destination: destination === 'danang' ? 'Da Nang' : 'Ho Chi Minh',
-        facility: clinic,
-        appointmentDate: preferredDate,
-        timeWindow: preferredSession === 'morning' ? 'Morning Session (08:00 - 12:00)' : 'Afternoon Session (13:30 - 17:30)',
-        verified: true
-      });
+      // Web verification URL inside QR Code (so any standard scanner redirects to a sleek, beautiful check-in pass page)
+      const qrData = `${window.location.origin}${window.location.pathname || ''}#/verify?id=${encodeURIComponent(uniqueId)}&name=${encodeURIComponent(fullName)}&service=${encodeURIComponent(treatment)}&clinic=${encodeURIComponent(clinic)}&date=${encodeURIComponent(preferredDate)}&session=${encodeURIComponent(preferredSession === 'morning' ? 'Morning Session (08:00 - 12:00)' : 'Afternoon Session (13:30 - 17:30)')}&phone=${encodeURIComponent(whatsappPhone)}`;
 
       let generatedUrl = '';
       try {

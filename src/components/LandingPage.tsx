@@ -389,7 +389,10 @@ export default function LandingPage() {
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const randomChars = alphabet[Math.floor(Math.random() * 26)] + alphabet[Math.floor(Math.random() * 26)];
     const uniqueId = `UCS-${randomNum}-${randomChars}`;
-    const generatedUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(uniqueId)}`;
+
+    // Construct elegant verification link
+    const qrData = `${window.location.origin}${window.location.pathname || ''}#/verify?id=${encodeURIComponent(uniqueId)}&name=${encodeURIComponent(fullName)}&service=${encodeURIComponent(treatment)}&clinic=Any%20Vetted%20Partner%20Clinic&date=${encodeURIComponent(preferredDate)}&session=morning&phone=${encodeURIComponent(whatsappPhone)}`;
+    const generatedUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}`;
 
     const bookingSessionData = {
       fullName,

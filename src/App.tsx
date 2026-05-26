@@ -22,6 +22,7 @@ import Logo from './components/Logo';
 import LandingPage from './components/LandingPage';
 import BlogPage from './components/BlogPage';
 import BookingPage from './components/BookingPage';
+import VerifyPage from './components/VerifyPage';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -97,6 +98,7 @@ function Layout() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/blogs" element={<BlogPage />} />
         <Route path="/booking" element={<BookingPage />} />
+        <Route path="/verify" element={<VerifyPage />} />
       </Routes>
 
       {/* Footer Rail */}
