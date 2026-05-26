@@ -12,7 +12,9 @@ import {
   Phone, 
   Globe, 
   Mail, 
-  FileText 
+  FileText,
+  X,
+  AlertTriangle
 } from 'lucide-react';
 import Logo from './Logo';
 import { decodeBooking } from './codec';
@@ -20,7 +22,8 @@ import { decodeBooking } from './codec';
 export default function VerifyPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [checkedIn, setCheckedIn] = React.useState(false);
+  const [bookingStatus, setBookingStatus] = React.useState<'confirmed' | 'cancelled' | 'checked_in'>('confirmed');
+  const [showConfirmModal, setShowConfirmModal] = React.useState(false);
 
   // Parse parameters from verification URL (supporting compressed token 'p' first)
   const token = searchParams.get('p');
@@ -37,6 +40,15 @@ export default function VerifyPage() {
   const email = decoded ? decoded.email : (searchParams.get('email') || searchParams.get('em') || '');
   const destination = decoded ? decoded.destination : (searchParams.get('destination') || searchParams.get('ds') || '');
   const notes = decoded ? decoded.notes : (searchParams.get('notes') || searchParams.get('ns') || '');
+
+  React.useEffect(() => {
+    const savedStatus = localStorage.getItem(`ucsmile_status_${bookingId}`);
+    if (savedStatus === 'checked_in' || savedStatus === 'cancelled' || savedStatus === 'confirmed') {
+      setBookingStatus(savedStatus);
+    } else {
+      setBookingStatus('confirmed');
+    }
+  }, [bookingId]);
 
   // Format destination nice text
   const formattedDestination = destination.toLowerCase() === 'danang' 
@@ -71,25 +83,48 @@ export default function VerifyPage() {
         {/* Dynamic Verifiable Header */}
         <div className="flex flex-col items-center mb-6 text-center">
           <div id="verified-icon-container" className="relative mb-3">
-            {/* Smooth animated concentric radial glow rings */}
-            <motion.div 
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: [1, 1.25, 1], opacity: [0.12, 0.35, 0.12] }}
-              transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
-              className="absolute -inset-4 rounded-full bg-emerald-500/10 blur-sm pointer-events-none"
-            />
-            <motion.div 
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 18 }}
-              className="w-14 h-14 bg-gradient-to-tr from-emerald-500 to-emerald-400 rounded-full flex items-center justify-center border-4 border-white shadow-[0_8px_20px_rgba(16,185,129,0.15)]"
-            >
-              <Check className="w-6 h-6 text-white stroke-[3.5]" />
-            </motion.div>
+            {bookingStatus === 'cancelled' ? (
+              <>
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: [1, 1.25, 1], opacity: [0.12, 0.35, 0.12] }}
+                  transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
+                  className="absolute -inset-4 rounded-full bg-red-500/10 blur-sm pointer-events-none"
+                />
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+                  className="w-14 h-14 bg-gradient-to-tr from-red-500 to-red-400 rounded-full flex items-center justify-center border-4 border-white shadow-[0_8px_20px_rgba(239,68,68,0.15)]"
+                >
+                  <X className="w-6 h-6 text-white stroke-[3.5]" />
+                </motion.div>
+              </>
+            ) : (
+              <>
+                {/* Smooth animated concentric radial glow rings */}
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: [1, 1.25, 1], opacity: [0.12, 0.35, 0.12] }}
+                  transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
+                  className="absolute -inset-4 rounded-full bg-emerald-500/10 blur-sm pointer-events-none"
+                />
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+                  className="w-14 h-14 bg-gradient-to-tr from-emerald-500 to-emerald-400 rounded-full flex items-center justify-center border-4 border-white shadow-[0_8px_20px_rgba(16,185,129,0.15)]"
+                >
+                  <Check className="w-6 h-6 text-white stroke-[3.5]" />
+                </motion.div>
+              </>
+            )}
           </div>
           
           <span className="text-[10px] uppercase font-black tracking-[0.25em] text-[#FFB800] mb-0.5">UCSmile Secure Gateway</span>
-          <h1 className="text-xl font-bold text-gray-900 tracking-tight uppercase">Booking Verified</h1>
+          <h1 className="text-xl font-bold text-gray-900 tracking-tight uppercase">
+            {bookingStatus === 'cancelled' ? 'Booking Cancelled' : 'Booking Verified'}
+          </h1>
         </div>
 
         {/* Elegant Boarding Pass Style Card */}
@@ -97,9 +132,15 @@ export default function VerifyPage() {
           
           {/* Header Band */}
           <div className="py-3.5 px-6 text-center border-b border-gray-100 bg-[#FAF9F5]/70">
-            <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-emerald-600 tracking-wider uppercase">
-              <ShieldCheck className="w-4 h-4 text-emerald-500" /> Check-In Pass
-            </div>
+            {bookingStatus === 'cancelled' ? (
+              <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-red-600 tracking-wider uppercase">
+                <AlertTriangle className="w-4 h-4 text-red-500 animate-pulse" /> Invalid / Cancelled Pass
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-emerald-600 tracking-wider uppercase">
+                <ShieldCheck className="w-4 h-4 text-emerald-500" /> Check-In Pass
+              </div>
+            )}
           </div>
 
           <div className="p-6 space-y-5">
@@ -112,13 +153,18 @@ export default function VerifyPage() {
               </div>
               <div className="text-right flex flex-col items-end">
                 <span className="text-[9px] uppercase tracking-wider text-gray-400 font-extrabold block mb-1">Status</span>
-                {checkedIn ? (
+                {bookingStatus === 'checked_in' ? (
                   <span className="inline-flex bg-emerald-50 border border-emerald-100 text-emerald-600 text-[9px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full items-center gap-1 shadow-sm">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     Checked-In
                   </span>
+                ) : bookingStatus === 'cancelled' ? (
+                  <span className="inline-flex bg-red-50 border border-red-100 text-red-600 text-[9px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full items-center gap-1 shadow-sm font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    Cancelled
+                  </span>
                 ) : (
-                  <span className="inline-flex bg-amber-50 border border-amber-100 text-[#FFD151] dark:text-amber-600 text-[9px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full items-center gap-1 shadow-sm">
+                  <span className="inline-flex bg-amber-50 border border-amber-100 text-amber-600 dark:text-amber-600 text-[9px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full items-center gap-1 shadow-sm">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                     Confirmed
                   </span>
@@ -251,17 +297,33 @@ export default function VerifyPage() {
         {/* Action button redirect */}
         <div className="mt-8 flex flex-col items-center gap-3 w-full">
           <button 
-            onClick={() => setCheckedIn(prev => !prev)}
+            type="button"
+            onClick={() => {
+              if (bookingStatus === 'checked_in') {
+                // If already checked in, toggle back to confirmed
+                localStorage.setItem(`ucsmile_status_${bookingId}`, 'confirmed');
+                setBookingStatus('confirmed');
+              } else {
+                setShowConfirmModal(true);
+              }
+            }}
             className={`w-full py-3.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer ${
-              checkedIn 
+              bookingStatus === 'checked_in' 
                 ? 'bg-emerald-500 border-emerald-500 text-white shadow-emerald-500/10 hover:bg-emerald-600' 
-                : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700 hover:bg-gray-50'
+                : bookingStatus === 'cancelled'
+                  ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100 shadow-red-500/5'
+                  : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
           >
-            {checkedIn ? (
+            {bookingStatus === 'checked_in' ? (
               <>
                 <Check className="w-4 h-4 stroke-[3px]" />
                 <span>Patient Check-In Confirmed</span>
+              </>
+            ) : bookingStatus === 'cancelled' ? (
+              <>
+                <AlertTriangle className="w-4 h-4 text-red-500 animate-pulse" />
+                <span>Re-activate & Check-In Patient</span>
               </>
             ) : (
               <>
@@ -279,6 +341,59 @@ export default function VerifyPage() {
             Return to UCSmile Home
           </button>
         </div>
+
+        {/* Secure modal confirmation overlay for dental clinic arrival check-in */}
+        {showConfirmModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full border border-gray-100 shadow-2xl text-center space-y-6">
+              {bookingStatus === 'cancelled' ? (
+                <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500">
+                  <AlertTriangle className="w-8 h-8" />
+                </div>
+              ) : (
+                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-emerald-500">
+                  <ShieldCheck className="w-8 h-8" />
+                </div>
+              )}
+              <div className="space-y-2">
+                <h3 className="font-serif text-xl font-bold text-gray-900">
+                  {bookingStatus === 'cancelled' ? 'Re-activate & Confirm Arrival?' : 'Confirm Patient Arrival?'}
+                </h3>
+                <p className="text-gray-500 text-xs leading-relaxed">
+                  {bookingStatus === 'cancelled' ? (
+                    <span>
+                      This booking was previously <strong>cancelled</strong>. Re-activating will update patient <strong>{patientName}</strong>'s status to Checked-In at the clinic.
+                    </span>
+                  ) : (
+                    <span>
+                      The appointment status for patient <strong>{patientName}</strong> will be updated to Checked-In at the clinic to proceed with treatment.
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.setItem(`ucsmile_status_${bookingId}`, 'checked_in');
+                    setBookingStatus('checked_in');
+                    setShowConfirmModal(false);
+                  }}
+                  className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+                >
+                  {bookingStatus === 'cancelled' ? 'Re-activate & Check-In' : 'Confirm Check-In'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmModal(false)}
+                  className="w-full py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+                >
+                  Cancel / Return
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

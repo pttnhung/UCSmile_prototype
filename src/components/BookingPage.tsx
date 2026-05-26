@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { encodeBooking } from './codec';
 import { motion, AnimatePresence } from 'motion/react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import { 
   Calendar, 
@@ -45,6 +45,7 @@ const NATIONALITIES = [
 ];
 
 export default function BookingPage() {
+  const [searchParams] = useSearchParams();
   const passRef = useRef<HTMLDivElement>(null);
 
   // Form states
@@ -61,6 +62,16 @@ export default function BookingPage() {
   const [treatment, setTreatment] = useState('Choose your treatment');
   const [additionalDetails, setAdditionalDetails] = useState('');
 
+  // Referral state
+  const [referralCode, setReferralCode] = useState(() => {
+    const fromUrl = searchParams.get('ref') || searchParams.get('referral') || searchParams.get('referrer');
+    if (fromUrl) {
+      localStorage.setItem('ucsmile_referral_code', fromUrl);
+      return fromUrl;
+    }
+    return localStorage.getItem('ucsmile_referral_code') || '';
+  });
+
   // App states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
@@ -68,6 +79,8 @@ export default function BookingPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const [formError, setFormError] = useState('');
+  const [bookingStatus, setBookingStatus] = useState<'confirmed' | 'cancelled' | 'checked_in'>('confirmed');
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   // Vetted clinics list mapping
   const clinicsByDest: Record<string, string[]> = {
@@ -105,12 +118,37 @@ export default function BookingPage() {
         setAdditionalDetails(data.additionalDetails || '');
         setBookingId(data.bookingId || '');
         setQrCodeUrl(data.qrCodeUrl || '');
+        if (data.referralCode) {
+          setReferralCode(data.referralCode);
+        }
         setBookingConfirmed(true);
+
+        const currentId = data.bookingId;
+        if (currentId) {
+          const storedStatus = localStorage.getItem(`ucsmile_status_${currentId}`);
+          if (storedStatus === 'cancelled' || storedStatus === 'checked_in' || storedStatus === 'confirmed') {
+            setBookingStatus(storedStatus);
+          } else {
+            setBookingStatus('confirmed');
+          }
+        }
       } catch (err) {
         console.error('Error restoring active booking session', err);
       }
     }
   }, []);
+
+  // Update status when booking ID is set or loaded
+  useEffect(() => {
+    if (bookingId) {
+      const storedStatus = localStorage.getItem(`ucsmile_status_${bookingId}`);
+      if (storedStatus === 'cancelled' || storedStatus === 'checked_in' || storedStatus === 'confirmed') {
+        setBookingStatus(storedStatus);
+      } else {
+        setBookingStatus('confirmed');
+      }
+    }
+  }, [bookingId]);
 
   // Sync clinic choose when destination changes
   useEffect(() => {
@@ -160,7 +198,8 @@ export default function BookingPage() {
         nationality: nationality || '',
         destination: destination || '',
         notes: additionalDetails || '',
-        email: email || ''
+        email: email || '',
+        referral: referralCode
       });
       const qrData = `${window.location.origin}${window.location.pathname || ''}#/verify?p=${token}`;
 
@@ -179,6 +218,8 @@ export default function BookingPage() {
         console.error('Error generating QR', err);
       }
 
+      localStorage.setItem(`ucsmile_status_${uniqueId}`, 'confirmed');
+      setBookingStatus('confirmed');
       setBookingId(uniqueId);
       setBookingConfirmed(true);
       setIsSubmitting(false);
@@ -196,7 +237,8 @@ export default function BookingPage() {
         preferredSession,
         additionalDetails,
         bookingId: uniqueId,
-        qrCodeUrl: generatedUrl
+        qrCodeUrl: generatedUrl,
+        referralCode
       };
       localStorage.setItem('ucsmile_saved_booking', JSON.stringify(bookingSessionData));
 
@@ -355,12 +397,12 @@ export default function BookingPage() {
                 <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-[#FFD151]/5 to-transparent rounded-full -mr-20 -mt-20 pointer-events-none" />
                 
                 <div className="text-left relative z-10 space-y-4">
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#FFD151] block">SECURE BOOKING</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#FFD151] block font-mono">PRIORITY TICKET</span>
                   <h1 className="font-serif text-4xl md:text-[2.75rem] leading-[1.1] font-bold text-white">
-                    Confirm Your<br />Dental Appointment.
+                    Confirm Your<br />Scheduled Visit.
                   </h1>
                   <p className="text-gray-400 text-xs font-semibold leading-relaxed max-w-sm pt-2">
-                    Enter your clinical booking requirements below. We will secure priority slot allocation and premium coordinator service on-site.
+                    This priority form is strictly reserved for patients who have already finalized their itinerary with a UCSmile consultant. Input your pre-arranged details below to generate your check-in pass.
                   </p>
                 </div>
 
@@ -369,19 +411,19 @@ export default function BookingPage() {
                   <div className="flex items-start gap-4">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#FFD151] mt-2 flex-shrink-0 shadow-lg shadow-[#FFD151]/20" />
                     <p className="text-gray-300 text-[15px] md:text-base leading-relaxed font-semibold">
-                      Specify your desired treatment and facility.
+                      Confirm your pre-arranged treatment & clinic.
                     </p>
                   </div>
                   <div className="flex items-start gap-4">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#FFD151] mt-2 flex-shrink-0 shadow-lg shadow-[#FFD151]/20" />
                     <p className="text-gray-300 text-[15px] md:text-base leading-relaxed font-semibold">
-                      Select your preferred calendar dates.
+                      Input your scheduled arrival date.
                     </p>
                   </div>
                   <div className="flex items-start gap-4">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#FFD151] mt-2 flex-shrink-0 shadow-lg shadow-[#FFD151]/20" />
                     <p className="text-gray-300 text-[15px] md:text-base leading-relaxed font-semibold">
-                      Generate your high-priority check-in QR pass.
+                      Generate your high-priority check-in Pass.
                     </p>
                   </div>
                 </div>
@@ -392,21 +434,32 @@ export default function BookingPage() {
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <h5 className="font-bold text-white text-sm leading-snug">5-Star Rated Practice</h5>
-                    <p className="text-[#999999] text-[11px] font-bold uppercase tracking-wider">Join 12,000+ happy patients.</p>
+                    <h5 className="font-bold text-white text-sm leading-snug">5-Star Partner Clinics</h5>
+                    <p className="text-[#999999] text-[11px] font-bold uppercase tracking-wider">Quality Vetted Diagnostics</p>
                   </div>
                 </div>
               </div>
 
               {/* RIGHT SIDE Booking Form Segment */}
               <div className="col-span-12 lg:col-span-7 p-8 md:p-12 lg:p-14 flex flex-col justify-between">
+                
+                {/* Warning banner specifying pre-finalized schedule only */}
+                <div className="mb-6 p-4 rounded-2xl bg-amber-50/50 border border-[#FFD151]/30 text-left">
+                  <p className="text-[11px] text-amber-800 font-bold leading-relaxed flex items-start gap-2">
+                    <span className="text-sm mt-0.5">⚠️</span>
+                    <span>
+                      <strong>Note:</strong> This form is strictly for patients who have <strong>already finalized their itinerary</strong> with a consultant. Details will be cross-checked during clinic check-in.
+                    </span>
+                  </p>
+                </div>
+
                 <form onSubmit={handleBookingSubmit} className="space-y-9">
                   
                   {/* Part A: Patient Profile */}
                   <div className="space-y-5">
                     <div className="flex items-center gap-2.5 border-b border-gray-100 pb-3 text-left">
                       <User className="w-5 h-5 text-[#FFB800]" />
-                      <h3 className="font-bold text-lg text-gray-900">Personal Details</h3>
+                      <h3 className="font-bold text-lg text-gray-900">Patient Identification</h3>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-5 text-left">
@@ -419,7 +472,7 @@ export default function BookingPage() {
                           required
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
-                          placeholder="Enter your full name"
+                          placeholder="Your complete name"
                           className="w-full bg-[#FAF9F6]/50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-brand-text focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 transition-all placeholder:text-gray-400"
                         />
                       </div>
@@ -433,7 +486,7 @@ export default function BookingPage() {
                           required
                           value={whatsappPhone}
                           onChange={(e) => setWhatsappPhone(e.target.value)}
-                          placeholder="+1 (555) 000-0000"
+                          placeholder="Registered phone number"
                           className="w-full bg-[#FAF9F6]/50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-brand-text focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 transition-all placeholder:text-gray-400"
                         />
                       </div>
@@ -442,7 +495,7 @@ export default function BookingPage() {
                     <div className="grid md:grid-cols-2 gap-5 text-left">
                       <div>
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">
-                          EMAIL
+                          EMAIL ADDRESS
                         </label>
                         <input 
                           type="email" 
@@ -474,27 +527,27 @@ export default function BookingPage() {
                   <div className="space-y-5">
                     <div className="flex items-center gap-2.5 border-b border-gray-100 pb-3 text-left">
                       <Calendar className="w-5 h-5 text-[#FFB800]" />
-                      <h3 className="font-bold text-lg text-gray-900">Appointment Info</h3>
+                      <h3 className="font-bold text-lg text-gray-900">Confirmed Appointment Info</h3>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-5 text-left">
                       <div>
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">
-                          PREFERRED DATE <span className="text-red-500">*</span>
+                          CONFIRMED DATE <span className="text-red-500">*</span>
                         </label>
                         <input 
                           type="text" 
                           required
                           value={preferredDate}
                           onChange={(e) => setPreferredDate(e.target.value)}
-                          placeholder="dd/mm/yyyy or Flexible Week"
+                          placeholder="đd/mm/yyyy (e.g. 15/06/2026)"
                           className="w-full bg-[#FAF9F6]/50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-brand-text focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 transition-all placeholder:text-gray-400"
                         />
                       </div>
 
                       <div>
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">
-                          CITY <span className="text-red-500">*</span>
+                          CONFIRMED CITY <span className="text-red-500">*</span>
                         </label>
                         <select 
                           value={destination}
@@ -509,7 +562,7 @@ export default function BookingPage() {
 
                     <div className="text-left">
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">
-                        PREFERRED CLINIC
+                        CONFIRMED CLINIC
                       </label>
                       <select 
                         value={clinic}
@@ -524,7 +577,7 @@ export default function BookingPage() {
 
                     <div className="text-left">
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 ml-1">
-                        PREFERRED SESSION
+                        CONFIRMED SESSION
                       </label>
                       <div className="grid grid-cols-2 gap-4">
                         <button
@@ -659,9 +712,30 @@ export default function BookingPage() {
                 <span className="absolute right-0 top-[32%] w-6 h-6 rounded-full bg-[#FAF9F6] -mr-3 z-30" />
 
                 {/* Header Band */}
-                <div className="p-8 text-center border-b border-white/5 bg-gradient-to-r from-gray-900/40 via-[#141618] to-gray-900/40">
-                  <span className="text-[10px] font-black text-[#FFD151] uppercase tracking-[0.25em] block mb-1">UCSMILE</span>
-                  <h2 className="text-xl font-bold uppercase tracking-wider text-white">Booking QR Pass</h2>
+                <div className="p-8 text-center border-b border-white/5 bg-gradient-to-r from-gray-900/40 via-[#141618] to-gray-900/40 flex flex-col sm:flex-row justify-between items-center gap-4 px-10">
+                  <div className="text-left">
+                    <span className="text-[10px] font-black text-[#FFD151] uppercase tracking-[0.25em] block mb-1">UCSMILE</span>
+                    <h2 className="text-xl font-bold uppercase tracking-wider text-white">Booking QR Pass</h2>
+                  </div>
+                  <div className="text-right flex flex-col items-end">
+                    <span className="text-[9px] uppercase tracking-wider text-gray-500 font-extrabold block mb-1">Pass Status</span>
+                    {bookingStatus === 'checked_in' ? (
+                      <span className="inline-flex bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[9px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full items-center gap-1 shadow-sm">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        Checked-In
+                      </span>
+                    ) : bookingStatus === 'cancelled' ? (
+                      <span className="inline-flex bg-red-500/15 border border-red-500/30 text-red-400 text-[9px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full items-center gap-1 shadow-sm animate-pulse">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                        Cancelled
+                      </span>
+                    ) : (
+                      <span className="inline-flex bg-amber-500/15 border border-amber-500/30 text-[#FFD151] text-[9px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full items-center gap-1 shadow-sm">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        Confirmed
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Credentials list */}
@@ -745,15 +819,25 @@ export default function BookingPage() {
                   <span>Download Booking Pass Image (.PNG)</span>
                 </button>
 
-                {/* State resets */}
+                {/* State resets with confirmation built with React states */}
                 <div className="grid grid-cols-2 gap-3 pt-4">
-                  <button
-                    onClick={handleReset}
-                    className="p-3.5 rounded-xl bg-white border border-gray-200 text-xs font-black uppercase tracking-wider hover:bg-[#FFF9F9] text-[#FF4D4D] hover:border-[#FFCCCC] transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <RefreshCw className="w-4.5 h-4.5" />
-                    <span>Cancel / New Booking</span>
-                  </button>
+                  {bookingStatus === 'cancelled' ? (
+                    <button
+                      onClick={handleReset}
+                      className="p-3.5 rounded-xl bg-white border border-gray-200 text-xs font-black uppercase tracking-wider hover:bg-gray-50 text-gray-900 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <RefreshCw className="w-4.5 h-4.5 text-[#FFB800]" />
+                      <span>New Booking Form</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowCancelConfirm(true)}
+                      className="p-3.5 rounded-xl bg-white border border-gray-200 text-xs font-black uppercase tracking-wider hover:bg-[#FFF9F9] text-[#FF4D4D] hover:border-[#FFCCCC] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <RefreshCw className="w-4.5 h-4.5" />
+                      <span>Cancel Appointment</span>
+                    </button>
+                  )}
 
                   <Link
                     to="/"
@@ -762,6 +846,53 @@ export default function BookingPage() {
                     <span>Back to Home</span>
                   </Link>
                 </div>
+
+                {/* Secure custom cancel modal overlay */}
+                <AnimatePresence>
+                  {showCancelConfirm && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                      <motion.div
+                        initial={{ scale: 0.95, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.95, opacity: 0 }}
+                        className="bg-white rounded-3xl p-8 max-w-sm w-full border border-gray-150 shadow-2xl text-center space-y-6"
+                      >
+                        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500">
+                          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="font-serif text-xl font-bold text-gray-900">Cancel Appointment?</h3>
+                          <p className="text-gray-500 text-xs leading-relaxed">
+                            Your guaranteed priority slot and VIP coordinator support will be cancelled. This action is final.
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              // Perform state changes
+                              localStorage.setItem(`ucsmile_status_${bookingId}`, 'cancelled');
+                              setBookingStatus('cancelled');
+                              setShowCancelConfirm(false);
+                            }}
+                            className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white font-extrabold text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+                          >
+                            Confirm Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowCancelConfirm(false)}
+                            className="w-full py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+                          >
+                            Keep Appointment
+                          </button>
+                        </div>
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
 
               </div>
 

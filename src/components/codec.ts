@@ -10,6 +10,7 @@ export interface BookingData {
   email?: string;
   destination?: string;
   notes?: string;
+  referral?: string;
 }
 
 export function encodeBooking(booking: BookingData): string {
@@ -25,6 +26,7 @@ export function encodeBooking(booking: BookingData): string {
     em: booking.email || '',
     ds: booking.destination || '',
     ns: booking.notes || '',
+    rf: booking.referral || '',
   };
 
   const cleaned: Record<string, string> = {};
@@ -73,6 +75,7 @@ export function decodeBooking(token: string): BookingData | null {
       email: shortObj.em || '',
       destination: shortObj.ds || '',
       notes: shortObj.ns || '',
+      referral: shortObj.rf || '',
     };
   } catch (error) {
     console.error('Failed to decode booking token', error);
