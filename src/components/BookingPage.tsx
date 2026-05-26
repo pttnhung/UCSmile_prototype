@@ -323,10 +323,6 @@ export default function BookingPage() {
             <ArrowLeft className="w-4 h-4 text-[#FFD151]" />
             <span>Back to Home</span>
           </Link>
-          <div className="bg-white px-4 py-2 rounded-full border border-gray-100/90 flex items-center gap-2 shadow-sm">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#FFD151] animate-pulse"></span>
-            <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">UCSMILE STANDALONE CONCIERGE</span>
-          </div>
         </div>
 
         <AnimatePresence mode="wait">
