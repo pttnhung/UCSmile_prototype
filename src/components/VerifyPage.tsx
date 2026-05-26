@@ -85,16 +85,15 @@ export default function VerifyPage() {
           
           <span className="text-[10px] uppercase font-black tracking-[0.3em] text-[#FFB800] mb-1">UCSMILE SECURE GATEWAY</span>
           <h1 className="text-2xl font-black text-gray-950 tracking-tight uppercase">Booking Verified</h1>
-          <p className="text-gray-500 text-xs font-semibold mt-1">Official Clinical Coordination & Medical Concierge Pass</p>
         </div>
 
         {/* Elegant Boarding Pass Style Card */}
         <div id="boarding-pass-card" className="bg-white rounded-[2rem] border border-gray-100 overflow-hidden shadow-[0_25px_60px_rgba(15,23,42,0.06)] relative">
           
-          {/* Header Priority Band */}
+          {/* Header Band */}
           <div className="py-4 px-8 text-center border-b border-gray-100 bg-[#FAF9F5]/80">
             <div className="flex items-center justify-center gap-1.5 text-[10px] font-black text-emerald-600 tracking-[0.25em] uppercase">
-              <ShieldCheck className="w-4 h-4 text-emerald-500" /> Priority Check-In Pass
+              <ShieldCheck className="w-4 h-4 text-emerald-500" /> Check-In Pass
             </div>
           </div>
 
@@ -236,13 +235,6 @@ export default function VerifyPage() {
             <div className="w-full border-t border-dashed border-gray-200 mx-5" />
             <div className="w-4 h-8 rounded-l-full bg-[#FAF9F6] -mr-[1px] border-l border-t border-b border-gray-100" />
           </div>
-
-          {/* Verification stamp notice */}
-          <div className="p-6 bg-gray-50/50 text-center border-t border-gray-100">
-            <p className="text-[11.5px] text-gray-500 leading-relaxed font-semibold">
-              This clinical appointment has been pre-verified Digitally. Admitting partner facilities and international coordinators are requested to provide high-priority hospitality.
-            </p>
-          </div>
         </div>
 
         {/* Action button redirect & status footprint signature */}
@@ -255,10 +247,6 @@ export default function VerifyPage() {
             Return to UCSmile Home
           </button>
           
-          <div className="flex items-center gap-1.5 justify-center">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-gray-400">digital cryptographic verification signature</p>
-          </div>
         </div>
       </div>
     </div>
