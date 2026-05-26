@@ -391,7 +391,7 @@ export default function LandingPage() {
     const uniqueId = `UCS-${randomNum}-${randomChars}`;
 
     // Construct elegant verification link
-    const qrData = `${window.location.origin}${window.location.pathname || ''}#/verify?id=${encodeURIComponent(uniqueId)}&name=${encodeURIComponent(fullName)}&service=${encodeURIComponent(treatment)}&clinic=Any%20Vetted%20Partner%20Clinic&date=${encodeURIComponent(preferredDate)}&session=morning&phone=${encodeURIComponent(whatsappPhone)}`;
+    const qrData = `${window.location.origin}${window.location.pathname || ''}#/verify?id=${encodeURIComponent(uniqueId)}&name=${encodeURIComponent(fullName)}&service=${encodeURIComponent(treatment)}&clinic=Any%20Vetted%20Partner%20Clinic&date=${encodeURIComponent(preferredDate)}&session=morning&phone=${encodeURIComponent(whatsappPhone)}&nationality=${encodeURIComponent(nationality || 'N/A')}&destination=danang&notes=${encodeURIComponent(additionalDetails || '')}&email=`;
     const generatedUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}`;
 
     const bookingSessionData = {

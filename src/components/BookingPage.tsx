@@ -148,7 +148,7 @@ export default function BookingPage() {
       const uniqueId = `UCS-${Math.floor(1000 + Math.random() * 9000)}-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`;
       
       // Web verification URL inside QR Code (so any standard scanner redirects to a sleek, beautiful check-in pass page)
-      const qrData = `${window.location.origin}${window.location.pathname || ''}#/verify?id=${encodeURIComponent(uniqueId)}&name=${encodeURIComponent(fullName)}&service=${encodeURIComponent(treatment)}&clinic=${encodeURIComponent(clinic)}&date=${encodeURIComponent(preferredDate)}&session=${encodeURIComponent(preferredSession === 'morning' ? 'Morning Session (08:00 - 12:00)' : 'Afternoon Session (13:30 - 17:30)')}&phone=${encodeURIComponent(whatsappPhone)}`;
+      const qrData = `${window.location.origin}${window.location.pathname || ''}#/verify?id=${encodeURIComponent(uniqueId)}&name=${encodeURIComponent(fullName)}&service=${encodeURIComponent(treatment)}&clinic=${encodeURIComponent(clinic)}&date=${encodeURIComponent(preferredDate)}&session=${encodeURIComponent(preferredSession === 'morning' ? 'Morning Session (08:00 - 12:00)' : 'Afternoon Session (13:30 - 17:30)')}&phone=${encodeURIComponent(whatsappPhone)}&nationality=${encodeURIComponent(nationality || '')}&destination=${encodeURIComponent(destination || '')}&notes=${encodeURIComponent(additionalDetails || '')}&email=${encodeURIComponent(email || '')}`;
 
       let generatedUrl = '';
       try {

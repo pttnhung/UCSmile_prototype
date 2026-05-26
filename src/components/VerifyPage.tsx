@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ShieldCheck, Calendar, MapPin, User, ChevronLeft, Sparkles, Check, Phone } from 'lucide-react';
+import { ShieldCheck, Calendar, MapPin, User, ChevronLeft, Sparkles, Check, Phone, Globe, Mail, FileText } from 'lucide-react';
 import Logo from './Logo';
 
 export default function VerifyPage() {
@@ -16,9 +16,16 @@ export default function VerifyPage() {
   const date = searchParams.get('date') || 'To Be Arranged';
   const session = searchParams.get('session') || 'Flexible Time Window';
   const phone = searchParams.get('phone') || ''; // Optional contact
+  const nationality = searchParams.get('nationality') || '';
+  const email = searchParams.get('email') || '';
+  const destination = searchParams.get('destination') || '';
+  const notes = searchParams.get('notes') || '';
+
+  // Format destination nice text
+  const formattedDestination = destination.toLowerCase() === 'danang' ? 'Da Nang, Vietnam' : (destination.toLowerCase() === 'hcm' || destination.toLowerCase() === 'hochiminh' ? 'Ho Chi Minh, Vietnam' : destination);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FAF9F6] via-[#F4F3EF] to-[#FAF9F6] text-[#1a1c1e] pt-12 pb-24 px-4 relative overflow-hidden flex flex-col items-center justify-center font-sans">
+    <div className="min-h-screen bg-gradient-to-b from-[#FAF9F6] via-[#F4F3EF] to-[#FAF9F6] text-[#1a1c1e] pt-12 pb-24 px-4 relative overflow-hidden flex flex-col items-center justify-center font-sans animate-fade-in">
       {/* Soft elegant golden background decor */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#FFD151]/5 rounded-full blur-[100px] pointer-events-none" />
 
@@ -56,7 +63,7 @@ export default function VerifyPage() {
           </div>
           <span className="text-[10px] uppercase font-black tracking-[0.3em] text-[#FFB800] mb-1">UCSMILE SECURE GATEWAY</span>
           <h1 className="text-2xl font-black text-[#1a1c1e] tracking-tight uppercase">Booking Verified</h1>
-          <p className="text-gray-500 text-xs font-semibold mt-1">Official clinic coordination security ticket</p>
+          <p className="text-gray-500 text-xs font-semibold mt-1 text-center">Official clinic coordination security ticket</p>
         </div>
 
         {/* Boarding Pass Style Card - LIGHT THEMED & SEAMLESS */}
@@ -70,7 +77,7 @@ export default function VerifyPage() {
           </div>
 
           {/* Details body */}
-          <div className="p-8 space-y-7">
+          <div className="p-8 space-y-6">
             <div className="grid grid-cols-2 gap-4 pb-6 border-b border-gray-100">
               <div className="text-left">
                 <span className="text-[9px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Pass ID Code</span>
@@ -86,6 +93,7 @@ export default function VerifyPage() {
             </div>
 
             <div className="space-y-5">
+              {/* Patient Name */}
               <div className="flex items-start gap-4">
                 <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center flex-shrink-0 border border-gray-100">
                   <User className="w-4 h-4 text-gray-500" />
@@ -96,38 +104,68 @@ export default function VerifyPage() {
                 </div>
               </div>
 
-              {phone && (
+              {/* Nationality */}
+              {nationality && nationality !== 'N/A' && (
                 <div className="flex items-start gap-4">
                   <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center flex-shrink-0 border border-gray-100">
-                    <Phone className="w-4 h-4 text-gray-500" />
+                    <Globe className="w-4 h-4 text-gray-500" />
                   </div>
                   <div className="text-left">
-                    <span className="text-[9px] uppercase tracking-widest text-gray-400 font-black block mb-0.5">WHATSAPP CONTACT</span>
-                    <span className="text-sm font-bold text-gray-700">{phone}</span>
+                    <span className="text-[9px] uppercase tracking-widest text-gray-400 font-black block mb-0.5">NATIONALITY</span>
+                    <span className="text-sm font-bold text-gray-700">{nationality}</span>
                   </div>
                 </div>
               )}
 
-              <div className="flex items-start gap-4">
+              {/* Contacts */}
+              {(phone || email) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-50">
+                  {phone && (
+                    <div className="flex items-start gap-3">
+                      <Phone className="w-4.5 h-4.5 text-gray-400 mt-0.5" />
+                      <div className="text-left">
+                        <span className="text-[9px] uppercase tracking-widest text-gray-400 font-semibold block">CONTACT</span>
+                        <span className="text-xs font-bold text-gray-700">{phone}</span>
+                      </div>
+                    </div>
+                  )}
+                  {email && (
+                    <div className="flex items-start gap-3">
+                      <Mail className="w-4.5 h-4.5 text-gray-400 mt-0.5" />
+                      <div className="text-left">
+                        <span className="text-[9px] uppercase tracking-widest text-gray-400 font-semibold block">EMAIL</span>
+                        <span className="text-xs font-bold text-gray-700 truncate max-w-[150px]">{email}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Treatment */}
+              <div className="flex items-start gap-4 pt-3 border-t border-gray-50">
                 <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center flex-shrink-0 border border-gray-100">
                   <Sparkles className="w-4 h-4 text-gray-500" />
                 </div>
                 <div className="text-left">
-                  <span className="text-[9px] uppercase tracking-widest text-gray-400 font-black block mb-0.5">TREATMENT NEEDED</span>
+                  <span className="text-[9px] uppercase tracking-widest text-gray-400 font-black block mb-0.5">TREATMENT SCHEDULED</span>
                   <span className="text-sm font-bold text-gray-800">{service}</span>
                 </div>
               </div>
 
+              {/* Clinic and Location */}
               <div className="flex items-start gap-4">
                 <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center flex-shrink-0 border border-gray-100">
                   <MapPin className="w-4 h-4 text-gray-500" />
                 </div>
                 <div className="text-left">
-                  <span className="text-[9px] uppercase tracking-widest text-gray-400 font-black block mb-0.5">DENTAL CLINIC</span>
-                  <span className="text-sm font-black text-brand-secondary uppercase tracking-tight">{clinic}</span>
+                  <span className="text-[9px] uppercase tracking-widest text-gray-400 font-black block mb-0.5">DENTAL CLINIC & LOCATION</span>
+                  <span className="text-sm font-black text-brand-secondary uppercase tracking-tight">
+                    {clinic} {formattedDestination ? `(${formattedDestination})` : ''}
+                  </span>
                 </div>
               </div>
 
+              {/* Schedule */}
               <div className="flex items-start gap-4">
                 <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center flex-shrink-0 border border-gray-100">
                   <Calendar className="w-4 h-4 text-gray-500" />
@@ -140,6 +178,21 @@ export default function VerifyPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Special request notes */}
+              {notes && (
+                <div className="flex items-start gap-4 pt-4 border-t border-gray-100">
+                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 border border-orange-100">
+                    <FileText className="w-4 h-4 text-orange-500" />
+                  </div>
+                  <div className="text-left flex-grow">
+                    <span className="text-[9px] uppercase tracking-widest text-orange-600 font-black block mb-0.5">YÊU CẦU ĐẶC BIỆT / SPECIAL REQUESTS</span>
+                    <p className="text-xs text-gray-600 font-medium whitespace-pre-wrap leading-relaxed italic bg-gray-50/50 p-3 rounded-2xl border border-gray-100/50 mt-1">
+                      "{notes}"
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
