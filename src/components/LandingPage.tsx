@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   ChevronDown, 
   ShieldCheck, 
@@ -17,12 +18,12 @@ import { blogData, BlogPost } from '../constants/blogData';
 import BlogModal from './BlogModal';
 
 // Types
-interface PriceRange {
+export interface PriceRange {
   min: number;
   max: number;
 }
 
-interface Treatment {
+export interface Treatment {
   id: string;
   name: string;
   prices: Record<string, PriceRange>;
@@ -31,7 +32,7 @@ interface Treatment {
   secondaryCategory?: string;
 }
 
-const TREATMENTS: Treatment[] = [
+export const TREATMENTS: Treatment[] = [
   { 
     id: 'cleaning', 
     name: 'Cleaning + Exam', 
@@ -340,6 +341,7 @@ function TreatmentCard({
 }
 
 export default function LandingPage() {
+  const navigate = useNavigate();
   const [selectedTreatments, setSelectedTreatments] = useState<string[]>(['cleaning', 'whitening']);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [pricingFrom, setPricingFrom] = useState<keyof typeof ORIGINS>('au');
@@ -492,10 +494,15 @@ export default function LandingPage() {
             Premium care in Da Nang. We connect international patients with JCI-standard clinics and local concierge support.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="#book-now" className="btn-luxury px-10 py-5">
+            <Link to="/booking" className="btn-luxury px-10 py-5">
               Send Your Request
-            </a>
-            <a href="#book-now" className="bg-white/95 backdrop-blur border border-gray-200 px-10 py-5 rounded-2xl font-bold text-lg text-brand-text hover:bg-gray-100 transition-all flex items-center gap-2 uppercase tracking-[0.1em]">
+            </Link>
+            <a 
+              href="https://wa.me/84905000000" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="bg-white/95 backdrop-blur border border-gray-200 px-10 py-5 rounded-2xl font-bold text-lg text-brand-text hover:bg-gray-100 transition-all flex items-center gap-2 uppercase tracking-[0.1em]"
+            >
               Chat Now
             </a>
           </div>
@@ -917,7 +924,7 @@ export default function LandingPage() {
           </div>
 
           <div className="p-10 md:p-14 bg-brand-bg flex-grow">
-            <form className="space-y-6">
+            <form onSubmit={(e) => { e.preventDefault(); navigate('/booking'); }} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2 text-left">FULL NAME</label>
