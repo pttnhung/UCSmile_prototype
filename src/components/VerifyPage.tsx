@@ -3,16 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
   ShieldCheck, 
-  Calendar, 
-  MapPin, 
-  User, 
   ChevronLeft, 
-  Sparkles, 
-  Check, 
-  Phone, 
-  Globe, 
-  Mail, 
-  FileText 
+  Check 
 } from 'lucide-react';
 import Logo from './Logo';
 
@@ -103,7 +95,7 @@ export default function VerifyPage() {
             <div className="flex justify-between items-start pb-5 border-b border-gray-100">
               <div className="text-left">
                 <span className="text-[10px] uppercase tracking-[0.15em] text-gray-400 font-extrabold block mb-1">PASS CODE</span>
-                <span className="text-base font-black text-gray-950 tracking-tight font-mono uppercase">{bookingId}</span>
+                <span className="text-lg font-mono font-black text-gray-950 tracking-tight uppercase">{bookingId}</span>
               </div>
               <div className="text-right flex flex-col items-end">
                 <span className="text-[10px] uppercase tracking-[0.15em] text-gray-400 font-extrabold block mb-1.5">STATUS</span>
@@ -115,112 +107,71 @@ export default function VerifyPage() {
             </div>
 
             {/* Core Details Grid / Column Stack */}
-            <div className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
               
-              {/* Patient Block */}
-              <div className="flex items-start gap-4">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0 text-[#FFB800] border border-[#FFB800]/10 shadow-sm">
-                  <User className="w-4 h-4" />
-                </div>
-                <div className="text-left flex-grow">
-                  <span className="text-[10px] uppercase tracking-widest text-gray-400 font-extrabold block mb-0.5">Patient Name</span>
-                  <span className="text-base font-black text-gray-950 uppercase tracking-wide">{patientName}</span>
-                </div>
+              {/* Patient Name */}
+              <div className="text-left md:col-span-2">
+                <span className="text-[10px] uppercase tracking-[0.15em] text-gray-400 font-extrabold block mb-0.5">Patient Name</span>
+                <span className="text-base font-black text-gray-950 uppercase tracking-wide">{patientName}</span>
               </div>
 
               {/* Nationality Information */}
               {nationality && nationality !== 'N/A' && (
-                <div className="flex items-start gap-4">
-                  <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0 text-[#FFB800] border border-[#FFB800]/10 shadow-sm">
-                    <Globe className="w-4 h-4" />
-                  </div>
-                  <div className="text-left flex-grow">
-                    <span className="text-[10px] uppercase tracking-widest text-gray-400 font-extrabold block mb-0.5">Nationality</span>
-                    <span className="text-sm font-bold text-gray-800">{nationality}</span>
-                  </div>
+                <div className="text-left">
+                  <span className="text-[10px] uppercase tracking-[0.15em] text-gray-400 font-extrabold block mb-0.5">Nationality</span>
+                  <span className="text-sm font-bold text-gray-800">{nationality}</span>
                 </div>
               )}
 
-              {/* Patient Contact Cards (Grid-optimized) */}
-              {(phone || email) && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-gray-100">
-                  {phone && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0 text-emerald-500 border border-emerald-100">
-                        <Phone className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="text-left min-w-0">
-                        <span className="text-[9px] uppercase tracking-widest text-gray-400 font-extrabold block">Phone Contact</span>
-                        <span className="text-xs font-bold text-gray-700 block truncate">{phone}</span>
-                      </div>
-                    </div>
-                  )}
+              {/* Phone Contact */}
+              {phone && (
+                <div className="text-left">
+                  <span className="text-[10px] uppercase tracking-[0.15em] text-gray-400 font-extrabold block mb-0.5">Phone Contact</span>
+                  <span className="text-sm font-bold text-gray-700 font-mono">{phone}</span>
+                </div>
+              )}
 
-                  {email && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 text-blue-500 border border-blue-100">
-                        <Mail className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="text-left min-w-0">
-                        <span className="text-[9px] uppercase tracking-widest text-gray-400 font-extrabold block">Email Address</span>
-                        <span className="text-xs font-bold text-gray-700 block truncate" title={email}>{email}</span>
-                      </div>
-                    </div>
-                  )}
+              {/* Email Address */}
+              {email && (
+                <div className="text-left md:col-span-2">
+                  <span className="text-[10px] uppercase tracking-[0.15em] text-gray-400 font-extrabold block mb-0.5">Email Address</span>
+                  <span className="text-sm font-bold text-gray-700 truncate block" title={email}>{email}</span>
                 </div>
               )}
 
               {/* Treatment Selected */}
-              <div className="flex items-start gap-4 pt-3 border-t border-gray-100">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0 text-[#FFB800] border border-[#FFB800]/10 shadow-sm">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div className="text-left flex-grow">
-                  <span className="text-[10px] uppercase tracking-widest text-gray-400 font-extrabold block mb-0.5">Requested Treatment</span>
-                  <span className="text-sm font-extrabold text-[#1a1c1e]">{service}</span>
-                </div>
+              <div className="text-left md:col-span-2 pt-2 border-t border-gray-100/50">
+                <span className="text-[10px] uppercase tracking-[0.15em] text-gray-400 font-extrabold block mb-0.5">Requested Treatment</span>
+                <span className="text-sm font-extrabold text-[#1a1c1e]">{service}</span>
               </div>
 
-              {/* Medical Dental Clinic & Target Destination Destination details */}
-              <div className="flex items-start gap-4">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0 text-[#FFB800] border border-[#FFB800]/10 shadow-sm">
-                  <MapPin className="w-4 h-4" />
-                </div>
-                <div className="text-left flex-grow">
-                  <span className="text-[10px] uppercase tracking-widest text-gray-400 font-extrabold block mb-0.5">Assigned Dental Clinic</span>
-                  <span className="text-sm font-black text-[#FFB800] uppercase tracking-tight block">
-                    {clinic}
+              {/* Medical Dental Clinic & Target Destination details */}
+              <div className="text-left md:col-span-2">
+                <span className="text-[10px] uppercase tracking-[0.15em] text-gray-400 font-extrabold block mb-0.5">Assigned Dental Clinic</span>
+                <span className="text-sm font-black text-brand-secondary uppercase tracking-tight block">
+                  {clinic}
+                </span>
+                {formattedDestination && (
+                  <span className="text-xs font-bold text-gray-500 mt-0.5 block italic">
+                    Location: {formattedDestination}
                   </span>
-                  {formattedDestination && (
-                    <span className="text-[11px] font-bold text-gray-500 mt-1 block">
-                      Location Venue: {formattedDestination}
-                    </span>
-                  )}
-                </div>
+                )}
               </div>
 
               {/* Appointment Schedule Time block */}
-              <div className="flex items-start gap-4">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0 text-[#FFB800] border border-[#FFB800]/10 shadow-sm">
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <div className="text-left flex-grow">
-                  <span className="text-[10px] uppercase tracking-widest text-gray-400 font-extrabold block mb-0.5">Appointment Schedule</span>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-extrabold text-gray-950">{date}</span>
-                    <span className="text-xs text-gray-500 font-semibold mt-0.5 uppercase tracking-wider">{session}</span>
-                  </div>
+              <div className="text-left md:col-span-2">
+                <span className="text-[10px] uppercase tracking-[0.15em] text-gray-400 font-extrabold block mb-0.5">Appointment Schedule</span>
+                <div className="flex flex-col">
+                  <span className="text-sm font-extrabold text-gray-950">{date}</span>
+                  <span className="text-xs text-gray-500 font-semibold mt-0.5 uppercase tracking-wider">{session}</span>
                 </div>
               </div>
 
               {/* Specialized patient notes */}
               {notes && (
-                <div className="flex flex-col gap-2 pt-4 border-t border-gray-100">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-orange-500" />
-                    <span className="text-[10px] uppercase tracking-widest text-orange-600 font-extrabold block">Special Requests & Notes</span>
-                  </div>
-                  <p className="text-xs text-gray-600 font-semibold whitespace-pre-wrap leading-relaxed italic bg-[#FAF9F5] p-3.5 rounded-xl border border-gray-200/50">
+                <div className="text-left md:col-span-2 pt-4 border-t border-gray-100/60">
+                  <span className="text-[10px] uppercase tracking-[0.15em] text-orange-600 font-extrabold block mb-1">Special Requests & Notes</span>
+                  <p className="text-xs text-gray-600 font-semibold whitespace-pre-wrap leading-relaxed italic bg-[#FAF9F5] p-3.5 rounded-xl border border-gray-200/50 shadow-inner">
                     "{notes}"
                   </p>
                 </div>
@@ -235,9 +186,12 @@ export default function VerifyPage() {
             <div className="w-full border-t border-dashed border-gray-200 mx-5" />
             <div className="w-4 h-8 rounded-l-full bg-[#FAF9F6] -mr-[1px] border-l border-t border-b border-gray-100" />
           </div>
+
+          {/* Symmetrical simple bottom spacing */}
+          <div className="py-2.5 bg-gray-50/50" />
         </div>
 
-        {/* Action button redirect & status footprint signature */}
+        {/* Action button redirect */}
         <div className="mt-10 flex flex-col items-center gap-5">
           <button 
             id="go-home-footer-btn"
@@ -246,7 +200,6 @@ export default function VerifyPage() {
           >
             Return to UCSmile Home
           </button>
-          
         </div>
       </div>
     </div>
