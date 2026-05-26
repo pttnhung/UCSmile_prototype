@@ -731,7 +731,6 @@ export default function BookingPage() {
                     <Clock className="w-4 h-4 text-[#FFD151]" />
                     <span className="text-[10px] font-bold uppercase tracking-wider">Booking Verified</span>
                   </div>
-                  <span className="text-[10px] font-extrabold text-[#FFD151]">{String(new Date().getFullYear())} SECURITY MATCH</span>
                 </div>
               </div>
 
@@ -748,15 +747,7 @@ export default function BookingPage() {
                   <span>Download Booking Pass Image (.PNG)</span>
                 </button>
 
-                <a 
-                  href={getWhatsAppLink()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-4.5 bg-[#25D366] hover:bg-[#1ebd5d] text-gray-900 shadow-md font-extrabold text-sm tracking-widest uppercase rounded-2xl flex items-center justify-center gap-3 transition-colors cursor-pointer"
-                >
-                  <MessageCircle className="w-5 h-5 fill-current text-gray-900" />
-                  <span>Connect Concierge via WhatsApp</span>
-                </a>
+  
 
                 {/* State resets */}
                 <div className="grid grid-cols-2 gap-3 pt-4">
