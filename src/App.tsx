@@ -71,7 +71,20 @@ function Layout() {
             <Link to="/#clinics" className="hover:text-gray-500 transition-colors">Top Clinics</Link>
             <Link to="/#travel" className="hover:text-gray-500 transition-colors">Travel</Link>
             <Link to="/blogs" className={`hover:text-gray-500 transition-colors ${location.pathname === '/blogs' ? 'text-gray-900' : ''}`}>Blogs</Link>
-            <Link to="/booking" className="btn-luxury px-6 py-2.5 !text-[11px] !tracking-[0.2em]">
+            <Link 
+              to="/" 
+              state={{ scrollTo: 'booking' }}
+              className="btn-luxury px-6 py-2.5 !text-[11px] !tracking-[0.2em]"
+              onClick={(e) => {
+                if (location.pathname === '/') {
+                  e.preventDefault();
+                  const element = document.getElementById('booking');
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }
+              }}
+            >
               BOOK NOW
             </Link>
           </div>

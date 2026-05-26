@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   ChevronDown, 
   ShieldCheck, 
@@ -342,6 +342,8 @@ function TreatmentCard({
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [selectedTreatments, setSelectedTreatments] = useState<string[]>(['cleaning', 'whitening']);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [pricingFrom, setPricingFrom] = useState<keyof typeof ORIGINS>('au');
@@ -351,6 +353,62 @@ export default function LandingPage() {
   const [travelCity, setTravelCity] = useState<'danang' | 'hcm'>('danang');
   const [isComparisonVisible, setIsComparisonVisible] = useState(false);
   const comparisonRef = useRef<HTMLDivElement>(null);
+
+  // States for footer form
+  const [fullName, setFullName] = useState('');
+  const [nationality, setNationality] = useState('');
+  const [treatment, setTreatment] = useState('Choose your treatment');
+  const [preferredDate, setPreferredDate] = useState('');
+  const [whatsappPhone, setWhatsappPhone] = useState('');
+  const [additionalDetails, setAdditionalDetails] = useState('');
+  const [formError, setFormError] = useState('');
+
+  // Handle routing state-based smooth scrolling on initial mount or path change
+  useEffect(() => {
+    if (location.state && (location.state as any).scrollTo === 'booking') {
+      const element = document.getElementById('booking');
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+      }
+      navigate('/', { replace: true, state: {} });
+    }
+  }, [location.state, navigate]);
+
+  const handleFooterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    if (!fullName.trim() || !whatsappPhone.trim() || treatment === 'Choose your treatment' || !preferredDate.trim()) {
+      setFormError('Please fill in all required fields marked with *');
+      return;
+    }
+
+    // Generate custom booking session data
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const randomChars = alphabet[Math.floor(Math.random() * 26)] + alphabet[Math.floor(Math.random() * 26)];
+    const uniqueId = `UCS-${randomNum}-${randomChars}`;
+    const generatedUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(uniqueId)}`;
+
+    const bookingSessionData = {
+      fullName,
+      whatsappPhone,
+      email: '',
+      nationality: nationality || 'N/A',
+      treatment,
+      destination: 'danang',
+      clinic: 'Any Vetted Partner Clinic',
+      preferredDate,
+      preferredSession: 'morning',
+      additionalDetails,
+      bookingId: uniqueId,
+      qrCodeUrl: generatedUrl,
+    };
+
+    localStorage.setItem('ucsmile_saved_booking', JSON.stringify(bookingSessionData));
+    navigate('/booking');
+  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -494,9 +552,19 @@ export default function LandingPage() {
             Premium care in Da Nang. We connect international patients with JCI-standard clinics and local concierge support.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/booking" className="btn-luxury px-10 py-5">
+            <a 
+              href="#booking" 
+              className="btn-luxury px-10 py-5"
+              onClick={(e) => {
+                e.preventDefault();
+                const element = document.getElementById('booking');
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+            >
               Send Your Request
-            </Link>
+            </a>
             <a 
               href="https://wa.me/84905000000" 
               target="_blank" 
@@ -770,7 +838,16 @@ export default function LandingPage() {
               img: "https://lh3.googleusercontent.com/p/AF1QipOYhj3gOtFlLBbfeQKOoXKa_95YDHaAH9SffXBN=s1360-w1360-h1020-rw"
             }
           ].map((partner, idx) => (
-            <div key={idx} className="bg-white rounded-[2.5rem] overflow-hidden group border border-gray-100 shadow-sm hover:shadow-2xl hover:border-brand-primary/20 transition-all cursor-pointer">
+            <div 
+              key={idx} 
+              onClick={() => {
+                const element = document.getElementById('booking');
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="bg-white rounded-[2.5rem] overflow-hidden group border border-gray-100 shadow-sm hover:shadow-2xl hover:border-brand-primary/20 transition-all cursor-pointer"
+            >
                 <div className="h-64 bg-gray-100 relative overflow-hidden p-3">
                 <img 
                   src={partner.img} 
@@ -901,7 +978,7 @@ export default function LandingPage() {
       </AnimatePresence>
 
       {/* Footer Form */}
-      <section id="book-now" className="py-32 px-4 scroll-mt-24">
+      <section id="booking" className="py-32 px-4 scroll-mt-24">
         <div className="max-w-7xl mx-auto bg-white rounded-[3rem] overflow-hidden shadow-[0_30px_80px_rgba(15,23,42,0.08)] border border-gray-100 flex flex-col md:flex-row">
           <div className="bg-brand-section p-10 md:p-14 text-white md:w-[35%]">
             <p className="text-[11px] font-black uppercase tracking-[0.22em] text-gray-400 mb-4">BOOKING SUPPORT</p>
@@ -924,38 +1001,82 @@ export default function LandingPage() {
           </div>
 
           <div className="p-10 md:p-14 bg-brand-bg flex-grow">
-            <form onSubmit={(e) => { e.preventDefault(); navigate('/booking'); }} className="space-y-6">
+            <form onSubmit={handleFooterSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2 text-left">FULL NAME</label>
-                  <input type="text" className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm" />
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2 text-left">FULL NAME *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                    placeholder="Enter your full name"
+                    className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm" 
+                  />
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2 text-left">NATIONALITY</label>
-                  <input type="text" className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm" />
+                  <input 
+                    type="text" 
+                    value={nationality}
+                    onChange={e => setNationality(e.target.value)}
+                    placeholder="Country of passport"
+                    className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm" 
+                  />
                 </div>
               </div>
               <div className="text-left">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2">TREATMENT NEEDED</label>
-                <select className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm appearance-none">
-                  <option>Choose your treatment</option>
-                  {TREATMENTS.map(t => <option key={t.id}>{t.name}</option>)}
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2">TREATMENT NEEDED *</label>
+                <select 
+                  value={treatment}
+                  onChange={e => setTreatment(e.target.value)}
+                  className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm appearance-none"
+                >
+                  <option disabled value="Choose your treatment">Choose your treatment</option>
+                  {TREATMENTS.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
                 </select>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="text-left">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2">PREFERRED DATE</label>
-                  <input type="text" placeholder="Flexible or exact date" className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm" />
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2">PREFERRED DATE *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={preferredDate}
+                    onChange={e => setPreferredDate(e.target.value)}
+                    placeholder="Flexible or exact date" 
+                    className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm" 
+                  />
                 </div>
                 <div className="text-left">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2">WHATSAPP / EMAIL</label>
-                  <input type="text" placeholder="How we should contact you" className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm" />
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2">WHATSAPP / EMAIL *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={whatsappPhone}
+                    onChange={e => setWhatsappPhone(e.target.value)}
+                    placeholder="How we should contact you" 
+                    className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm" 
+                  />
                 </div>
               </div>
               <div className="pb-4 text-left">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2">FURTHER DETAILS (OPTIONAL)</label>
-                <textarea rows={3} placeholder="Any specific requirements or questions?" className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm resize-none"></textarea>
+                <textarea 
+                  rows={3} 
+                  value={additionalDetails}
+                  onChange={e => setAdditionalDetails(e.target.value)}
+                  placeholder="Any specific requirements or questions?" 
+                  className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm resize-none"
+                />
               </div>
+
+              {formError && (
+                <div className="p-4 rounded-xl bg-red-50 border border-red-100 text-[#FF4D4D] font-semibold text-xs text-left">
+                  ⚠️ {formError}
+                </div>
+              )}
+
               <button className="btn-luxury w-full py-5 !shadow-brand-primary/10">
                 SUBMIT TO CONCIERGE
               </button>
