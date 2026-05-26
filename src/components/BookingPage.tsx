@@ -149,7 +149,7 @@ export default function BookingPage() {
       
       // Clear pure check-in pass payload
       const qrData = JSON.stringify({
-        org: 'UCSMILE Concierge Service',
+        org: 'UCSMILE',
         type: 'Dental Tourist Check-In Pass',
         passId: uniqueId,
         patientName: fullName,
@@ -660,7 +660,7 @@ export default function BookingPage() {
 
                 {/* Header Band */}
                 <div className="p-8 text-center border-b border-white/5 bg-gradient-to-r from-gray-900/40 via-[#141618] to-gray-900/40">
-                  <span className="text-[10px] font-black text-[#FFD151] uppercase tracking-[0.25em] block mb-1">UCSMILE SECURE CONCIERGE</span>
+                  <span className="text-[10px] font-black text-[#FFD151] uppercase tracking-[0.25em] block mb-1">UCSMILE</span>
                   <h2 className="text-xl font-bold uppercase tracking-wider text-white">Booking QR Pass</h2>
                 </div>
 
@@ -700,7 +700,7 @@ export default function BookingPage() {
                       <span className="text-white font-bold">{treatment}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400 uppercase tracking-wider">Healthcare Center</span>
+                      <span className="text-gray-400 uppercase tracking-wider">Dental Clinic</span>
                       <span className="text-[#FFD151] font-bold">{clinic}</span>
                     </div>
                     <div className="flex justify-between">
