@@ -14,7 +14,8 @@ import {
   Mail, 
   FileText,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Lock
 } from 'lucide-react';
 import Logo from './Logo';
 import { decodeBooking } from './codec';
@@ -24,6 +25,69 @@ export default function VerifyPage() {
   const navigate = useNavigate();
   const [bookingStatus, setBookingStatus] = React.useState<'confirmed' | 'cancelled' | 'checked_in'>('confirmed');
   const [showConfirmModal, setShowConfirmModal] = React.useState(false);
+
+  // Secure Receptionist Access Control
+  const [pin, setPin] = React.useState<string[]>(['', '', '', '']);
+  const [pinError, setPinError] = React.useState(false);
+  const [isPinVerified, setIsPinVerified] = React.useState<boolean>(() => {
+    return sessionStorage.getItem('ucsmile_pin_unlocked') === 'true';
+  });
+
+  const pinRefs = [
+    React.useRef<HTMLInputElement>(null),
+    React.useRef<HTMLInputElement>(null),
+    React.useRef<HTMLInputElement>(null),
+    React.useRef<HTMLInputElement>(null)
+  ];
+
+  const handlePinChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+    
+    const newPin = [...pin];
+    newPin[index] = value.slice(-1);
+    setPin(newPin);
+    setPinError(false);
+
+    // Auto focus next input
+    if (value && index < 3) {
+      pinRefs[index + 1].current?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+      if (!pin[index] && index > 0) {
+        const newPin = [...pin];
+        newPin[index - 1] = '';
+        setPin(newPin);
+        pinRefs[index - 1].current?.focus();
+      } else {
+        const newPin = [...pin];
+        newPin[index] = '';
+        setPin(newPin);
+      }
+      setPinError(false);
+    }
+  };
+
+  const verifyPin = (currentPinArray: string[]) => {
+    const joined = currentPinArray.join('');
+    if (joined === '1234') {
+      setIsPinVerified(true);
+      sessionStorage.setItem('ucsmile_pin_unlocked', 'true');
+    } else {
+      setPinError(true);
+      setPin(['', '', '', '']);
+      pinRefs[0].current?.focus();
+    }
+  };
+
+  // Check and auto-verify when fully populated
+  React.useEffect(() => {
+    if (!isPinVerified && pin.every(digit => digit !== '')) {
+      verifyPin(pin);
+    }
+  }, [pin, isPinVerified]);
 
   // Parse parameters from verification URL (supporting compressed token 'p' first)
   const token = searchParams.get('p');
@@ -56,6 +120,184 @@ export default function VerifyPage() {
     : (destination.toLowerCase() === 'hcm' || destination.toLowerCase() === 'hochiminh' 
       ? 'Ho Chi Minh, Vietnam' 
       : destination);
+
+  if (!isPinVerified) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#FAF9F6] via-[#F4F3EF] to-[#FAF9F6] text-[#1a1c1e] pt-12 pb-20 px-4 relative overflow-hidden flex flex-col items-center justify-center font-sans">
+        {/* Background radial gradient decor for depth */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[400px] bg-gradient-to-b from-[#FFD151]/5 to-transparent rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="w-full max-w-sm z-10 text-center">
+          
+          <div className="mb-8 flex justify-center">
+            <Logo size="md" variant="full" />
+          </div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', duration: 0.6 }}
+            className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-[0_20px_50px_rgba(15,23,42,0.04)] relative overflow-hidden"
+          >
+            {/* Top Security Emblem */}
+            <div className="relative mb-5 flex justify-center">
+              <motion.div 
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                className="absolute w-14 h-14 bg-[#FFB800]/10 rounded-full blur-md"
+              />
+              <div className="w-12 h-12 bg-[#FFB800]/15 rounded-2xl flex items-center justify-center text-[#E6A600] border border-[#FFB800]/20 z-10">
+                <Lock className="w-5 h-5 stroke-[2.2]" />
+              </div>
+            </div>
+
+            <div className="space-y-2 mb-8">
+              <h2 className="font-serif text-xl font-bold text-gray-900">Clinic Verification Code</h2>
+              <p className="text-gray-500 text-xs leading-relaxed max-w-xs mx-auto">
+                Enter the secure 4-digit receptionist PIN to access client credentials and log clinical arrival.
+              </p>
+            </div>
+
+            {/* Standard Key-in fields (Hidden or styled as passive preview) */}
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+              <div className="flex justify-center gap-3">
+                {pin.map((digit, idx) => (
+                  <input
+                    key={idx}
+                    ref={pinRefs[idx]}
+                    type="password"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handlePinChange(idx, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(idx, e)}
+                    className={`w-12 h-14 text-center text-xl font-bold rounded-xl border transition-all ${
+                      pinError 
+                        ? 'border-red-400 bg-red-50 text-red-600 focus:ring-red-500' 
+                        : 'border-gray-200 bg-gray-50/50 text-gray-900 focus:border-[#FFB800] focus:bg-white focus:ring-2 focus:ring-[#FFB800]/25'
+                    } focus:outline-none focus:scale-105`}
+                  />
+                ))}
+              </div>
+
+              {pinError && (
+                <motion.p 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-red-500 text-[11px] font-bold tracking-wide"
+                >
+                  Incorrect security validation. Clear and retry.
+                </motion.p>
+              )}
+
+              {/* Seamless dynamic button confirmation callback (Fallback for manual submit) */}
+              <button 
+                type="button"
+                onClick={() => verifyPin(pin)}
+                className="w-full py-3.5 bg-gray-900 text-white hover:bg-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm hover:shadow-md"
+              >
+                Access Dashboard
+              </button>
+            </form>
+
+            {/* Virtual Onsite Dialpad */}
+            <div className="mt-8 pt-6 border-t border-gray-100 grid grid-cols-3 gap-3">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => {
+                    // Find first empty cell
+                    const nextEmptyIdx = pin.findIndex(d => d === '');
+                    if (nextEmptyIdx !== -1) {
+                      const newPin = [...pin];
+                      newPin[nextEmptyIdx] = num.toString();
+                      setPin(newPin);
+                      setPinError(false);
+                      // Focus it virtually
+                      if (nextEmptyIdx < 3) {
+                        pinRefs[nextEmptyIdx + 1].current?.focus();
+                      }
+                    }
+                  }}
+                  className="py-3 text-center text-sm font-extrabold text-gray-700 bg-gray-50/80 hover:bg-gray-100 rounded-xl transition-all active:scale-95 cursor-pointer"
+                >
+                  {num}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setPin(['', '', '', '']);
+                  setPinError(false);
+                  pinRefs[0].current?.focus();
+                }}
+                className="py-3 text-center text-xs font-bold text-red-500 bg-red-50/50 hover:bg-red-50 rounded-xl transition-all active:scale-95 cursor-pointer"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  // Find first empty index, or set numeric to zero
+                  const nextEmptyIdx = pin.findIndex(d => d === '');
+                  if (nextEmptyIdx !== -1) {
+                    const newPin = [...pin];
+                    newPin[nextEmptyIdx] = '0';
+                    setPin(newPin);
+                    setPinError(false);
+                    if (nextEmptyIdx < 3) {
+                      pinRefs[nextEmptyIdx + 1].current?.focus();
+                    }
+                  } else {
+                    const newPin = [...pin];
+                    newPin[3] = '0';
+                    setPin(newPin);
+                    setPinError(false);
+                  }
+                }}
+                className="py-3 text-center text-sm font-extrabold text-[#1a1c1e] bg-gray-50/80 hover:bg-gray-100 rounded-xl transition-all active:scale-95 cursor-pointer"
+              >
+                0
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  // Backspace behavior on keypad click
+                  let lastFilledIdx = -1;
+                  for (let i = 3; i >= 0; i--) {
+                    if (pin[i] !== '') {
+                      lastFilledIdx = i;
+                      break;
+                    }
+                  }
+                  if (lastFilledIdx !== -1) {
+                    const newPin = [...pin];
+                    newPin[lastFilledIdx] = '';
+                    setPin(newPin);
+                    setPinError(false);
+                    pinRefs[lastFilledIdx].current?.focus();
+                  }
+                }}
+                className="py-3 text-center text-xs font-bold text-gray-500 bg-gray-50/80 hover:bg-[#FAF9F6] rounded-xl transition-all active:scale-95 cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </motion.div>
+
+          <button 
+            type="button"
+            onClick={() => navigate('/')}
+            className="mt-6 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-gray-[#1a1c1e] transition-colors"
+          >
+            ← Exit System
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#FAF9F6] via-[#F4F3EF] to-[#FAF9F6] text-[#1a1c1e] pt-10 pb-20 px-4 relative overflow-hidden flex flex-col items-center justify-start font-sans">

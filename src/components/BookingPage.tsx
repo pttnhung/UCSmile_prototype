@@ -448,7 +448,7 @@ export default function BookingPage() {
                   <p className="text-[11px] text-amber-800 font-bold leading-relaxed flex items-start gap-2">
                     <span className="text-sm mt-0.5">⚠️</span>
                     <span>
-                      <strong>Note:</strong> This form is strictly for patients who have <strong>already finalized their itinerary</strong> with a consultant. Details will be cross-checked during clinic check-in.
+                      This form only is for patients who have already confirmed their treatment plan with our consultant. Submit it to receive your Check-in Pass instantly.
                     </span>
                   </p>
                 </div>
