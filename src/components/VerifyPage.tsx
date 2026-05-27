@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Logo from './Logo';
 import { decodeBooking } from './codec';
+import { TREATMENTS } from './LandingPage';
 
 export default function VerifyPage() {
   const [searchParams] = useSearchParams();
@@ -104,6 +105,20 @@ export default function VerifyPage() {
   const email = decoded ? decoded.email : (searchParams.get('email') || searchParams.get('em') || '');
   const destination = decoded ? decoded.destination : (searchParams.get('destination') || searchParams.get('ds') || '');
   const notes = decoded ? decoded.notes : (searchParams.get('notes') || searchParams.get('ns') || '');
+
+  // Parse service details
+  const parsedServices = React.useMemo(() => {
+    if (!service) return [];
+    return service.split(', ').filter(Boolean).map(item => {
+      const match = item.match(/(.+?)\s*\(x(\d+)\)/);
+      if (match) {
+        const name = match[1].trim();
+        const qty = parseInt(match[2], 10);
+        return { name, qty };
+      }
+      return { name: item.trim(), qty: 1 };
+    });
+  }, [service]);
 
   React.useEffect(() => {
     const savedStatus = localStorage.getItem(`ucsmile_status_${bookingId}`);
@@ -200,91 +215,6 @@ export default function VerifyPage() {
                 Access Dashboard
               </button>
             </form>
-
-            {/* Virtual Onsite Dialpad */}
-            <div className="mt-8 pt-6 border-t border-gray-100 grid grid-cols-3 gap-3">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => {
-                    // Find first empty cell
-                    const nextEmptyIdx = pin.findIndex(d => d === '');
-                    if (nextEmptyIdx !== -1) {
-                      const newPin = [...pin];
-                      newPin[nextEmptyIdx] = num.toString();
-                      setPin(newPin);
-                      setPinError(false);
-                      // Focus it virtually
-                      if (nextEmptyIdx < 3) {
-                        pinRefs[nextEmptyIdx + 1].current?.focus();
-                      }
-                    }
-                  }}
-                  className="py-3 text-center text-sm font-extrabold text-gray-700 bg-gray-50/80 hover:bg-gray-100 rounded-xl transition-all active:scale-95 cursor-pointer"
-                >
-                  {num}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => {
-                  setPin(['', '', '', '']);
-                  setPinError(false);
-                  pinRefs[0].current?.focus();
-                }}
-                className="py-3 text-center text-xs font-bold text-red-500 bg-red-50/50 hover:bg-red-50 rounded-xl transition-all active:scale-95 cursor-pointer"
-              >
-                Clear
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  // Find first empty index, or set numeric to zero
-                  const nextEmptyIdx = pin.findIndex(d => d === '');
-                  if (nextEmptyIdx !== -1) {
-                    const newPin = [...pin];
-                    newPin[nextEmptyIdx] = '0';
-                    setPin(newPin);
-                    setPinError(false);
-                    if (nextEmptyIdx < 3) {
-                      pinRefs[nextEmptyIdx + 1].current?.focus();
-                    }
-                  } else {
-                    const newPin = [...pin];
-                    newPin[3] = '0';
-                    setPin(newPin);
-                    setPinError(false);
-                  }
-                }}
-                className="py-3 text-center text-sm font-extrabold text-[#1a1c1e] bg-gray-50/80 hover:bg-gray-100 rounded-xl transition-all active:scale-95 cursor-pointer"
-              >
-                0
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  // Backspace behavior on keypad click
-                  let lastFilledIdx = -1;
-                  for (let i = 3; i >= 0; i--) {
-                    if (pin[i] !== '') {
-                      lastFilledIdx = i;
-                      break;
-                    }
-                  }
-                  if (lastFilledIdx !== -1) {
-                    const newPin = [...pin];
-                    newPin[lastFilledIdx] = '';
-                    setPin(newPin);
-                    setPinError(false);
-                    pinRefs[lastFilledIdx].current?.focus();
-                  }
-                }}
-                className="py-3 text-center text-xs font-bold text-gray-500 bg-gray-50/80 hover:bg-[#FAF9F6] rounded-xl transition-all active:scale-95 cursor-pointer"
-              >
-                Delete
-              </button>
-            </div>
           </motion.div>
 
           <button 
@@ -471,13 +401,50 @@ export default function VerifyPage() {
               )}
 
               {/* Treatment Selected */}
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-400 border border-gray-100">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
+              <div className="flex flex-col gap-2 pt-1">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-400 border border-gray-100">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <div className="text-left">
+                    <span className="text-[9px] uppercase tracking-wider text-gray-400 font-bold block">Selected Treatments</span>
+                    <span className="text-[11px] text-gray-500 font-medium">
+                      ({parsedServices.length || 1} treatment{parsedServices.length > 1 ? 's' : ''})
+                    </span>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <span className="text-[9px] uppercase tracking-wider text-gray-400 font-bold block">Treatment</span>
-                  <span className="text-sm font-semibold text-gray-800">{service}</span>
+
+                <div className="ml-11 border border-gray-100 bg-gray-50/30 rounded-2xl divide-y divide-gray-100 p-2 text-left text-[#1a1c1e]">
+                  {parsedServices.map(({ name, qty }) => {
+                    const tObj = TREATMENTS.find(t => t.name === name);
+                    const priceItem = tObj?.prices?.vn;
+                    const minPrice = priceItem ? priceItem.min * qty : null;
+                    const maxPrice = priceItem ? priceItem.max * qty : null;
+                    const priceStr = minPrice && maxPrice ? `$${minPrice} - $${maxPrice}` : '';
+
+                    return (
+                      <div key={name} className="flex items-center justify-between py-2 px-2 hover:bg-white/40 rounded-lg transition-colors">
+                        <div className="min-w-0 pr-2">
+                          <span className="font-sans font-semibold text-gray-800 text-xs sm:text-sm block truncate">
+                            {name}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          {tObj?.hasQuantity && (
+                            <span className="text-[10px] font-bold text-gray-600 bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5 font-mono select-none">
+                              Qty: {qty}
+                            </span>
+                          )}
+
+                          {priceStr && (
+                            <span className="font-mono text-xs text-amber-600 font-bold min-w-[75px] text-right">
+                              {priceStr}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

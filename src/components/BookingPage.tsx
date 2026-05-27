@@ -20,7 +20,13 @@ import {
   Mail,
   Download,
   RefreshCw,
-  Clock
+  Clock,
+  X,
+  Search,
+  ChevronDown,
+  Stethoscope,
+  Minus,
+  Plus
 } from 'lucide-react';
 import { TREATMENTS, Treatment } from './LandingPage';
 import QRCode from 'qrcode';
@@ -58,8 +64,14 @@ export default function BookingPage() {
   const [destination, setDestination] = useState('danang');
   const [clinic, setClinic] = useState('Any Vetted Partner Clinic');
   const [preferredSession, setPreferredSession] = useState<'morning' | 'afternoon'>('morning');
+  const [confirmedHour, setConfirmedHour] = useState('');
   
   const [treatment, setTreatment] = useState('Choose your treatment');
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [serviceQuantities, setServiceQuantities] = useState<Record<string, number>>({});
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [serviceSearch, setServiceSearch] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [additionalDetails, setAdditionalDetails] = useState('');
 
   // Referral state
@@ -81,6 +93,7 @@ export default function BookingPage() {
   const [formError, setFormError] = useState('');
   const [bookingStatus, setBookingStatus] = useState<'confirmed' | 'cancelled' | 'checked_in'>('confirmed');
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Vetted clinics list mapping
   const clinicsByDest: Record<string, string[]> = {
@@ -100,6 +113,36 @@ export default function BookingPage() {
     ]
   };
 
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Keep treatment selection string in sync for global QR code generation and printable card
+  useEffect(() => {
+    if (selectedServices.length > 0) {
+      const textList = selectedServices.map(serName => {
+        const tObj = TREATMENTS.find(t => t.name === serName);
+        if (tObj?.hasQuantity) {
+          const qty = serviceQuantities[serName] || 1;
+          if (qty > 1) {
+            return `${serName} (x${qty})`;
+          }
+        }
+        return serName;
+      });
+      setTreatment(textList.join(', '));
+    } else {
+      setTreatment('Choose your treatment');
+    }
+  }, [selectedServices, serviceQuantities]);
+
   // Restore saved pass if user refreshes or returns later
   useEffect(() => {
     const saved = localStorage.getItem('ucsmile_saved_booking');
@@ -110,11 +153,38 @@ export default function BookingPage() {
         setWhatsappPhone(data.whatsappPhone || '');
         setEmail(data.email || '');
         setNationality(data.nationality || 'Select Nationality');
-        setTreatment(data.treatment || 'Choose your treatment');
+        
+        const savedTreatment = data.treatment || 'Choose your treatment';
+        if (savedTreatment && savedTreatment !== 'Choose your treatment') {
+          // Reconstruct array of selected services by stripping out the quantity suffix e.g. " (x3)"
+          const list = savedTreatment.split(', ').filter(Boolean).map(item => item.replace(/\s*\(x\d+\)/g, ''));
+          setSelectedServices(list);
+          setTreatment(savedTreatment);
+
+          // Restore quantities
+          if (data.serviceQuantities) {
+            setServiceQuantities(data.serviceQuantities);
+          } else {
+            const quants: Record<string, number> = {};
+            savedTreatment.split(', ').filter(Boolean).forEach(item => {
+              const match = item.match(/(.+?)\s*\(x(\d+)\)/);
+              if (match) {
+                quants[match[1]] = parseInt(match[2], 10);
+              }
+            });
+            setServiceQuantities(quants);
+          }
+        } else {
+          setSelectedServices([]);
+          setServiceQuantities({});
+          setTreatment('Choose your treatment');
+        }
+
         setDestination(data.destination || 'danang');
         setClinic(data.clinic || 'Any Vetted Partner Clinic');
         setPreferredDate(data.preferredDate || '');
         setPreferredSession(data.preferredSession || 'morning');
+        setConfirmedHour(data.confirmedHour || '');
         setAdditionalDetails(data.additionalDetails || '');
         setBookingId(data.bookingId || '');
         setQrCodeUrl(data.qrCodeUrl || '');
@@ -157,16 +227,38 @@ export default function BookingPage() {
     }
   }, [destination, bookingConfirmed]);
 
-  // Pricing calculation helper
+  // Reset confirmed hour when session changes
+  useEffect(() => {
+    if (!bookingConfirmed) {
+      setConfirmedHour('');
+    }
+  }, [preferredSession, bookingConfirmed]);
+
+  // Pricing calculation helper for multiple selected services
   const getPriceRange = () => {
-    if (treatment === 'Choose your treatment' || !treatment) {
+    if (selectedServices.length === 0) {
       return { min: 0, max: 0 };
     }
-    const tObj = TREATMENTS.find(t => t.name === treatment);
-    if (!tObj || !tObj.prices || !tObj.prices.vn) {
-      return { min: 0, max: 0 };
+    let totalMin = 0;
+    let totalMax = 0;
+    selectedServices.forEach(serName => {
+      const tObj = TREATMENTS.find(t => t.name === serName);
+      if (tObj && tObj.prices && tObj.prices.vn) {
+        const qty = tObj.hasQuantity ? (serviceQuantities[serName] || 1) : 1;
+        totalMin += tObj.prices.vn.min * qty;
+        totalMax += tObj.prices.vn.max * qty;
+      }
+    });
+    return { min: totalMin, max: totalMax };
+  };
+
+  const getServicePriceRangeText = (serName: string, customQty?: number) => {
+    const tObj = TREATMENTS.find(t => t.name === serName);
+    if (tObj && tObj.prices && tObj.prices.vn) {
+      const qty = customQty !== undefined ? customQty : (tObj.hasQuantity ? (serviceQuantities[serName] || 1) : 1);
+      return `$${tObj.prices.vn.min * qty} - $${tObj.prices.vn.max * qty}`;
     }
-    return tObj.prices.vn; // VN clinic price estimator
+    return '';
   };
 
   const { min, max } = getPriceRange();
@@ -175,8 +267,8 @@ export default function BookingPage() {
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
-    if (!fullName.trim() || !whatsappPhone.trim() || treatment === 'Choose your treatment' || !preferredDate.trim()) {
-      setFormError('Please fill in all required fields marked with *');
+    if (!fullName.trim() || !whatsappPhone.trim() || selectedServices.length === 0 || !preferredDate.trim() || !confirmedHour) {
+      setFormError('Please fill in all required fields marked with * and select at least one treatment');
       return;
     }
 
@@ -186,6 +278,8 @@ export default function BookingPage() {
     setTimeout(async () => {
       const uniqueId = `UCS-${Math.floor(1000 + Math.random() * 9000)}-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`;
       
+      const formattedSession = `${confirmedHour} (${preferredSession === 'morning' ? 'Morning' : 'Afternoon'} Session)`;
+
       // Web verification URL inside QR Code (so any standard scanner redirects to a sleek, beautiful check-in pass page)
       const token = encodeBooking({
         id: uniqueId,
@@ -193,7 +287,7 @@ export default function BookingPage() {
         service: treatment,
         clinic: clinic,
         date: preferredDate,
-        session: preferredSession === 'morning' ? 'Morning Session (08:00 - 12:00)' : 'Afternoon Session (13:30 - 17:30)',
+        session: formattedSession,
         phone: whatsappPhone,
         nationality: nationality || '',
         destination: destination || '',
@@ -231,10 +325,12 @@ export default function BookingPage() {
         email,
         nationality,
         treatment,
+        serviceQuantities,
         destination,
         clinic,
         preferredDate,
         preferredSession,
+        confirmedHour,
         additionalDetails,
         bookingId: uniqueId,
         qrCodeUrl: generatedUrl,
@@ -246,12 +342,42 @@ export default function BookingPage() {
       setTimeout(async () => {
         if (passRef.current) {
           try {
-            // Use window scroll offset to prevent cut off inside iframe
+             // Retrieve any images inside the ticket (such as the QR code) and verify they are fully loaded
+             const images = passRef.current.querySelectorAll('img');
+             const loadPromises = Array.from(images).map((el) => {
+               const img = el as HTMLImageElement;
+               if (img.complete) return Promise.resolve();
+               return new Promise<void>((resolve) => {
+                 img.onload = () => resolve();
+                 img.onerror = () => resolve();
+               });
+             });
+             await Promise.all(loadPromises);
+
+            // High reliability capture settings to bypass iframe layout constraints
             const canvas = await html2canvas(passRef.current, {
               backgroundColor: '#141618',
-              scale: 2,
+              scale: 3, // Ultra-crisp rendering
               useCORS: true,
+              allowTaint: true,
               logging: false,
+              width: passRef.current.offsetWidth,
+              height: passRef.current.offsetHeight,
+              windowWidth: passRef.current.scrollWidth,
+              windowHeight: passRef.current.scrollHeight,
+              scrollX: 0,
+              scrollY: 0,
+              onclone: (clonedDoc) => {
+                // Remove transitions, scales, and transforms for stable static screenshot
+                const passNode = clonedDoc.querySelector('[data-ticket-pass]');
+                if (passNode) {
+                  const element = passNode as HTMLElement;
+                  element.style.transform = 'none';
+                  element.style.transition = 'none';
+                  element.style.animation = 'none';
+                  element.style.opacity = '1';
+                }
+              }
             });
             const dataUrl = canvas.toDataURL('image/png');
             const downloadLink = document.createElement('a');
@@ -281,7 +407,7 @@ export default function BookingPage() {
             document.body.removeChild(downloadLink);
           }
         }
-      }, 1200); // 1.2s delay ensures that CSS transitions & framer motion entry animations are completely finished
+      }, 1500); // Increased to 1.5s delay to guarantee full state stabilization, animation resolution and image painting
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }, 1500);
@@ -289,13 +415,48 @@ export default function BookingPage() {
 
   // Helper function to manual download of full styled booking pass or QR fallback
   const downloadBookingPass = async () => {
+    if (isDownloading) return;
+    setIsDownloading(true);
+
+    // Minor delay to let UI state changes paint nicely
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
     if (passRef.current) {
       try {
+        // Retrieve and pre-wait for all image nodes inside the ticket structure to resolve fully
+        const images = passRef.current.querySelectorAll('img');
+        const loadPromises = Array.from(images).map((el) => {
+          const img = el as HTMLImageElement;
+          if (img.complete) return Promise.resolve();
+          return new Promise<void>((resolve) => {
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+          });
+        });
+        await Promise.all(loadPromises);
+
         const canvas = await html2canvas(passRef.current, {
           backgroundColor: '#141618',
-          scale: 2,
+          scale: 3, // Ultra crisp high-definition ticket download
           useCORS: true,
+          allowTaint: true,
           logging: false,
+          width: passRef.current.offsetWidth,
+          height: passRef.current.offsetHeight,
+          windowWidth: passRef.current.scrollWidth,
+          windowHeight: passRef.current.scrollHeight,
+          scrollX: 0,
+          scrollY: 0,
+          onclone: (clonedDoc) => {
+            const passNode = clonedDoc.querySelector('[data-ticket-pass]');
+            if (passNode) {
+              const element = passNode as HTMLElement;
+              element.style.transform = 'none';
+              element.style.transition = 'none';
+              element.style.animation = 'none';
+              element.style.opacity = '1';
+            }
+          }
         });
         const dataUrl = canvas.toDataURL('image/png');
         const link = document.createElement('a');
@@ -314,6 +475,8 @@ export default function BookingPage() {
           link.click();
           document.body.removeChild(link);
         }
+      } finally {
+        setIsDownloading(false);
       }
     } else {
       if (qrCodeUrl) {
@@ -324,6 +487,7 @@ export default function BookingPage() {
         link.click();
         document.body.removeChild(link);
       }
+      setIsDownloading(false);
     }
   };
 
@@ -340,8 +504,11 @@ export default function BookingPage() {
     setEmail('');
     setNationality('Select Nationality');
     setTreatment('Choose your treatment');
+    setSelectedServices([]);
+    setServiceQuantities({});
     setDestination('danang');
     setPreferredDate('');
+    setConfirmedHour('');
     setAdditionalDetails('');
     setBookingId('');
     setQrCodeUrl('');
@@ -361,7 +528,7 @@ export default function BookingPage() {
       `📍 *City:* ${destination === 'danang' ? 'Da Nang' : 'Ho Chi Minh'}\n` +
       `🏥 *Dental Facility:* ${clinic}\n` +
       `📅 *Date:* ${preferredDate}\n` +
-      `🕒 *Time Session:* ${preferredSession === 'morning' ? '🌞 Morning Session' : '🌙 Afternoon Session'}\n` +
+      `🕒 *Time Session:* ${preferredSession === 'morning' ? '🌞 Morning Session' : '🌙 Afternoon Session'} at ${confirmedHour}\n` +
       `💰 *Estimated Cost:* $${min} - $${max} USD\n` +
       `📝 *Additional Notes:* ${additionalDetails || 'None'}\n\n` +
       `Please register my private diagnostic appointment window and secure local coordination support! 💎`;
@@ -575,60 +742,328 @@ export default function BookingPage() {
                       </select>
                     </div>
 
-                    <div className="text-left">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 ml-1">
-                        CONFIRMED SESSION
-                      </label>
-                      <div className="grid grid-cols-2 gap-4">
-                        <button
-                          type="button"
-                          onClick={() => setPreferredSession('morning')}
-                          className={`p-4 rounded-xl border text-xs font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
-                            preferredSession === 'morning' 
-                            ? 'bg-amber-50/50 border-[#FFD151] text-[#FFB800] ring-1 ring-[#FFD151]/20' 
-                            : 'bg-white border-gray-200 text-gray-400 hover:text-gray-700'
-                          }`}
-                        >
-                          <Sun className={`w-5 h-5 ${preferredSession === 'morning' ? 'text-[#FFB800]' : 'text-gray-400'}`} />
-                          <span className="font-black tracking-[0.1em]">MORNING</span>
-                        </button>
-                        
-                        <button
-                          type="button"
-                          onClick={() => setPreferredSession('afternoon')}
-                          className={`p-4 rounded-xl border text-xs font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
-                            preferredSession === 'afternoon' 
-                            ? 'bg-amber-50/50 border-[#FFD151] text-[#FFB800] ring-1 ring-[#FFD151]/20' 
-                            : 'bg-white border-gray-200 text-gray-400 hover:text-gray-700'
-                          }`}
-                        >
-                          <Moon className={`w-5 h-5 ${preferredSession === 'afternoon' ? 'text-[#FFB800]' : 'text-gray-400'}`} />
-                          <span className="font-black tracking-[0.1em]">AFTERNOON</span>
-                        </button>
+                    <div className="grid md:grid-cols-2 gap-5">
+                      <div className="text-left">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 ml-1">
+                          CONFIRMED SESSION <span className="text-red-500">*</span>
+                        </label>
+                        <div className="grid grid-cols-2 gap-4">
+                          <button
+                            type="button"
+                            onClick={() => setPreferredSession('morning')}
+                            className={`p-4 rounded-xl border text-xs font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
+                              preferredSession === 'morning' 
+                              ? 'bg-amber-50/50 border-[#FFD151] text-[#FFB800] ring-1 ring-[#FFD151]/20' 
+                              : 'bg-white border-gray-200 text-gray-400 hover:text-gray-700'
+                            }`}
+                          >
+                            <Sun className={`w-5 h-5 ${preferredSession === 'morning' ? 'text-[#FFB800]' : 'text-gray-400'}`} />
+                            <span className="font-black tracking-[0.1em]">MORNING</span>
+                          </button>
+                          
+                          <button
+                            type="button"
+                            onClick={() => setPreferredSession('afternoon')}
+                            className={`p-4 rounded-xl border text-xs font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
+                              preferredSession === 'afternoon' 
+                              ? 'bg-amber-50/50 border-[#FFD151] text-[#FFB800] ring-1 ring-[#FFD151]/20' 
+                              : 'bg-white border-gray-200 text-gray-400 hover:text-gray-700'
+                            }`}
+                          >
+                            <Moon className={`w-5 h-5 ${preferredSession === 'afternoon' ? 'text-[#FFB800]' : 'text-gray-400'}`} />
+                            <span className="font-black tracking-[0.1em]">AFTERNOON</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="text-left font-sans">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 ml-1">
+                          CONFIRMED HOUR <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <select 
+                            value={confirmedHour}
+                            onChange={(e) => setConfirmedHour(e.target.value)}
+                            className="w-full bg-[#FAF9F6]/50 border border-gray-200 rounded-xl pl-10 pr-4 py-4 text-sm text-brand-text focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 transition-all appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%20%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%239CA3AF%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat font-semibold text-gray-800"
+                            required
+                          >
+                            <option value="">Select Confirmed Hour</option>
+                            {(preferredSession === 'morning' 
+                              ? ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30'] 
+                              : ['13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00']
+                            ).map((hourOpt) => (
+                              <option key={hourOpt} value={hourOpt}>
+                                {hourOpt} {preferredSession === 'morning' ? 'AM' : 'PM'}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                            <Clock className="w-4.5 h-4.5 text-amber-500" />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Part C: Selected Treatment Services */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2.5 border-b border-gray-100 pb-3 text-left">
-                      <span className="text-[#FFB800] text-lg font-bold">🩺</span>
+                  <div className="space-y-4" ref={dropdownRef}>
+                    <div className="flex items-center gap-2 border-b border-gray-100 pb-3 text-left">
+                      <Stethoscope className="w-5 h-5 text-[#FFB800]" />
                       <h3 className="font-bold text-lg text-gray-900">Select Services <span className="text-red-500">*</span></h3>
                     </div>
 
-                    <div className="text-left">
-                      <select 
-                        value={treatment}
-                        onChange={(e) => setTreatment(e.target.value)}
-                        className="w-full bg-[#FAF9F6]/50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-brand-text focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 transition-all appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%20%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%239CA3AF%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.85rem_center] bg-no-repeat font-medium text-gray-700"
-                        required
+                    <div className="relative text-left">
+                      {/* Anchor Selector Button */}
+                      <button
+                        type="button"
+                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                        className={`w-full border rounded-[1.2rem] px-5 py-4 text-sm font-semibold flex items-center justify-between cursor-pointer shadow-sm transition-all ${
+                          selectedServices.length > 0 
+                            ? 'bg-white border-amber-300 ring-2 ring-amber-100/50 text-gray-900' 
+                            : 'bg-[#FAF9F6]/50 border-gray-200 text-gray-400 hover:border-amber-300 hover:bg-white'
+                        }`}
                       >
-                        <option disabled value="Choose your treatment">Choose your treatment</option>
-                        {TREATMENTS.map(t => (
-                          <option key={t.id} value={t.name}>{t.name}</option>
-                        ))}
-                      </select>
+                        <span className={selectedServices.length === 0 ? 'text-gray-400 font-normal font-sans' : 'text-gray-900 font-bold font-sans'}>
+                          {selectedServices.length === 0 
+                            ? 'Choose treatment services...' 
+                            : `${selectedServices.length} service${selectedServices.length > 1 ? 's' : ''} selected`
+                          }
+                        </span>
+                        <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {/* Dropdown Panel */}
+                      {isDropdownOpen && (
+                        <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-150 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] z-40 overflow-hidden max-h-[350px] flex flex-col">
+                          {/* Search Area */}
+                          <div className="p-3 border-b border-gray-100 flex items-center gap-2 bg-gray-50/70">
+                            <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            <input 
+                              type="text"
+                              value={serviceSearch}
+                              onChange={(e) => setServiceSearch(e.target.value)}
+                              placeholder="Search treatment services..."
+                              className="w-full bg-transparent text-xs focus:outline-none font-semibold text-gray-800 placeholder:text-gray-400"
+                            />
+                            {serviceSearch && (
+                              <button 
+                                type="button" 
+                                onClick={() => setServiceSearch('')}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+
+                          {/* List of Treatments */}
+                          <div className="overflow-y-auto py-1 max-h-[290px] bg-white divide-y divide-gray-50/50">
+                            {(() => {
+                              const filtered = TREATMENTS.filter(t => 
+                                t.name.toLowerCase().includes(serviceSearch.toLowerCase()) ||
+                                t.category.toLowerCase().includes(serviceSearch.toLowerCase())
+                              );
+
+                              if (filtered.length === 0) {
+                                return (
+                                  <div className="p-6 text-center text-xs text-gray-400 font-semibold">
+                                    No services match "{serviceSearch}"
+                                  </div>
+                                );
+                              }
+
+                              // Group filtered items by category
+                              const categories: string[] = [];
+                              const grouped: Record<string, Treatment[]> = {};
+                              
+                              filtered.forEach(t => {
+                                const cat = t.category || 'Other';
+                                if (!grouped[cat]) {
+                                  grouped[cat] = [];
+                                  categories.push(cat);
+                                }
+                                grouped[cat].push(t);
+                              });
+
+                              return categories.map((category) => (
+                                <div key={category} className="bg-white">
+                                  {/* Category Header */}
+                                  <div className="px-4.5 py-2.5 text-[10px] font-bold tracking-wider text-slate-400/90 uppercase font-sans select-none bg-gray-50/30 border-b border-gray-100/30">
+                                    {category}
+                                  </div>
+                                  
+                                  {/* Group Services */}
+                                  <div className="divide-y divide-gray-50/40">
+                                    {grouped[category].map((t) => {
+                                      const isChecked = selectedServices.includes(t.name);
+                                      return (
+                                        <div 
+                                          key={t.id}
+                                          onClick={() => {
+                                            if (isChecked) {
+                                              setSelectedServices(selectedServices.filter(item => item !== t.name));
+                                              const newQuants = {...serviceQuantities};
+                                              delete newQuants[t.name];
+                                              setServiceQuantities(newQuants);
+                                            } else {
+                                              setSelectedServices([...selectedServices, t.name]);
+                                              if (t.hasQuantity) {
+                                                setServiceQuantities(prev => ({ ...prev, [t.name]: 1 }));
+                                              }
+                                            }
+                                          }}
+                                          className={`flex items-start gap-3 pl-4 pr-3.5 py-3.5 hover:bg-gray-50/50 cursor-pointer transition-colors select-none ${
+                                            isChecked ? 'bg-amber-50/10' : ''
+                                          }`}
+                                        >
+                                          {/* Check Icon Column - indented style */}
+                                          <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
+                                            {isChecked ? (
+                                              <Check className="w-4.5 h-4.5 text-[#FFB800] stroke-[3]" />
+                                            ) : null}
+                                          </div>
+                                          
+                                          <div className="flex-1 text-left min-w-0">
+                                            <span className={`text-xs sm:text-sm tracking-tight ${
+                                              isChecked ? 'text-gray-900 font-bold' : 'text-gray-700 font-medium'
+                                            }`}>
+                                              {t.name}
+                                            </span>
+
+                                            {/* Quantity adjustment if checked & supports quantity */}
+                                            {t.hasQuantity && isChecked && (
+                                              <div 
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="flex items-center gap-1.5 mt-2 bg-white/90 rounded-full px-2 py-0.5 w-max border border-gray-200 shadow-xs"
+                                              >
+                                                <button 
+                                                  type="button"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const currentVal = serviceQuantities[t.name] || 1;
+                                                    if (currentVal > 1) {
+                                                      setServiceQuantities(prev => ({ ...prev, [t.name]: currentVal - 1 }));
+                                                    }
+                                                  }} 
+                                                  className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-700 cursor-pointer"
+                                                  title="Decrease quantity"
+                                                >
+                                                  <Minus className="w-2.5 h-2.5" />
+                                                </button>
+                                                <span className="text-[10px] font-bold min-w-[0.8rem] text-center text-gray-800 font-mono select-none">
+                                                  {serviceQuantities[t.name] || 1}
+                                                </span>
+                                                <button 
+                                                  type="button"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const currentVal = serviceQuantities[t.name] || 1;
+                                                    setServiceQuantities(prev => ({ ...prev, [t.name]: currentVal + 1 }));
+                                                  }} 
+                                                  className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-700 cursor-pointer"
+                                                  title="Increase quantity"
+                                                >
+                                                  <Plus className="w-2.5 h-2.5" />
+                                                </button>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ));
+                            })()}
+                          </div>
+                        </div>
+                      )}
                     </div>
+
+                    {/* Selected Services Display */}
+                    {selectedServices.length > 0 && (
+                      <div className="flex flex-col pt-3 border-t border-gray-100/80 divide-y divide-gray-100 text-left">
+                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider pb-1 px-1 select-none">
+                          Selected Treatment ({selectedServices.length})
+                        </div>
+                        {selectedServices.map((serName) => {
+                          const tObj = TREATMENTS.find(t => t.name === serName);
+                          const qty = serviceQuantities[serName] || 1;
+                          const priceStr = getServicePriceRangeText(serName, qty);
+                          return (
+                            <div 
+                              key={serName}
+                              className="flex items-center justify-between py-2.5 px-1 hover:bg-gray-50/40 rounded-lg transition-colors"
+                            >
+                              {/* Left Column: Service Name */}
+                              <div className="min-w-0 pr-2">
+                                <span className="font-sans font-semibold text-gray-800 text-xs sm:text-sm block truncate">
+                                  {serName}
+                                </span>
+                              </div>
+
+                              {/* Right Columns aligned */}
+                              <div className="flex items-center gap-3.5 flex-shrink-0">
+                                {/* Quantity Column (only if applies) */}
+                                {tObj?.hasQuantity ? (
+                                  <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-md px-1.5 py-0.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (qty > 1) {
+                                          setServiceQuantities(prev => ({ ...prev, [serName]: qty - 1 }));
+                                        }
+                                      }}
+                                      className="p-0.5 hover:bg-gray-200 text-gray-500 rounded transition-colors cursor-pointer"
+                                      title="Decrease qty"
+                                    >
+                                      <Minus className="w-2.5 h-2.5" />
+                                    </button>
+                                    <span className="text-[11px] font-bold text-gray-800 font-mono min-w-[10px] text-center select-none">
+                                      {qty}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setServiceQuantities(prev => ({ ...prev, [serName]: qty + 1 }));
+                                      }}
+                                      className="p-0.5 hover:bg-gray-200 text-gray-500 rounded transition-colors cursor-pointer"
+                                      title="Increase qty"
+                                    >
+                                      <Plus className="w-2.5 h-2.5" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="w-[48px] hidden sm:block" />
+                                )}
+
+                                {/* Price Column */}
+                                {priceStr && (
+                                  <span className="font-mono text-xs text-slate-500 font-medium min-w-[75px] text-right">
+                                    {priceStr}
+                                  </span>
+                                )}
+
+                                {/* Remove Button Column */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedServices(selectedServices.filter(x => x !== serName));
+                                    const newQuants = {...serviceQuantities};
+                                    delete newQuants[serName];
+                                    setServiceQuantities(newQuants);
+                                  }}
+                                  className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all cursor-pointer"
+                                  title="Remove service"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Part D: Notes */}
@@ -706,7 +1141,7 @@ export default function BookingPage() {
               </div>
 
               {/* CLEAN DENTAL APPOINTMENT PASS (Pristine, focused completely on pass + QR code) */}
-              <div ref={passRef} className="bg-[#141618] text-white rounded-[2.5rem] overflow-hidden shadow-2xl relative border border-white/5 flex flex-col">
+              <div ref={passRef} data-ticket-pass="true" className="bg-[#141618] text-white rounded-[2.5rem] overflow-hidden shadow-2xl relative border border-white/5 flex flex-col">
                 {/* Vintage Ticket tear notches */}
                 <span className="absolute left-0 top-[32%] w-6 h-6 rounded-full bg-[#FAF9F6] -ml-3 z-30" />
                 <span className="absolute right-0 top-[32%] w-6 h-6 rounded-full bg-[#FAF9F6] -mr-3 z-30" />
@@ -760,9 +1195,42 @@ export default function BookingPage() {
                       <span className="text-gray-400 uppercase tracking-wider">Patient Name</span>
                       <span className="text-white font-bold">{fullName}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400 uppercase tracking-wider">Selected Treatment</span>
-                      <span className="text-white font-bold">{treatment}</span>
+                    <div className="flex flex-col gap-2 pt-1 font-sans">
+                      <div className="flex justify-between font-mono">
+                        <span className="text-gray-400 uppercase tracking-wider text-xs">Selected Treatment</span>
+                        <span className="text-gray-400 text-[10px]">({selectedServices.length} treatment{selectedServices.length > 1 ? 's' : ''})</span>
+                      </div>
+                      
+                      <div className="border border-white/5 bg-white/5 rounded-2xl divide-y divide-white/10 p-2 text-left">
+                        {selectedServices.map((serName) => {
+                          const tObj = TREATMENTS.find(t => t.name === serName);
+                          const qty = serviceQuantities[serName] || 1;
+                          const priceStr = getServicePriceRangeText(serName, qty);
+
+                          return (
+                            <div key={serName} className="flex items-center justify-between py-2 px-2 hover:bg-white/5 rounded-lg transition-colors">
+                              <div className="min-w-0 pr-2">
+                                <span className="font-sans font-semibold text-gray-200 text-xs block truncate">
+                                  {serName}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-3 flex-shrink-0">
+                                {tObj?.hasQuantity && (
+                                  <span className="text-[10px] font-bold text-gray-300 bg-white/10 border border-white/10 rounded px-1.5 py-0.5 font-mono select-none">
+                                    Qty: {qty}
+                                  </span>
+                                )}
+
+                                {priceStr && (
+                                  <span className="font-mono text-xs text-amber-350 font-semibold min-w-[75px] text-right">
+                                    {priceStr}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400 uppercase tracking-wider">Dental Clinic</span>
@@ -774,8 +1242,16 @@ export default function BookingPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400 uppercase tracking-wider">Appointment Date</span>
-                      <span className="text-white font-bold">{preferredDate} ({preferredSession === 'morning' ? 'Morning' : 'Afternoon'})</span>
+                      <span className="text-white font-bold">{preferredDate}</span>
                     </div>
+                    {confirmedHour && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400 uppercase tracking-wider">Confirmed Hour</span>
+                        <span className="text-[#FFD151] font-bold">
+                          {confirmedHour} ({preferredSession === 'morning' ? 'Morning' : 'Afternoon'})
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Clean Visual QR container */}
@@ -813,10 +1289,27 @@ export default function BookingPage() {
                 <button
                   type="button"
                   onClick={downloadBookingPass}
-                  className="w-full py-4 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 shadow-sm font-extrabold text-xs tracking-widest uppercase rounded-2xl flex items-center justify-center gap-2.5 transition-all cursor-pointer"
+                  disabled={isDownloading}
+                  className={`w-full py-4 font-extrabold text-xs tracking-widest uppercase rounded-2xl flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                    isDownloading 
+                      ? 'bg-gray-100 text-gray-400 border border-gray-100 cursor-not-allowed animate-pulse' 
+                      : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 shadow-sm'
+                  }`}
                 >
-                  <Download className="w-4.5 h-4.5 text-[#FFB800]" />
-                  <span>Download Booking Pass Image (.PNG)</span>
+                  {isDownloading ? (
+                    <>
+                      <svg className="animate-spin h-4.5 w-4.5 text-[#FFB800]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Generating Pass Image...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4.5 h-4.5 text-[#FFB800]" />
+                      <span>Download Booking Pass Image (.PNG)</span>
+                    </>
+                  )}
                 </button>
 
                 {/* State resets with confirmation built with React states */}
