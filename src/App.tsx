@@ -102,6 +102,8 @@ function Layout() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/blogs" element={<BlogPage />} />
         <Route path="/booking" element={<BookingPage />} />
+        <Route path="/booking/internal" element={<BookingPage />} />
+        <Route path="/booking/pass/:bookingCode" element={<BookingPage />} />
         <Route path="/verify" element={<VerifyPage />} />
       </Routes>
 
