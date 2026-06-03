@@ -14,12 +14,14 @@ import {
   Mail, 
   Lock, 
   Share2, 
+  Calendar,
   Briefcase,
   ExternalLink,
   ChevronRight,
   ChevronDown,
   ChevronUp,
-  Info
+  Info,
+  Camera
 } from 'lucide-react';
 import Logo from './Logo';
 
@@ -648,6 +650,7 @@ export function ReferrerDashboardPage() {
   // States
   const [referrer, setReferrer] = useState<ReferrerAccount | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [codeTouched, setCodeTouched] = useState(false);
   
   // Editable properties
   const [tempReferralCode, setTempReferralCode] = useState('');
@@ -658,6 +661,40 @@ export function ReferrerDashboardPage() {
   const [copied, setCopied] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   const [isReferralsExpanded, setIsReferralsExpanded] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file (PNG, JPG, etc.).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64Url = event.target?.result as string;
+      if (!base64Url || !referrer) return;
+
+      const updatedReferrer: ReferrerAccount = {
+        ...referrer,
+        avatarUrl: base64Url
+      };
+
+      // Update in database list
+      const dbList = getReferrersList();
+      const updatedList = dbList.map(r => r.email === referrer.email ? updatedReferrer : r);
+      saveReferrersList(updatedList);
+
+      // Update local state and session storage
+      localStorage.setItem(REFERRER_SESSION_KEY, JSON.stringify(updatedReferrer));
+      setReferrer(updatedReferrer);
+      setTempAvatarUrl(base64Url);
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Load and refresh session
   useEffect(() => {
@@ -713,11 +750,28 @@ export function ReferrerDashboardPage() {
   // Handle Saves (Edit mode toggle)
   const handleSave = () => {
     if (!tempReferralCode.trim()) {
+      setCodeTouched(true);
       alert('Referral Code is required.');
       return;
     }
 
     const cleanedCode = tempReferralCode.trim().toUpperCase();
+
+    if (cleanedCode.length < 6 || cleanedCode.length > 12) {
+      setCodeTouched(true);
+      alert('Referral Code must be between 6 and 12 characters.');
+      return;
+    }
+
+    if (tempDisplayName.trim() && tempDisplayName.trim().length >= 12) {
+      alert('Display Name must be less than 12 characters.');
+      return;
+    }
+
+    if (tempSharingMessage.trim() && tempSharingMessage.trim().length >= 40) {
+      alert('Sharing Message must be less than 40 characters.');
+      return;
+    }
 
     // Check code duplication with other referrers in DB
     const dbList = getReferrersList();
@@ -795,21 +849,39 @@ export function ReferrerDashboardPage() {
         {/* Profile Card Header */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.01)] p-6 md:p-8 flex flex-col sm:flex-row items-center gap-6 transition-all">
           <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-            <div className="relative">
-              <img 
-                src={referrer.avatarUrl} 
-                alt={referrer.fullName} 
-                className="w-16 h-16 rounded-full object-cover border border-amber-100/50 shadow-sm"
-                referrerPolicy="no-referrer"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop';
-                }}
+            <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()} title="Click to change profile picture">
+              <div className="w-20 h-20 rounded-full overflow-hidden relative border border-amber-100/65 shadow-sm bg-neutral-50 flex items-center justify-center">
+                <img 
+                  src={referrer.avatarUrl} 
+                  alt={referrer.fullName} 
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop';
+                  }}
+                />
+                
+                {/* Hover overlay exhibiting camera icon */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center text-white gap-1 select-none">
+                  <Camera className="w-5 h-5 text-amber-300 animate-pulse" />
+                  <span className="text-[8px] font-sans font-bold tracking-wider uppercase text-gray-100">Change</span>
+                </div>
+              </div>
+              
+              <input 
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
               />
-              <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full" />
             </div>
-            <div>
+            <div className="space-y-1.5 text-center sm:text-left">
+              <span className="text-xs font-semibold text-amber-600 block uppercase tracking-wider font-sans">
+                Welcome back!
+              </span>
               <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start font-sans">
-                <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
                   {referrer.fullName}
                 </h2>
                 <div className="flex gap-1.5">
@@ -861,12 +933,11 @@ export function ReferrerDashboardPage() {
         {/* Dashboard Body */}
         <div className="space-y-6">
           
-          {/* Top Section (Metrics & Referrals List) */}
-          <div className="space-y-6">
-            
+          {/* Connected Metrics & Referral List Module */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.01)] overflow-hidden divide-y divide-gray-100">
             {/* Dashboard Performance Metrics Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col justify-between shadow-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+              <div className="p-6 flex flex-col justify-between">
                 <span className="text-[10px] uppercase font-bold tracking-wider text-gray-450 block font-sans">
                   Total Referred Bookings
                 </span>
@@ -878,7 +949,7 @@ export function ReferrerDashboardPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col justify-between shadow-xs">
+              <div className="p-6 flex flex-col justify-between">
                 <span className="text-[10px] uppercase font-bold tracking-wider text-gray-450 block font-sans">
                   Successful
                 </span>
@@ -892,89 +963,119 @@ export function ReferrerDashboardPage() {
             </div>
 
             {/* Referrals Count Tracker List */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden p-0">
+            <div>
               <div 
                 onClick={() => setIsReferralsExpanded(!isReferralsExpanded)}
-                className="p-6 md:p-8 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 cursor-pointer hover:bg-slate-50/40 select-none transition-colors"
+                className="p-6 md:p-8 flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/30 select-none transition-colors"
               >
-                <div>
-                  <h3 className="text-sm font-bold uppercase text-gray-900 tracking-wider">
+                <div className="flex items-center gap-2.5">
+                  <h3 className="text-sm font-bold uppercase text-gray-900 tracking-wider font-sans">
                     Referral Records List
                   </h3>
                 </div>
                 
-                {/* Collapsible toggle trigger button replacing static text badge */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsReferralsExpanded(!isReferralsExpanded);
-                  }}
-                  className="flex items-center gap-2 self-start sm:self-center bg-gray-50 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-xs font-bold font-sans transition-all active:scale-[97%]"
+                <div 
+                  className="inline-flex items-center gap-1 border border-gray-200 hover:border-amber-400 py-1.5 px-3 rounded-lg text-[10px] font-bold text-gray-600 hover:text-gray-900 transition-all uppercase tracking-wider bg-white shadow-xs whitespace-nowrap"
                 >
-                  <span className="font-mono">{referredPatients.length} Active Records</span>
-                  {isReferralsExpanded ? (
-                    <ChevronUp className="w-4 h-4 text-gray-500 hover:text-amber-700 transition-colors" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-500 hover:text-amber-700 transition-colors" />
-                  )}
-                </button>
+                  <span>{isReferralsExpanded ? 'Hide' : 'Show'}</span>
+                  <div className={`transform transition-transform duration-200 ${isReferralsExpanded ? 'rotate-180' : 'rotate-0'}`}>
+                    <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+                  </div>
+                </div>
               </div>
 
               {isReferralsExpanded && (
                 <>
                   {referredPatients.length === 0 ? (
-                    <div className="text-center py-16 px-4 bg-gray-50/20">
+                    <div className="text-center py-16 px-4 bg-gray-50/20 border-t border-gray-100">
                       <Share2 className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                       <p className="text-xs text-gray-500 font-bold">No registered referrals found.</p>
                       <p className="text-[10px] text-gray-400 mt-1 leading-snug">Share your personalized invite link. When a patient schedules, they will show up here.</p>
                     </div>
                   ) : (
-                    <div className="divide-y divide-gray-100">
+                    <div className="divide-y divide-gray-100 border-t border-gray-100">
                       {referredPatients.map((patient: any) => {
-                        const statusStr = patient.status || 'confirmed';
+                        const rawStatus = patient.status || 'confirmed';
+                        
+                        // Normalize status
+                        let normalized: 'BOOKING_REQUESTED' | 'CONFIRMED' | 'CANCELLED' | 'CHECKED-IN' = 'CONFIRMED';
+                        const sLower = rawStatus.toLowerCase().trim();
+                        if (sLower === 'booking_requested' || sLower === 'pending' || sLower === 'requested' || sLower === 'booking-requested') {
+                          normalized = 'BOOKING_REQUESTED';
+                        } else if (sLower === 'cancelled' || sLower === 'void' || sLower === 'no_show') {
+                          normalized = 'CANCELLED';
+                        } else if (sLower === 'checked_in' || sLower === 'checked-in' || sLower === 'completed' || sLower === 'arrived') {
+                          normalized = 'CHECKED-IN';
+                        } else {
+                          normalized = 'CONFIRMED';
+                        }
+
+                        // Colors corresponding to the user request
+                        const statusColors = {
+                          BOOKING_REQUESTED: {
+                            bg: 'bg-[#2196F3]/10',
+                            text: 'text-[#2196F3]',
+                            dot: 'bg-[#2196F3]',
+                            border: 'border-[#2196F3]/25',
+                            label: 'Booking Requested'
+                          },
+                          CONFIRMED: {
+                            bg: 'bg-[#FFC107]/10',
+                            text: 'text-[#FFC107]',
+                            dot: 'bg-[#FFC107]',
+                            border: 'border-[#FFC107]/25',
+                            label: 'Confirmed'
+                          },
+                          CANCELLED: {
+                            bg: 'bg-[#F44336]/10',
+                            text: 'text-[#F44336]',
+                            dot: 'bg-[#F44336]',
+                            border: 'border-[#F44336]/25',
+                            label: 'Cancelled'
+                          },
+                          'CHECKED-IN': {
+                            bg: 'bg-[#00B074]/10',
+                            text: 'text-[#00B074]',
+                            dot: 'bg-[#00B074]',
+                            border: 'border-[#00B074]/25',
+                            label: 'Checked-In'
+                          }
+                        };
+
+                        const meta = statusColors[normalized];
+
                         return (
                           <div
                             key={patient.bookingId}
-                            className="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white hover:bg-neutral-50/50 transition-all font-sans"
+                            className="p-4 md:py-5 md:px-6 flex flex-col gap-2 bg-white hover:bg-neutral-50/30 transition-all font-sans"
                           >
-                            <div className="flex items-start gap-3">
-                              <div className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                              <div className="flex flex-col min-w-0">
-                                <span className="font-bold text-sm text-gray-900 font-sans truncate">
+                            {/* Line 1: Name & Status Badge */}
+                            <div className="flex items-center justify-between gap-4 w-full min-w-0">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 animate-pulse" />
+                                <span className="font-bold text-sm md:text-base text-gray-900 tracking-tight truncate">
                                   {patient.fullName}
                                 </span>
-                                <span className="text-[10px] text-gray-400 font-medium font-sans mt-0.5">
-                                  ID: {patient.bookingId} {patient.treatment ? `• ${patient.treatment}` : ''} {patient.clinic ? `• ${patient.clinic.split('(')[0]}` : ''}
-                                </span>
+                              </div>
+                              <div className="shrink-0">
+                                <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 md:px-3 md:py-0.5 rounded-full border text-[9px] md:text-[10px] font-bold tracking-wider uppercase ${meta.bg} ${meta.text} ${meta.border} shadow-xs`}>
+                                  <span className={`w-1 h-1 md:w-1.5 md:h-1.5 rounded-full ${meta.dot}`} />
+                                  <span>{meta.label}</span>
+                                </div>
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-6 justify-between sm:justify-end w-full sm:w-auto font-sans">
-                              {patient.preferredDate && (
-                                <div className="text-xs text-gray-400 font-mono">
-                                  Date: {patient.preferredDate}
-                                </div>
-                              )}
-                              
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <span className={`w-1.5 h-1.5 rounded-full ${
-                                  statusStr === 'checked_in'
-                                    ? 'bg-emerald-500'
-                                    : statusStr === 'cancelled'
-                                      ? 'bg-red-500'
-                                      : 'bg-amber-500'
-                                }`} />
-                                <span className={`text-xs font-semibold uppercase tracking-wider ${
-                                  statusStr === 'checked_in'
-                                    ? 'text-emerald-700'
-                                    : statusStr === 'cancelled'
-                                      ? 'text-red-700'
-                                      : 'text-amber-700'
-                                }`}>
-                                  {statusStr === 'checked_in' ? 'Completed' : (statusStr === 'confirmed' ? 'Confirmed' : statusStr)}
-                                </span>
-                              </div>
+                            {/* Line 2: Phone & Expected Check-In Date */}
+                            <div className="flex items-center gap-3 text-xs text-gray-500 font-medium pl-3.5">
+                              <span className="font-mono flex items-center gap-1.5 shrink-0">
+                                <Phone className="w-3.5 h-3.5 text-gray-400" />
+                                {patient.whatsappPhone || patient.phone || 'N/A'}
+                              </span>
+                              <span className="text-gray-200 select-none">•</span>
+                              <span className="font-mono flex items-center gap-1.5 text-gray-400 shrink-0">
+                                <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                                {patient.preferredDate || 'N/A'}
+                              </span>
                             </div>
                           </div>
                         );
@@ -984,7 +1085,6 @@ export function ReferrerDashboardPage() {
                 </>
               )}
             </div>
-
           </div>
 
           {/* Bottom Section (Customize Settings & Real-time Sharing Preview - side by side on medium/large screens) */}
@@ -999,7 +1099,10 @@ export function ReferrerDashboardPage() {
                 {isEditing ? (
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => setIsEditing(false)}
+                      onClick={() => {
+                        setIsEditing(false);
+                        setCodeTouched(false);
+                      }}
                       className="text-[11px] font-bold text-gray-400 hover:text-gray-650 uppercase tracking-widest"
                     >
                       Cancel
@@ -1014,7 +1117,10 @@ export function ReferrerDashboardPage() {
                   </div>
                 ) : (
                   <button
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => {
+                      setIsEditing(true);
+                      setCodeTouched(false);
+                    }}
                     className="inline-flex items-center gap-1 border border-gray-200 hover:border-amber-400 py-1.5 px-3 rounded-lg text-[10px] font-bold text-gray-600 hover:text-gray-900 transition-all uppercase tracking-wider"
                   >
                     <Edit3 className="w-3 h-3" />
@@ -1031,30 +1137,58 @@ export function ReferrerDashboardPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-bold text-gray-450 uppercase tracking-wider block mb-1.5 font-sans">
-                    Referral Promo Code
-                  </label>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="text-[10px] font-bold text-gray-450 uppercase tracking-wider block font-sans">
+                      Referral Code
+                    </label>
+                    {isEditing && (
+                      <span className="text-[9px] font-mono font-medium text-gray-400">
+                        {tempReferralCode.length}/12
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="text"
                     disabled={!isEditing}
                     value={tempReferralCode}
-                    onChange={(e) => setTempReferralCode(e.target.value.toUpperCase().replace(/\s/g, ''))}
+                    maxLength={12}
+                    onBlur={() => setCodeTouched(true)}
+                    onChange={(e) => {
+                      const val = e.target.value.toUpperCase().replace(/\s/g, '');
+                      setTempReferralCode(val);
+                    }}
                     placeholder="e.g. AMIRAH05"
-                    className={`w-full bg-slate-50/50 border border-gray-250/20 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono font-bold ${
-                      !isEditing ? 'text-gray-500 bg-gray-50/65 cursor-not-allowed' : 'text-gray-900 bg-white border-amber-400/50'
+                    className={`w-full bg-slate-50/50 border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 font-mono font-bold ${
+                      !isEditing 
+                        ? 'text-gray-500 bg-gray-50/65 cursor-not-allowed border-gray-250/20' 
+                        : (codeTouched && tempReferralCode.length < 6)
+                          ? 'border-red-500 text-red-900 bg-red-50/10 focus:ring-red-500'
+                          : 'text-gray-900 bg-white border-amber-400/50 focus:ring-amber-500'
                     }`}
                   />
-                  <p className="text-[10px] text-gray-400 mt-1">Changes are synced immediately to active invite links.</p>
+                  {isEditing && codeTouched && tempReferralCode.length < 6 && (
+                    <p className="text-[10px] text-red-500 font-sans mt-1.5 font-bold flex items-center gap-1">
+                      ⚠️ Referral code must be at least 6 characters.
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-gray-450 uppercase tracking-wider block mb-1.5 font-sans">
-                    Affiliate Display Name
-                  </label>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="text-[10px] font-bold text-gray-450 uppercase tracking-wider block font-sans">
+                      Display Name (optional)
+                    </label>
+                    {isEditing && (
+                      <span className="text-[9px] font-mono font-medium text-gray-400">
+                        {tempDisplayName.length}/11
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="text"
                     disabled={!isEditing}
                     value={tempDisplayName}
+                    maxLength={11}
                     onChange={(e) => setTempDisplayName(e.target.value)}
                     placeholder="Amirah Phan"
                     className={`w-full bg-slate-50/50 border border-gray-250/20 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500 font-sans font-bold ${
@@ -1064,13 +1198,21 @@ export function ReferrerDashboardPage() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-gray-450 uppercase tracking-wider block mb-1.5 font-sans">
-                    Affiliate Tagline Message
-                  </label>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="text-[10px] font-bold text-gray-450 uppercase tracking-wider block font-sans">
+                      Sharing Message (optional)
+                    </label>
+                    {isEditing && (
+                      <span className="text-[9px] font-mono font-medium text-gray-400">
+                        {tempSharingMessage.length}/39
+                      </span>
+                    )}
+                  </div>
                   <textarea
                     rows={2}
                     disabled={!isEditing}
                     value={tempSharingMessage}
+                    maxLength={39}
                     onChange={(e) => setTempSharingMessage(e.target.value)}
                     placeholder="shared a smile with you"
                     className={`w-full bg-slate-50/50 border border-gray-250/20 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500 font-sans font-medium resize-none ${
@@ -1078,21 +1220,6 @@ export function ReferrerDashboardPage() {
                     }`}
                   />
                 </div>
-
-                {isEditing && (
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1 font-sans">
-                      Profile Avatar URL Link
-                    </label>
-                    <input
-                      type="text"
-                      value={tempAvatarUrl}
-                      onChange={(e) => setTempAvatarUrl(e.target.value)}
-                      placeholder="Image URL link"
-                      className="w-full bg-white border border-gray-200/80 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono"
-                    />
-                  </div>
-                )}
               </div>
             </div>
 
@@ -1108,40 +1235,196 @@ export function ReferrerDashboardPage() {
               </div>
 
               <p className="text-xs text-gray-400 font-normal leading-relaxed font-sans">
-                This card appears when you share your link via Facebook Messenger, WhatsApp, or iMessage:
+                This template shows how your referral link looks to users in their browser and social platforms:
               </p>
 
-              <div className="bg-neutral-50 rounded-xl border border-gray-100 p-4">
-                <div className="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden">
-                  <div className="h-16 bg-gradient-to-r from-amber-50 to-orange-50/60 border-b border-gray-100 flex items-center px-4 justify-between">
-                    <Logo size="xs" variant="full" />
-                    <span className="text-[9px] font-mono tracking-wider text-amber-600 font-bold bg-white px-2 py-0.5 rounded border border-amber-100/40">VIP INVITE</span>
-                  </div>
+              <div className="bg-neutral-50/50 rounded-2xl border border-gray-100 p-3 sm:p-4 md:p-6">
+                {/* Clean, premium unified canvas mirroring the reference mockup */}
+                <div className="bg-white rounded-2xl border border-gray-150/40 shadow-[0_4px_24px_rgba(0,0,0,0.03)] overflow-hidden relative p-4 xs:p-6 sm:p-8 flex items-center gap-3.5 xs:gap-5 sm:gap-8 min-h-[140px] xs:min-h-[180px] sm:min-h-[220px]">
                   
-                  <div className="p-4 flex gap-4 items-center">
+                  {/* Left Column: Big Circular Avatar / Profile Picture */}
+                  <div className="relative z-10 flex-shrink-0">
                     <img
                       src={isEditing ? (tempAvatarUrl || referrer.avatarUrl) : referrer.avatarUrl}
-                      alt={isEditing ? tempDisplayName : referrer.displayName}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0"
+                      alt={isEditing ? tempDisplayName : (referrer.displayName || referrer.fullName)}
+                      className="w-14 h-14 xs:w-20 xs:h-20 sm:w-36 sm:h-36 rounded-full object-cover shadow-[0_4px_16px_rgba(0,0,0,0.05)] border border-amber-100/50 select-none"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop';
                       }}
                     />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-bold text-gray-900 truncate">
-                        {isEditing ? (tempDisplayName || referrer.fullName) : (referrer.displayName || referrer.fullName)}
-                      </h4>
-                      <p className="text-xs text-gray-500 truncate mt-0.5 font-medium">
-                        {isEditing ? (tempSharingMessage || 'shared a smile with you') : (referrer.sharingMessage || 'shared a smile with you')}
-                      </p>
-                    </div>
                   </div>
 
-                  <div className="bg-neutral-50 px-4 py-2.5 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400 font-sans">
-                    <span className="font-mono">ucsmile.com/referral/{tempReferralCode || referrer.code}</span>
-                    <span className="text-gray-500 font-medium">Dental Tourism Travel Partner</span>
+                  {/* Right Column: Dynamic Text Stack with Precise Typography Alignment */}
+                  <div className="flex-1 min-w-0 relative z-10 flex flex-col justify-center">
+                    {/* Brand Logo header */}
+                    <div className="mb-1.5 xs:mb-2.5 sm:mb-3">
+                      <Logo size="xs" variant="full" className="transform origin-left scale-85 xs:scale-100 sm:scale-110" />
+                    </div>
+
+                    {/* Display Name */}
+                    <h4 className="text-[14px] xs:text-[20px] sm:text-[34px] font-extrabold text-amber-500 tracking-tight leading-tight uppercase font-sans truncate">
+                      {isEditing ? (tempDisplayName || referrer.fullName) : (referrer.displayName || referrer.fullName)}
+                    </h4>
+
+                    {/* Sharing Promo Word */}
+                    <p className="text-[11px] xs:text-[14px] sm:text-[23px] font-black text-slate-900 tracking-tight leading-tight mt-0.5 sm:mt-1 truncate">
+                      {isEditing ? (tempSharingMessage || 'shared a smile with you') : (referrer.sharingMessage || 'shared a smile with you')}
+                    </p>
+
+                    {/* Exquisite Brand Tagline in Cormorant Garamond / Serif font */}
+                    <span className="font-serif text-[7px] xs:text-[10px] sm:text-sm text-neutral-600 tracking-wide font-medium mt-1.5 xs:mt-3 sm:mt-4 block border-t border-gray-100/60 pt-1 xs:pt-2 w-max max-w-full">
+                      Expert Dental Care. Designed for Travel
+                    </span>
                   </div>
+
+                  {/* Golden Skyline SVG Vector of Danang City at the bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 h-16 sm:h-20 text-amber-500/10 pointer-events-none z-0 overflow-hidden">
+                    <svg
+                      viewBox="0 0 800 200"
+                      width="100%"
+                      height="100%"
+                      preserveAspectRatio="none"
+                      className="text-[#EAA800] fill-none opacity-[0.22]"
+                    >
+                      {/* Da Nang Cathedral (Pink Gothic Church) */}
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M 12 200 L 12 140 L 25 125 L 25 140 M 25 125 L 25 85 L 30 75 L 35 85 L 35 140 M 35 140 L 35 60 L 45 60 L 45 35 L 50 25 L 55 35 L 55 60 L 65 60 L 65 140 M 65 140 L 65 125 L 75 110 L 85 125 L 85 200"
+                      />
+                      {/* Central Church Cross */}
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        d="M 50 25 L 50 12 M 46 16 L 54 16"
+                      />
+                      {/* Gothic arched rose-window and door */}
+                      <circle cx="50" cy="100" r="8" stroke="currentColor" strokeWidth="1.5" />
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        d="M 45 200 L 45 175 Q 50 166 55 175 L 55 200"
+                      />
+
+                      {/* Adjacent resort building structures */}
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M 105 200 L 105 110 L 135 110 L 135 200 M 145 200 L 145 135 L 165 105 L 185 135 L 185 200"
+                      />
+                      
+                      {/* Dragon Bridge (Vietnam gold dragon span over Han River) */}
+                      {/* Main Span Deck line */}
+                      <line x1="200" y1="190" x2="570" y2="190" stroke="currentColor" strokeWidth="1.5" />
+                      {/* Dragon waves arches */}
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M 235 190 Q 285 110 335 190 Q 385 100 435 190 Q 485 110 535 190"
+                      />
+                      {/* Vertical suspension hangers */}
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="1"
+                        strokeLinecap="round"
+                        d="M 260 162 L 260 190 M 285 146 L 285 190 M 310 162 L 310 190
+                           M 360 156 L 360 190 M 385 138 L 385 190 M 410 156 L 410 190
+                           M 460 162 L 460 190 M 485 146 L 485 190 M 510 162 L 510 190"
+                      />
+                      {/* Stylized up-angled Dragon Head */}
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M 235 190 L 225 168 C 220 160 208 160 206 170 C 204 178 214 185 224 185"
+                      />
+                      {/* Fire sparks from mouth */}
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        d="M 203 166 Q 192 160 200 155 Q 188 172 203 166"
+                      />
+
+                      {/* Da Nang Sun Wheel (Famous ferris wheel) */}
+                      {/* Wheel support stand */}
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M 630 115 L 600 200 M 630 115 L 660 200"
+                      />
+                      {/* Hub center circle */}
+                      <circle cx="630" cy="115" r="5" stroke="currentColor" strokeWidth="2.5" />
+                      {/* Outer & Inner Rims */}
+                      <circle cx="630" cy="115" r="50" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 3" />
+                      <circle cx="630" cy="115" r="46" stroke="currentColor" strokeWidth="1" />
+                      <circle cx="630" cy="115" r="14" stroke="currentColor" strokeWidth="1.2" />
+                      {/* Spokes */}
+                      <line x1="630" y1="65" x2="630" y2="165" stroke="currentColor" strokeWidth="1" />
+                      <line x1="580" y1="115" x2="680" y2="115" stroke="currentColor" strokeWidth="1" />
+                      <line x1="595" y1="80" x2="665" y2="150" stroke="currentColor" strokeWidth="1" />
+                      <line x1="665" y1="80" x2="595" y2="150" stroke="currentColor" strokeWidth="1" />
+                      <line x1="608" y1="95" x2="652" y2="135" stroke="currentColor" strokeWidth="0.8" />
+                      <line x1="652" y1="95" x2="608" y2="135" stroke="currentColor" strokeWidth="0.8" />
+                      <line x1="620" y1="68" x2="640" y2="162" stroke="currentColor" strokeWidth="0.8" />
+                      <line x1="640" y1="68" x2="620" y2="162" stroke="currentColor" strokeWidth="0.8" />
+
+                      {/* Lady Buddha (Graceful standing silhouette on Son Tra peninsula) */}
+                      {/* Lotus base */}
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M 715 200 C 725 186 735 180 750 180 C 765 180 775 186 785 200 Z"
+                      />
+                      {/* Statue form */}
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M 732 180 C 732 130 736 90 750 90 C 764 90 768 130 768 180 Z"
+                      />
+                      {/* Crown head */}
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M 744 90 C 744 78 756 78 756 90 Z"
+                      />
+                      <circle cx="750" cy="74" r="3" stroke="currentColor" strokeWidth="1.5" />
+                      {/* Glowing Halo aureole */}
+                      <circle
+                        cx="750"
+                        cy="84"
+                        r="24"
+                        stroke="currentColor"
+                        strokeWidth="1"
+                        strokeDasharray="4 4"
+                      />
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="1.2"
+                        strokeLinecap="round"
+                        d="M 742 125 C 747 121 753 121 758 125"
+                      />
+                    </svg>
+                  </div>
+
                 </div>
               </div>
             </div>
