@@ -23,6 +23,12 @@ import LandingPage from './components/LandingPage';
 import BlogPage from './components/BlogPage';
 import BookingPage from './components/BookingPage';
 import VerifyPage from './components/VerifyPage';
+import { 
+  BecomeReferrerPage, 
+  ReferrerLoginPage, 
+  ReferrerDashboardPage, 
+  ReferralRedirectHandler 
+} from './components/ReferrerPortal';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -105,6 +111,11 @@ function Layout() {
         <Route path="/booking/internal" element={<BookingPage />} />
         <Route path="/booking/pass/:bookingCode" element={<BookingPage />} />
         <Route path="/verify" element={<VerifyPage />} />
+        <Route path="/register" element={<BecomeReferrerPage />} />
+        <Route path="/referrer" element={<ReferrerLoginPage />} />
+        <Route path="/referrer/dashboard" element={<ReferrerDashboardPage />} />
+        <Route path="/dashboard" element={<ReferrerDashboardPage />} />
+        <Route path="/referral/:referrerCode" element={<ReferralRedirectHandler />} />
       </Routes>
 
       {/* Footer Rail */}
@@ -115,7 +126,9 @@ function Layout() {
               <Logo size="sm" variant="full" />
             </Link>
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-gray-400 text-center">UCsmile PLATFORM PROTOTYPE.</p>
-            <div className="flex items-center gap-10 text-[10px] uppercase tracking-[0.2em] font-black text-gray-500">
+            <div className="flex flex-wrap justify-center items-center gap-6 md:gap-10 text-[10px] uppercase tracking-[0.2em] font-black text-gray-500">
+               <Link to="/register" className="hover:text-amber-500 transition-colors text-amber-600 font-extrabold">Become a Referrer</Link>
+               <Link to="/referrer" className="hover:text-amber-500 transition-colors text-amber-600 font-extrabold">Referrer Portal</Link>
                <a href="#" className="hover:text-gray-900 transition-colors">Privacy</a>
                <a href="#" className="hover:text-gray-900 transition-colors">Terms</a>
             </div>

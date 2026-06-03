@@ -100,13 +100,34 @@ interface ReferralRecord {
   code: string;
 }
 
-const REFERRALS_DB: ReferralRecord[] = [
-  { name: 'Alex Tran', code: 'ALEX2025' },
-  { name: 'Sarah Nguyen', code: 'SARAH001' },
-  { name: 'John Doe', code: 'JOHN002' },
-  { name: 'Jane Smith', code: 'JANE003' },
-  { name: 'Elena Rostova', code: 'ELENA2025' }
-];
+const REFERRALS_DB: ReferralRecord[] = new Proxy([] as ReferralRecord[], {
+  get(target, prop, receiver) {
+    const list: ReferralRecord[] = [
+      { name: 'Alex Tran', code: 'ALEX2025' },
+      { name: 'Sarah Nguyen', code: 'SARAH001' },
+      { name: 'John Doe', code: 'JOHN002' },
+      { name: 'Jane Smith', code: 'JANE003' },
+      { name: 'Elena Rostova', code: 'ELENA2025' }
+    ];
+    try {
+      const listStr = localStorage.getItem('ucsmile_referrers_db');
+      if (listStr) {
+        const loadedList = JSON.parse(listStr);
+        loadedList.forEach((r: any) => {
+          if (r && r.code && !list.some(existing => existing.code.toUpperCase() === r.code.toUpperCase())) {
+            list.push({ name: r.fullName, code: r.code.toUpperCase() });
+          }
+        });
+      } else {
+        // Fallback or seed DEFAULT partner Nhung Phan
+        list.push({ name: 'Nhung Phan', code: 'AMIRAH05' });
+      }
+    } catch {}
+    
+    const value = Reflect.get(list, prop);
+    return typeof value === 'function' ? value.bind(list) : value;
+  }
+});
 
 // Initialize mock DB bookings if none exist
 function seedMockBookings() {
@@ -884,7 +905,7 @@ export default function BookingPage() {
                       <div className="flex justify-between">
                         <span className="text-gray-400 uppercase tracking-wider">Assigned City</span>
                         <span className="text-[#FFD151] font-bold">
-                          {ticketData.destination === 'danang' ? '✈ Da Nang, VN' : '✈ Ho Chi Minh, VN'}
+                          {ticketData.destination?.toLowerCase() === 'danang' ? '✈ Da Nang, VN' : '✈ Ho Chi Minh, VN'}
                         </span>
                       </div>
                       <div className="flex justify-between">
