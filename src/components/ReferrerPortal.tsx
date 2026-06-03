@@ -31,7 +31,7 @@ export interface ReferrerAccount {
   email: string;
   phone: string;
   code: string;
-  membershipLevel: string; // 'Standard (5% commission)' or 'Consultant (10% commission)' or 'Premium (15% commission)'
+  membershipLevel: string; // 'Standard (10% commission)' or 'Premium (15% commission)'
   displayName: string;
   sharingMessage: string;
   avatarUrl: string;
@@ -50,7 +50,7 @@ const DEFAULT_REFERRER: ReferrerAccount = {
   email: 'nhung.phan230206@vnuk.edu.vn',
   phone: '+84905123456',
   code: 'AMIRAH05',
-  membershipLevel: 'Consultant (10% commission)',
+  membershipLevel: 'Standard (10% commission)',
   displayName: 'Amirah Phan',
   sharingMessage: 'shared a smile with you',
   avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop', // Beautiful profile matches mockup
@@ -242,7 +242,19 @@ export function getReferrersList(): ReferrerAccount[] {
     return list;
   }
   try {
-    return JSON.parse(local);
+    const list = JSON.parse(local) as ReferrerAccount[];
+    // Normalize Consultant to Standard
+    let changed = false;
+    list.forEach(r => {
+      if (r.membershipLevel?.startsWith('Consultant')) {
+        r.membershipLevel = r.membershipLevel.replace('Consultant', 'Standard');
+        changed = true;
+      }
+    });
+    if (changed) {
+      localStorage.setItem(REFERRERS_DB_KEY, JSON.stringify(list));
+    }
+    return list;
   } catch {
     return [DEFAULT_REFERRER];
   }
@@ -261,7 +273,7 @@ export function BecomeReferrerPage() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [membershipLevel, setMembershipLevel] = useState('Standard (5% commission)');
+  const [membershipLevel, setMembershipLevel] = useState('Standard (10% commission)');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
@@ -425,8 +437,7 @@ export function BecomeReferrerPage() {
                 onChange={(e) => setMembershipLevel(e.target.value)}
                 className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl pl-12 pr-8 py-3.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/15 focus:border-brand-secondary transition-all font-sans font-bold text-gray-700 appearance-none cursor-pointer"
               >
-                <option value="Standard (5% commission)">Standard (5% commission)</option>
-                <option value="Consultant (10% commission)">Consultant (10% commission)</option>
+                <option value="Standard (10% commission)">Standard (10% commission)</option>
                 <option value="Premium (15% commission)">Premium (15% commission)</option>
               </select>
               <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -706,7 +717,11 @@ export function ReferrerDashboardPage() {
       return;
     }
     try {
-      const activeUser = JSON.parse(sessionStr) as ReferrerAccount;
+      let activeUser = JSON.parse(sessionStr) as ReferrerAccount;
+      if (activeUser.membershipLevel?.startsWith('Consultant')) {
+        activeUser.membershipLevel = activeUser.membershipLevel.replace('Consultant', 'Standard');
+        localStorage.setItem(REFERRER_SESSION_KEY, JSON.stringify(activeUser));
+      }
       setReferrer(activeUser);
       
       // Seed temporary inputs
@@ -876,19 +891,14 @@ export function ReferrerDashboardPage() {
                 className="hidden"
               />
             </div>
-            <div className="space-y-1.5 text-center sm:text-left">
-              <span className="text-xs font-semibold text-amber-600 block uppercase tracking-wider font-sans">
-                Welcome back!
-              </span>
-              <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start font-sans">
+            <div className="text-center sm:text-left">
+              <div className="flex flex-wrap items-center gap-2.5 justify-center sm:justify-start font-sans">
                 <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
-                  {referrer.fullName}
+                  Hi, {referrer.fullName}
                 </h2>
-                <div className="flex gap-1.5">
-                  <span className="bg-amber-50 text-amber-700 border border-amber-100/60 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                    {referrer.membershipLevel.includes('(') ? referrer.membershipLevel.split(' ')[0] : referrer.membershipLevel}
-                  </span>
-                </div>
+                <span className="bg-[#FFB800] text-gray-950 font-sans px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border border-[#E0A200] shadow-sm shadow-[#FFB800]/15 shrink-0 select-none">
+                  {referrer.membershipLevel.includes('(') ? referrer.membershipLevel.split(' ')[0] : referrer.membershipLevel}
+                </span>
               </div>
             </div>
           </div>
@@ -901,23 +911,22 @@ export function ReferrerDashboardPage() {
               <Share2 className="w-3.5 h-3.5 text-amber-600" />
               Your Referral Link:
             </h3>
-    
           </div>
-          <div className="relative flex items-center bg-white border border-gray-250/50 rounded-xl pl-3.5 pr-1.5 py-1.5 gap-2.5 w-full md:flex-1 md:max-w-2xl shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center bg-white border border-gray-250/50 rounded-xl p-1.5 sm:pl-3.5 sm:pr-1.5 sm:py-1.5 gap-2 w-full md:flex-1 md:max-w-2xl shadow-xs">
             <input
               type="text"
               readOnly
               value={referralUrl}
-              className="w-full bg-transparent text-xs font-medium font-mono text-gray-600 focus:outline-none select-all overflow-ellipsis"
+              className="w-full bg-transparent text-xs font-medium font-mono text-gray-600 focus:outline-none select-all px-2 py-1.5 sm:p-0"
             />
             <button
               type="button"
               onClick={handleCopy}
-              className="flex items-center justify-center bg-brand-primary hover:bg-[#FFB800] text-gray-900 font-bold px-4 py-2 rounded-lg text-[10px] uppercase font-sans tracking-wide shrink-0 transition-colors cursor-pointer shadow-xs"
+              className="flex items-center justify-center bg-brand-primary hover:bg-[#FFB800] text-gray-900 font-bold px-4 py-2.5 sm:py-2 rounded-lg text-[10px] uppercase font-sans tracking-wide shrink-0 transition-colors cursor-pointer shadow-xs w-full sm:w-auto"
             >
               {copied ? (
                 <>
-                  <Check className="w-3.5 h-3.5 mr-1 text-emerald-805 font-bold" />
+                  <Check className="w-3.5 h-3.5 mr-1 text-emerald-800 font-bold" />
                   Copied
                 </>
               ) : (
