@@ -669,147 +669,157 @@ async function startServer() {
 
   // Clinic Registration (AC 1, AC 2, AC 4, AC 5, AC 6)
   app.post("/api/clinic/register", (req, res) => {
-    const {
-      clinicName,
-      contactPersonName,
-      contactPhoneNumber,
-      contactEmail,
-      primaryBranchName,
-      city,
-      clinicAddress,
-      website,
-      adminFullName,
-      adminEmail,
-      password
-    } = req.body;
+    try {
+      const {
+        clinicName,
+        contactPersonName,
+        contactPhoneNumber,
+        contactEmail,
+        primaryBranchName,
+        city,
+        clinicAddress,
+        website,
+        adminFullName,
+        adminEmail,
+        password
+      } = req.body;
 
-    // AC 4 Required Field Validation
-    if (
-      !clinicName || !clinicName.trim() ||
-      !contactPersonName || !contactPersonName.trim() ||
-      !contactPhoneNumber || !contactPhoneNumber.trim() ||
-      !contactEmail || !contactEmail.trim() ||
-      !primaryBranchName || !primaryBranchName.trim() ||
-      !city || !city.trim() ||
-      !clinicAddress || !clinicAddress.trim() ||
-      !adminFullName || !adminFullName.trim() ||
-      !adminEmail || !adminEmail.trim() ||
-      !password || !password.trim()
-    ) {
-      return res.status(400).json({ error: "Missing required fields. Please fill in all required inputs." });
-    }
+      // AC 4 Required Field Validation
+      if (
+        !clinicName || !clinicName.trim() ||
+        !contactPersonName || !contactPersonName.trim() ||
+        !contactPhoneNumber || !contactPhoneNumber.trim() ||
+        !contactEmail || !contactEmail.trim() ||
+        !primaryBranchName || !primaryBranchName.trim() ||
+        !city || !city.trim() ||
+        !clinicAddress || !clinicAddress.trim() ||
+        !adminFullName || !adminFullName.trim() ||
+        !adminEmail || !adminEmail.trim() ||
+        !password || !password.trim()
+      ) {
+        return res.status(400).json({ error: "Missing required fields. Please fill in all required inputs." });
+      }
 
-    const formattedAdminEmail = adminEmail.trim().toLowerCase();
+      const formattedAdminEmail = adminEmail.trim().toLowerCase();
 
-    // AC 5 Duplicate Registration Check (Clinic Admin Email)
-    if (clinicAdmins[formattedAdminEmail]) {
-      return res.status(409).json({
-        error: "This admin email is already registered. Please log in to your account or register with another email."
+      // AC 5 Duplicate Registration Check (Clinic Admin Email)
+      if (clinicAdmins[formattedAdminEmail]) {
+        return res.status(409).json({
+          error: "This admin email is already registered. Please log in to your account or register with another email."
+        });
+      }
+
+      // AC 5 Duplicate clinic name or primary branch address check (triggers Admin flag, does not block)
+      let flaggedForReview = false;
+      let duplicateFlagReason = "";
+
+      const nameExists = Object.values(registeredClinics).some(
+        c => c && c.name && c.name.toLowerCase().trim() === clinicName.toLowerCase().trim()
+      );
+
+      let addressExists = false;
+      for (const cid in clinicBranches) {
+        const branches = clinicBranches[cid];
+        if (Array.isArray(branches)) {
+          if (branches.some(b => b && b.address && b.address.toLowerCase().trim() === clinicAddress.toLowerCase().trim() && b.isPrimary)) {
+            addressExists = true;
+            break;
+          }
+        }
+      }
+
+      if (nameExists || addressExists) {
+        flaggedForReview = true;
+        const reasons = [];
+        if (nameExists) reasons.push("Clinic name matches an existing registration");
+        if (addressExists) reasons.push("Primary branch address matches an existing registration");
+        duplicateFlagReason = reasons.join(", ");
+      }
+
+      // AC 6 Successful Registration creations
+      const clinicId = `C-REG-${Date.now()}`;
+      const branchId = `B-REG-${Date.now()}`;
+      const adminId = `A-REG-${Date.now()}`;
+
+      const clinicRecord: DentalClinic = {
+        id: clinicId,
+        name: clinicName.trim(),
+        contactPerson: contactPersonName.trim(),
+        contactPhone: contactPhoneNumber.trim(),
+        contactEmail: contactEmail.trim(),
+        website: website ? website.trim() : "",
+        status: 'ONBOARDING_IN_PROGRESS',
+        primaryBranchId: branchId,
+        flaggedForReview,
+        duplicateFlagReason,
+        createdAt: new Date().toISOString()
+      };
+
+      const branchRecord: ClinicBranch = {
+        branchId,
+        clinicId,
+        branchName: primaryBranchName.trim(),
+        city: city.trim(),
+        address: clinicAddress.trim(),
+        isPrimary: true
+      };
+
+      const adminRecord: ClinicAdmin = {
+        id: adminId,
+        clinicId,
+        fullName: adminFullName.trim(),
+        email: formattedAdminEmail,
+        phone: contactPhoneNumber.trim(),
+        password: password,
+        createdAt: new Date().toISOString()
+      };
+
+      const onboardingRecord: ClinicOnboarding = {
+        clinicId,
+        currentStep: 1, // On successful registration, prompt to step 1
+        profileSetupCompleted: false,
+        servicesCompleted: false,
+        workingHoursCompleted: false,
+        additionalInfoCompleted: false,
+        agreementCompleted: false
+      };
+
+      // Save records
+      registeredClinics[clinicId] = clinicRecord;
+      clinicBranches[clinicId] = [branchRecord];
+      clinicAdmins[formattedAdminEmail] = adminRecord;
+      clinicOnboardings[clinicId] = onboardingRecord;
+
+      // Log the action
+      const logId = `LOG-${Date.now()}`;
+      logs.unshift({
+        id: logId,
+        action: `New Clinic Registered (${clinicName})`,
+        updatedBy: 'Self Register',
+        updatedAt: new Date().toISOString(),
+        previousValue: 'None',
+        newValue: flaggedForReview ? `Registered & Flagged: ${duplicateFlagReason}` : 'Registered Successfully'
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: "Your clinic registration has been created successfully. Please continue completing your clinic onboarding information for UCSmile review.",
+        clinic: clinicRecord,
+        admin: {
+          id: adminRecord.id,
+          clinicId: adminRecord.clinicId,
+          fullName: adminRecord.fullName,
+          email: adminRecord.email,
+          phone: adminRecord.phone
+        },
+        onboarding: onboardingRecord
+      });
+    } catch (err: any) {
+      console.error("Error during clinic registration:", err);
+      return res.status(500).json({
+        error: `Internal Server Error: ${err.message || err}`
       });
     }
-
-    // AC 5 Duplicate clinic name or primary branch address check (triggers Admin flag, does not block)
-    let flaggedForReview = false;
-    let duplicateFlagReason = "";
-
-    const nameExists = Object.values(registeredClinics).some(
-      c => c.name.toLowerCase().trim() === clinicName.toLowerCase().trim()
-    );
-
-    let addressExists = false;
-    for (const cid in clinicBranches) {
-      if (clinicBranches[cid].some(b => b.address.toLowerCase().trim() === clinicAddress.toLowerCase().trim() && b.isPrimary)) {
-        addressExists = true;
-        break;
-      }
-    }
-
-    if (nameExists || addressExists) {
-      flaggedForReview = true;
-      const reasons = [];
-      if (nameExists) reasons.push("Clinic name matches an existing registration");
-      if (addressExists) reasons.push("Primary branch address matches an existing registration");
-      duplicateFlagReason = reasons.join(", ");
-    }
-
-    // AC 6 Successful Registration creations
-    const clinicId = `C-REG-${Date.now()}`;
-    const branchId = `B-REG-${Date.now()}`;
-    const adminId = `A-REG-${Date.now()}`;
-
-    const clinicRecord: DentalClinic = {
-      id: clinicId,
-      name: clinicName.trim(),
-      contactPerson: contactPersonName.trim(),
-      contactPhone: contactPhoneNumber.trim(),
-      contactEmail: contactEmail.trim(),
-      website: website ? website.trim() : "",
-      status: 'ONBOARDING_IN_PROGRESS',
-      primaryBranchId: branchId,
-      flaggedForReview,
-      duplicateFlagReason,
-      createdAt: new Date().toISOString()
-    };
-
-    const branchRecord: ClinicBranch = {
-      branchId,
-      clinicId,
-      branchName: primaryBranchName.trim(),
-      city: city.trim(),
-      address: clinicAddress.trim(),
-      isPrimary: true
-    };
-
-    const adminRecord: ClinicAdmin = {
-      id: adminId,
-      clinicId,
-      fullName: adminFullName.trim(),
-      email: formattedAdminEmail,
-      phone: contactPhoneNumber.trim(),
-      password: password,
-      createdAt: new Date().toISOString()
-    };
-
-    const onboardingRecord: ClinicOnboarding = {
-      clinicId,
-      currentStep: 1, // On successful registration, prompt to step 1
-      profileSetupCompleted: false,
-      servicesCompleted: false,
-      workingHoursCompleted: false,
-      additionalInfoCompleted: false,
-      agreementCompleted: false
-    };
-
-    // Save records
-    registeredClinics[clinicId] = clinicRecord;
-    clinicBranches[clinicId] = [branchRecord];
-    clinicAdmins[formattedAdminEmail] = adminRecord;
-    clinicOnboardings[clinicId] = onboardingRecord;
-
-    // Log the action
-    const logId = `LOG-${Date.now()}`;
-    logs.unshift({
-      id: logId,
-      action: `New Clinic Registered (${clinicName})`,
-      updatedBy: 'Self Register',
-      updatedAt: new Date().toISOString(),
-      previousValue: 'None',
-      newValue: flaggedForReview ? `Registered & Flagged: ${duplicateFlagReason}` : 'Registered Successfully'
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: "Your clinic registration has been created successfully. Please continue completing your clinic onboarding information for UCSmile review.",
-      clinic: clinicRecord,
-      admin: {
-        id: adminRecord.id,
-        clinicId: adminRecord.clinicId,
-        fullName: adminRecord.fullName,
-        email: adminRecord.email,
-        phone: adminRecord.phone
-      },
-      onboarding: onboardingRecord
-    });
   });
 
   // Clinic Admin Login (AC 5 login suggestion support)
@@ -885,130 +895,137 @@ async function startServer() {
 
   // Save Onboarding step (AC 8)
   app.post("/api/clinic/onboarding/:clinicId/step", (req, res) => {
-    const { clinicId } = req.params;
-    const { step, data } = req.body;
+    try {
+      const { clinicId } = req.params;
+      const { step, data } = req.body;
 
-    const onboarding = clinicOnboardings[clinicId];
-    if (!onboarding) {
-      return res.status(404).json({ error: "Onboarding record not found." });
-    }
-
-    if (step === 1) {
-      // Profile details
-      const { isDraft, ...profileData } = data;
-      onboarding.profileDetails = profileData;
-      if (!isDraft) {
-        onboarding.profileSetupCompleted = true;
-        if (onboarding.currentStep <= 1) {
-          onboarding.currentStep = 2;
-        }
+      const onboarding = clinicOnboardings[clinicId];
+      if (!onboarding) {
+        return res.status(404).json({ error: "Onboarding record not found." });
       }
-    } else if (step === 2) {
-      // Services and pricing
-      if (Array.isArray(data)) {
-        onboarding.services = data;
-        onboarding.servicesCompleted = true;
-        if (onboarding.currentStep <= 2) {
-          onboarding.currentStep = 3;
-        }
-      } else {
-        const { isDraft, services } = data;
-        onboarding.services = services;
+
+      if (step === 1) {
+        // Profile details
+        const { isDraft, ...profileData } = data;
+        onboarding.profileDetails = profileData;
         if (!isDraft) {
+          onboarding.profileSetupCompleted = true;
+          if (onboarding.currentStep <= 1) {
+            onboarding.currentStep = 2;
+          }
+        }
+      } else if (step === 2) {
+        // Services and pricing
+        if (Array.isArray(data)) {
+          onboarding.services = data;
           onboarding.servicesCompleted = true;
           if (onboarding.currentStep <= 2) {
             onboarding.currentStep = 3;
           }
-        }
-      }
-    } else if (step === 3) {
-      // Working hours
-      onboarding.workingHours = data;
-      onboarding.workingHoursCompleted = true;
-      if (onboarding.currentStep <= 3) {
-        onboarding.currentStep = 4;
-      }
-    } else if (step === 4) {
-      // Additional clinic information (AC 5)
-      const { branches, dentists, documents } = data;
-      onboarding.additionalInfo = { branches, dentists, documents };
-      onboarding.additionalInfoCompleted = true;
-      if (onboarding.currentStep <= 4) {
-        onboarding.currentStep = 5;
-      }
-      // Save branches list as well if provided (AC 2)
-      if (Array.isArray(branches)) {
-        const existing = clinicBranches[clinicId] || [];
-        const primary = existing.find(b => b.isPrimary);
-        const updatedBranches: ClinicBranch[] = [];
-        if (primary) {
-          updatedBranches.push(primary);
-        }
-        branches.forEach((b: any, index: number) => {
-          if (!b.isPrimary && b.branchName?.trim()) {
-            updatedBranches.push({
-              branchId: b.branchId || `B-BR-${clinicId}-${index}-${Date.now()}`,
-              clinicId,
-              branchName: b.branchName.trim(),
-              city: b.city.trim(),
-              address: b.address.trim(),
-              contactPhone: b.contactPhone ? b.contactPhone.trim() : "",
-              isPrimary: false
-            });
+        } else {
+          const { isDraft, services } = data;
+          onboarding.services = services;
+          if (!isDraft) {
+            onboarding.servicesCompleted = true;
+            if (onboarding.currentStep <= 2) {
+              onboarding.currentStep = 3;
+            }
           }
-        });
-        clinicBranches[clinicId] = updatedBranches;
-      }
-    } else if (step === 5) {
-      // Partnership Agreement (AC 4, AC 5, AC 7)
-      const { signedName, termsVersion, agreementStatus, ipAddress, userAgent } = data;
-      const agreementRecord = {
-        signedName: signedName || "Authorized Representative",
-        signedAt: new Date().toISOString(),
-        termsVersion: termsVersion || "v1.0.0-2026",
-        agreementStatus: agreementStatus || "AGREEMENT_ACCEPTED",
-        ipAddress: ipAddress || "127.0.0.1",
-        userAgent: userAgent || "Unknown Device",
-        acceptedAt: new Date().toISOString()
-      };
+        }
+      } else if (step === 3) {
+        // Working hours
+        onboarding.workingHours = data;
+        onboarding.workingHoursCompleted = true;
+        if (onboarding.currentStep <= 3) {
+          onboarding.currentStep = 4;
+        }
+      } else if (step === 4) {
+        // Additional clinic information (AC 5)
+        const { branches, dentists, documents } = data;
+        onboarding.additionalInfo = { branches, dentists, documents };
+        onboarding.additionalInfoCompleted = true;
+        if (onboarding.currentStep <= 4) {
+          onboarding.currentStep = 5;
+        }
+        // Save branches list as well if provided (AC 2)
+        if (Array.isArray(branches)) {
+          const existing = clinicBranches[clinicId] || [];
+          const primary = existing.find(b => b.isPrimary);
+          const updatedBranches: ClinicBranch[] = [];
+          if (primary) {
+            updatedBranches.push(primary);
+          }
+          branches.forEach((b: any, index: number) => {
+            if (b && !b.isPrimary && b.branchName?.trim()) {
+              updatedBranches.push({
+                branchId: b.branchId || `B-BR-${clinicId}-${index}-${Date.now()}`,
+                clinicId,
+                branchName: b.branchName.trim(),
+                city: b.city ? b.city.trim() : "",
+                address: b.address ? b.address.trim() : "",
+                contactPhone: b.contactPhone ? b.contactPhone.trim() : "",
+                isPrimary: false
+              });
+            }
+          });
+          clinicBranches[clinicId] = updatedBranches;
+        }
+      } else if (step === 5) {
+        // Partnership Agreement (AC 4, AC 5, AC 7)
+        const { signedName, termsVersion, agreementStatus, ipAddress, userAgent } = data;
+        const agreementRecord = {
+          signedName: signedName || "Authorized Representative",
+          signedAt: new Date().toISOString(),
+          termsVersion: termsVersion || "v1.0.0-2026",
+          agreementStatus: agreementStatus || "AGREEMENT_ACCEPTED",
+          ipAddress: ipAddress || "127.0.0.1",
+          userAgent: userAgent || "Unknown Device",
+          acceptedAt: new Date().toISOString()
+        };
 
-      onboarding.agreementDetails = agreementRecord;
-      onboarding.agreementCompleted = true;
-      if (!onboarding.agreementHistory) {
-        onboarding.agreementHistory = [];
-      }
-      onboarding.agreementHistory.push(agreementRecord);
+        onboarding.agreementDetails = agreementRecord;
+        onboarding.agreementCompleted = true;
+        if (!onboarding.agreementHistory) {
+          onboarding.agreementHistory = [];
+        }
+        onboarding.agreementHistory.push(agreementRecord);
 
-      if (onboarding.currentStep <= 5) {
+        if (onboarding.currentStep <= 5) {
+          onboarding.currentStep = 6;
+        }
+      } else if (step === 6) {
+        // Final submission for review
+        const clinic = registeredClinics[clinicId];
+        if (clinic) {
+          clinic.status = 'PENDING_REVIEW';
+        }
+        onboarding.submittedForReviewAt = new Date().toISOString();
         onboarding.currentStep = 6;
-      }
-    } else if (step === 6) {
-      // Final submission for review
-      const clinic = registeredClinics[clinicId];
-      if (clinic) {
-        clinic.status = 'PENDING_REVIEW';
-      }
-      onboarding.submittedForReviewAt = new Date().toISOString();
-      onboarding.currentStep = 6;
 
-      // Log action
-      logs.unshift({
-        id: `LOG-${Date.now()}`,
-        action: `Clinic Onboarding Submitted for Review (${clinic?.name})`,
-        updatedBy: 'Clinic Admin',
-        updatedAt: new Date().toISOString(),
-        previousValue: 'ONBOARDING_IN_PROGRESS',
-        newValue: 'PENDING_REVIEW'
+        // Log action
+        logs.unshift({
+          id: `LOG-${Date.now()}`,
+          action: `Clinic Onboarding Submitted for Review (${clinic?.name})`,
+          updatedBy: 'Clinic Admin',
+          updatedAt: new Date().toISOString(),
+          previousValue: 'ONBOARDING_IN_PROGRESS',
+          newValue: 'PENDING_REVIEW'
+        });
+      } else {
+        return res.status(400).json({ error: "Invalid onboarding step number." });
+      }
+
+      return res.json({
+        success: true,
+        onboarding,
+        clinic: registeredClinics[clinicId]
       });
-    } else {
-      return res.status(400).json({ error: "Invalid onboarding step number." });
+    } catch (err: any) {
+      console.error("Error during save onboarding step:", err);
+      return res.status(500).json({
+        error: `Internal Server Error during save step: ${err.message || err}`
+      });
     }
-
-    return res.json({
-      success: true,
-      onboarding,
-      clinic: registeredClinics[clinicId]
-    });
   });
 
   // Admin: Get all onboarding clinics
