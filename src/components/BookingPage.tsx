@@ -186,13 +186,20 @@ function seedMockBookings() {
 }
 
 export default function BookingPage() {
-  const { bookingCode } = useParams();
+  const { bookingCode, referrerCode } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const passRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const referrerSearchRef = useRef<HTMLDivElement>(null);
+
+  // Sync route param changes to localStorage if mounted directly
+  useEffect(() => {
+    if (referrerCode) {
+      localStorage.setItem('ucsmile_referral_code', referrerCode.trim().toUpperCase());
+    }
+  }, [referrerCode]);
 
   // Setup routing mode parameters
   const isPassPage = !!bookingCode;
@@ -271,12 +278,13 @@ export default function BookingPage() {
   const [serviceSearch, setServiceSearch] = useState('');
   const [additionalDetails, setAdditionalDetails] = useState('');
 
-  // Auto-capture public referral from URL query params
+  // Auto-capture public referral from URL query params or route params
   const [publicReferralCode] = useState(() => {
-    const fromUrl = searchParams.get('ref') || searchParams.get('referral') || searchParams.get('referrer');
+    const fromUrl = referrerCode || searchParams.get('ref') || searchParams.get('referral') || searchParams.get('referrer');
     if (fromUrl) {
-      localStorage.setItem('ucsmile_referral_code', fromUrl);
-      return fromUrl;
+      const cleaned = fromUrl.trim().toUpperCase();
+      localStorage.setItem('ucsmile_referral_code', cleaned);
+      return cleaned;
     }
     return localStorage.getItem('ucsmile_referral_code') || '';
   });
@@ -517,6 +525,13 @@ export default function BookingPage() {
       existingDb[generatedCode] = bookingRecord;
       localStorage.setItem('ucsmile_bookings_db', JSON.stringify(existingDb));
 
+      // Sync booking with Express full-stack admin backend
+      fetch('/api/admin/sync-booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking: bookingRecord })
+      }).catch(err => console.error('Failed to sync booking online:', err));
+
       // Save references locally
       localStorage.setItem(`ucsmile_status_${generatedCode}`, bookingRecord.status);
       localStorage.setItem('ucsmile_current_pass_code', generatedCode);
@@ -678,6 +693,13 @@ export default function BookingPage() {
       record.status = 'cancelled';
       db[bookingCode] = record;
       localStorage.setItem('ucsmile_bookings_db', JSON.stringify(db));
+
+      // Sync cancellation with Express full-stack admin backend
+      fetch('/api/admin/sync-booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking: record })
+      }).catch(err => console.error('Failed to sync cancellation:', err));
     }
     // Set matching legacy variables
     localStorage.setItem(`ucsmile_status_${bookingCode}`, 'cancelled');

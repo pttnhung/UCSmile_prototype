@@ -670,6 +670,7 @@ export function ReferrerDashboardPage() {
   const [tempAvatarUrl, setTempAvatarUrl] = useState('');
   
   const [copied, setCopied] = useState(false);
+  const [bookingCopied, setBookingCopied] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   const [isReferralsExpanded, setIsReferralsExpanded] = useState(false);
 
@@ -839,11 +840,18 @@ export function ReferrerDashboardPage() {
 
   // Referral URL generator
   const referralUrl = `https://ucsmile.com/referral/${referrer.code}`;
+  const bookingUrl = `https://ucsmile.com/booking/referral/${referrer.code}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
+  };
+
+  const handleCopyBooking = () => {
+    navigator.clipboard.writeText(bookingUrl);
+    setBookingCopied(true);
+    setTimeout(() => setBookingCopied(false), 2500);
   };
 
   // Advanced Stats Calculation
@@ -904,38 +912,80 @@ export function ReferrerDashboardPage() {
           </div>
         </div>
 
-        {/* High-visibility prominent Referral Invite Link Copy Banner */}
-        <div className="bg-amber-50/30 border border-amber-100/60 rounded-2xl p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="space-y-1 text-center md:text-left w-full md:w-auto">
-            <h3 className="text-xs font-bold uppercase text-amber-800 tracking-wider font-sans flex items-center justify-center md:justify-start gap-1.5">
-              <Share2 className="w-3.5 h-3.5 text-amber-600" />
-              Your Referral Link:
-            </h3>
+        {/* High-visibility prominent Referral Invite Link & Direct Booking Copy Banners */}
+        <div className="space-y-4">
+          {/* Panel 1: General Referral Link */}
+          <div className="bg-amber-50/20 border border-amber-100/50 rounded-2xl p-5 md:p-6 flex flex-col lg:flex-row items-center justify-between gap-4">
+            <div className="space-y-1 text-center lg:text-left w-full lg:w-5/12 xl:w-4/12">
+              <h3 className="text-xs font-bold uppercase text-amber-800 tracking-wider font-sans flex items-center justify-center lg:justify-start gap-1.5">
+                <Share2 className="w-3.5 h-3.5 text-amber-600" />
+                Your Referral Link:
+              </h3>
+            
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center bg-white border border-gray-250/50 rounded-xl p-1.5 sm:pl-3.5 sm:pr-1.5 sm:py-1.5 gap-2 w-full lg:flex-1 lg:max-w-xl shadow-xs">
+              <input
+                type="text"
+                readOnly
+                value={referralUrl}
+                className="w-full bg-transparent text-xs font-medium font-mono text-gray-600 focus:outline-none select-all px-2 py-1.5 sm:p-0"
+              />
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="flex items-center justify-center bg-brand-primary hover:bg-[#FFB800] text-gray-900 font-bold px-4 py-2.5 sm:py-2 rounded-lg text-[10px] uppercase font-sans tracking-wide shrink-0 transition-colors cursor-pointer shadow-xs w-full sm:w-auto"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 mr-1 text-emerald-800 font-bold" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 mr-1" />
+                    Copy URL
+                  </>
+                )}
+              </button>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center bg-white border border-gray-250/50 rounded-xl p-1.5 sm:pl-3.5 sm:pr-1.5 sm:py-1.5 gap-2 w-full md:flex-1 md:max-w-2xl shadow-xs">
-            <input
-              type="text"
-              readOnly
-              value={referralUrl}
-              className="w-full bg-transparent text-xs font-medium font-mono text-gray-600 focus:outline-none select-all px-2 py-1.5 sm:p-0"
-            />
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="flex items-center justify-center bg-brand-primary hover:bg-[#FFB800] text-gray-900 font-bold px-4 py-2.5 sm:py-2 rounded-lg text-[10px] uppercase font-sans tracking-wide shrink-0 transition-colors cursor-pointer shadow-xs w-full sm:w-auto"
-            >
-              {copied ? (
-                <>
-                  <Check className="w-3.5 h-3.5 mr-1 text-emerald-800 font-bold" />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5 mr-1" />
-                  Copy URL
-                </>
-              )}
-            </button>
+
+          {/* Panel 2: Direct Booking Link */}
+          <div className="bg-amber-50/20 border border-amber-100/50 rounded-2xl p-5 md:p-6 flex flex-col lg:flex-row items-center justify-between gap-4">
+            <div className="space-y-1 text-center lg:text-left w-full lg:w-5/12 xl:w-4/12">
+              <h3 className="text-xs font-bold uppercase text-amber-800 tracking-wider font-sans flex items-center justify-center lg:justify-start gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-amber-600" />
+                Your Booking Link:
+              </h3>
+              <p className="text-[11px] text-gray-500 font-medium leading-relaxed">
+                Book directly on behalf of referred clients, or share this link to let them secure scheduled spots post-consultation.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center bg-white border border-gray-250/50 rounded-xl p-1.5 sm:pl-3.5 sm:pr-1.5 sm:py-1.5 gap-2 w-full lg:flex-1 lg:max-w-xl shadow-xs">
+              <input
+                type="text"
+                readOnly
+                value={bookingUrl}
+                className="w-full bg-transparent text-xs font-medium font-mono text-gray-600 focus:outline-none select-all px-2 py-1.5 sm:p-0"
+              />
+              <button
+                type="button"
+                onClick={handleCopyBooking}
+                className="flex items-center justify-center bg-brand-primary hover:bg-[#FFB800] text-gray-900 font-bold px-4 py-2.5 sm:py-2 rounded-lg text-[10px] uppercase font-sans tracking-wide shrink-0 transition-colors cursor-pointer shadow-xs w-full sm:w-auto"
+              >
+                {bookingCopied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 mr-1 text-emerald-800 font-bold" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 mr-1" />
+                    Copy URL
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
