@@ -644,6 +644,12 @@ async function startServer() {
   // CORS mapping for security
   app.use((req, res, next) => {
     res.header("X-UCSmile-CMS", "Admin-Verified");
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
     next();
   });
 
