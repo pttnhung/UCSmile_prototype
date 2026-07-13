@@ -1121,38 +1121,52 @@ function handleClientSideMockApi(url: string, init?: RequestInit): Response {
   });
 }
 
-// Global API Fetch Interceptor
-const originalFetch = window.fetch;
-window.fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
-  let url = '';
-  if (typeof input === 'string') {
-    url = input;
-  } else if (input instanceof URL) {
-    url = input.toString();
-  } else if (input && typeof input === 'object' && 'url' in input) {
-    url = (input as any).url;
-  }
+// Global API Fetch Interceptor - Only active on static hosting platforms like GitHub Pages
+const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+const isCloudRun = hostname.endsWith('.run.app');
 
-  if (url.startsWith('/api/')) {
-    const hostname = window.location.hostname;
-    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
-    const isCloudRun = hostname.endsWith('.run.app');
-    
-    // If hosted on GitHub Pages or static host, direct to mock database immediately!
-    if (!isLocal && !isCloudRun) {
+if (!isLocal && !isCloudRun) {
+  const originalFetch = window.fetch;
+  const customFetch = async function (input: RequestInfo | URL, init?: RequestInit) {
+    let url = '';
+    if (typeof input === 'string') {
+      url = input;
+    } else if (input instanceof URL) {
+      url = input.toString();
+    } else if (input && typeof input === 'object' && 'url' in input) {
+      url = (input as any).url;
+    }
+
+    if (url.startsWith('/api/')) {
       return handleClientSideMockApi(url, init);
     }
-  }
 
-  if (typeof input === 'string') {
-    return originalFetch(url, init);
-  } else if (input instanceof URL) {
-    return originalFetch(new URL(url), init);
-  } else {
-    const newRequest = new Request(url, input as RequestInit);
-    return originalFetch(newRequest, init);
+    if (typeof input === 'string') {
+      return originalFetch(url, init);
+    } else if (input instanceof URL) {
+      return originalFetch(new URL(url), init);
+    } else {
+      const newRequest = new Request(url, input as RequestInit);
+      return originalFetch(newRequest, init);
+    }
+  };
+
+  try {
+    window.fetch = customFetch;
+  } catch (e) {
+    console.warn("Could not override window.fetch directly, trying Object.defineProperty:", e);
+    try {
+      Object.defineProperty(window, 'fetch', {
+        value: customFetch,
+        writable: true,
+        configurable: true
+      });
+    } catch (err) {
+      console.error("Failed to mock fetch:", err);
+    }
   }
-};
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

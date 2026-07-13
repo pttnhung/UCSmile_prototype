@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
+import crypto from "crypto";
 
 // Define Types
 interface Booking {
@@ -78,7 +79,7 @@ export interface DentalClinic {
   contactPhone: string;
   contactEmail: string;
   website?: string;
-  status: 'ONBOARDING_IN_PROGRESS' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+  status: 'ONBOARDING_IN_PROGRESS' | 'PENDING_REVIEW' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
   primaryBranchId: string;
   flaggedForReview: boolean;
   duplicateFlagReason?: string;
@@ -178,7 +179,8 @@ let logs: AdminLog[] = [];
 let clinicAdmins: Record<string, ClinicAdmin> = {}; // email -> ClinicAdmin
 let registeredClinics: Record<string, DentalClinic> = {}; // clinicId -> DentalClinic
 let clinicBranches: Record<string, ClinicBranch[]> = {}; // clinicId -> ClinicBranch[]
-let clinicOnboardings: Record<string, ClinicOnboarding> = {}; // clinicId -> ClinicOnboarding
+let clinicOnboardings: Record<string, ClinicOnboarding> = {};
+let sentEmails: any[] = []; // clinicId -> ClinicOnboarding
 
 let clinics = [
   { id: 'C-01', name: 'East Meets West Dental (Da Nang)', location: 'Da Nang', status: 'Active' },
@@ -639,7 +641,19 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+  // Error handling middleware for body parser limits or malformed JSON
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (err) {
+      console.error("Express middleware error:", err);
+      return res.status(err.status || 400).json({
+        error: err.message || "Invalid request payload size or format."
+      });
+    }
+    next();
+  });
 
   // CORS mapping for security
   app.use((req, res, next) => {
@@ -879,6 +893,13 @@ async function startServer() {
     });
   });
 
+  // Get Simulated Sent Emails for a clinic or general
+  app.get("/api/clinic/onboarding/:clinicId/emails", (req, res) => {
+    const { clinicId } = req.params;
+    const filtered = sentEmails.filter(e => e.clinicId === clinicId);
+    return res.json({ success: true, emails: filtered });
+  });
+
   // Restore in-memory clinic registration session (for server-restart survivability)
   app.post("/api/clinic/restore", (req, res) => {
     const { clinic, admin, onboarding, branches } = req.body;
@@ -978,15 +999,47 @@ async function startServer() {
         }
       } else if (step === 5) {
         // Partnership Agreement (AC 4, AC 5, AC 7)
-        const { signedName, termsVersion, agreementStatus, ipAddress, userAgent } = data;
+        const {
+          representativeName,
+          representativePosition,
+          agreementText,
+          checkboxes,
+          termsVersion,
+          agreementNumber,
+          ipAddress,
+          userAgent,
+          clinicEmail
+        } = data;
+
+        // 1. Validation
+        if (!representativeName || !representativeName.trim()) {
+          return res.status(400).json({ error: "Representative Name is required." });
+        }
+        if (!representativePosition || !representativePosition.trim()) {
+          return res.status(400).json({ error: "Representative Position is required." });
+        }
+        if (!checkboxes || checkboxes.length < 6 || checkboxes.some((c: boolean) => !c)) {
+          return res.status(400).json({ error: "All 6 checkboxes must be accepted." });
+        }
+
+        // 2. Generate SHA-256 hash
+        const hash = crypto.createHash('sha256').update(agreementText || '').digest('hex');
+
+        // 3. Save electronic acceptance record
         const agreementRecord = {
-          signedName: signedName || "Authorized Representative",
+          signedName: representativeName.trim(),
+          representativePosition: representativePosition.trim(),
           signedAt: new Date().toISOString(),
-          termsVersion: termsVersion || "v1.0.0-2026",
-          agreementStatus: agreementStatus || "AGREEMENT_ACCEPTED",
+          termsVersion: termsVersion || "v1.5-partner-2026",
+          agreementStatus: "UNDER_REVIEW",
           ipAddress: ipAddress || "127.0.0.1",
           userAgent: userAgent || "Unknown Device",
-          acceptedAt: new Date().toISOString()
+          acceptedAt: new Date().toISOString(),
+          agreementHash: hash,
+          agreementSnapshot: agreementText,
+          agreementNumber: agreementNumber || `AGR-${clinicId.substring(0, 8)}-2026`,
+          watermark: "ACCEPTED BY CLINIC – PENDING ADMIN APPROVAL",
+          checkboxes
         };
 
         onboarding.agreementDetails = agreementRecord;
@@ -996,9 +1049,40 @@ async function startServer() {
         }
         onboarding.agreementHistory.push(agreementRecord);
 
-        if (onboarding.currentStep <= 5) {
-          onboarding.currentStep = 6;
+        // 4. Change clinic and onboarding status to UNDER_REVIEW
+        const clinic = registeredClinics[clinicId];
+        if (clinic) {
+          clinic.status = 'UNDER_REVIEW';
         }
+        onboarding.submittedForReviewAt = new Date().toISOString();
+
+        // 5. Activate Step 6: Admin Review
+        onboarding.currentStep = 6;
+
+        // 6. Generate simulated PDF & Email to the clinic's registered email
+        const emailBody = `Dear ${representativeName.trim()},\n\nWe have received the Partnership Agreement submitted on behalf of ${clinic?.name || "your clinic"}.\n\nApplication ID:\n${clinicId}\n\nAgreement number:\n${agreementRecord.agreementNumber}\n\nAgreement version:\n${agreementRecord.termsVersion}\n\nSubmitted at:\n${new Date().toLocaleString()}\n\nCurrent status:\nUnder Review\n\nA copy of the Agreement accepted by your clinic is attached to this email.\n\nThe attached Agreement is currently marked:\n"Accepted by Clinic – Pending Admin Approval."\n\nYour clinic account will only become active after UCSmile completes the review and issues the final approved Agreement.\n\nYou can monitor the application status through the Clinic Partner Portal.\n\nPlease do not reply to this email with patient medical records or confidential patient information.\n\nSincerely,\nUCTalent Labs`;
+
+        sentEmails.push({
+          id: `EML-${Date.now()}`,
+          clinicId,
+          to: clinicEmail || clinic?.contactEmail || "clinic@example.com",
+          subject: `Partnership Agreement submitted – ${clinic?.name || "your clinic"}`,
+          body: emailBody,
+          sentAt: new Date().toISOString(),
+          attachmentName: `Partnership_Agreement_${agreementRecord.agreementNumber}.pdf`,
+          attachmentContent: agreementText,
+          attachmentWatermark: "ACCEPTED BY CLINIC – PENDING ADMIN APPROVAL"
+        });
+
+        // 7. Send notification to admin (log entry)
+        logs.unshift({
+          id: `LOG-${Date.now()}`,
+          action: `Partnership Agreement Submitted for Review (${clinic?.name || clinicId})`,
+          updatedBy: 'Clinic Portal',
+          updatedAt: new Date().toISOString(),
+          previousValue: 'ONBOARDING_IN_PROGRESS',
+          newValue: 'UNDER_REVIEW'
+        });
       } else if (step === 6) {
         // Final submission for review
         const clinic = registeredClinics[clinicId];

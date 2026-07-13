@@ -1799,7 +1799,7 @@ export default function AdminDashboard() {
                                       ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                                       : app.clinic.status === 'REJECTED'
                                       ? 'bg-red-50 text-red-800 border-red-200'
-                                      : app.clinic.status === 'PENDING_REVIEW'
+                                      : (app.clinic.status === 'PENDING_REVIEW' || app.clinic.status === 'UNDER_REVIEW')
                                       ? 'bg-blue-50 text-blue-800 border-blue-200 animate-pulse'
                                       : 'bg-amber-50 text-amber-800 border-amber-200'
                                   }`}>
@@ -1816,7 +1816,7 @@ export default function AdminDashboard() {
                                 </p>
                               </div>
 
-                              {app.clinic.status === 'PENDING_REVIEW' && (
+                              {(app.clinic.status === 'PENDING_REVIEW' || app.clinic.status === 'UNDER_REVIEW') && (
                                 <div className="flex items-center gap-2 shrink-0">
                                   <button
                                     onClick={() => reviewOnboardingClinic(app.clinic.id, 'APPROVED')}

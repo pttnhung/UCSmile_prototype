@@ -46,3 +46,11 @@
 .btn-luxury {
   @apply bg-brand-primary text-white border border-white/20 shadow-xl transition-all hover:bg-gray-900 hover:text-white hover:border-gray-900 active:scale-[0.98] rounded-2xl font-black text-lg tracking-[0.2em] uppercase text-center flex items-center justify-center;
 }
+
+input::placeholder,
+textarea::placeholder {
+  font-weight: 400 !important;
+  color: #9ca3af !important; /* Tailwind gray-400 */
+  opacity: 0.75 !important;
+}
+

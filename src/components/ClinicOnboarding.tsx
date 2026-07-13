@@ -24,6 +24,7 @@ import {
   LogOut,
   ChevronRight,
   Upload,
+  Download,
   X,
   Image as ImageIcon
 } from 'lucide-react';
@@ -267,13 +268,18 @@ export function ClinicOnboardingPage() {
     setSuccessMsg(null);
     setLoading(true);
 
+    const submissionForm = {
+      ...regForm,
+      primaryBranchName: regForm.clinicName.trim()
+    };
+
     // Required fields as per AC 4
     const required = [
       'clinicName', 'contactPersonName', 'contactPhoneNumber', 'contactEmail',
       'primaryBranchName', 'city', 'clinicAddress', 'adminFullName', 'adminEmail', 'password'
     ];
 
-    const missing = required.filter(field => !regForm[field as keyof typeof regForm]?.trim());
+    const missing = required.filter(field => !submissionForm[field as keyof typeof submissionForm]?.trim());
     if (missing.length > 0) {
       setError("Please fill in all required fields marked with *.");
       setLoading(false);
@@ -284,7 +290,7 @@ export function ClinicOnboardingPage() {
       const response = await fetch('/api/clinic/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(regForm)
+        body: JSON.stringify(submissionForm)
       });
 
       const result = await response.json();
@@ -386,14 +392,11 @@ export function ClinicOnboardingPage() {
         </AnimatePresence>
 
         {/* Portal Header */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center p-3 bg-amber-50 rounded-3xl mb-4 border border-amber-200/50">
-            <Building className="w-8 h-8 text-amber-500" />
-          </div>
-          <h1 className="text-3xl md:text-4xl font-serif text-gray-900 font-extrabold tracking-tight">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-serif text-gray-900 font-bold">
             UCSmile Clinic Partner Portal
           </h1>
-          <p className="text-gray-500 text-sm mt-2 max-w-lg mx-auto">
+          <p className="text-gray-500 text-xs mt-1.5 max-w-md mx-auto">
             Become an accredited UCSmile clinic partner and reach international dental tourists.
           </p>
         </div>
@@ -478,20 +481,6 @@ export function ClinicOnboardingPage() {
                           id="input-clinicName"
                         />
                       </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Primary Branch Name *</label>
-                      <input 
-                        type="text"
-                        required
-                        placeholder="e.g., Da Nang Central Branch"
-                        value={regForm.primaryBranchName}
-                        onChange={e => setRegForm({...regForm, primaryBranchName: e.target.value})}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 px-4 text-xs font-bold text-gray-800 focus:outline-none focus:border-amber-400 focus:bg-white transition-all"
-                        id="input-primaryBranchName"
-                      />
-                      <p className="text-[10px] text-gray-400 font-medium mt-1">If only one branch, same as Clinic Name.</p>
                     </div>
 
                     <div>
@@ -597,7 +586,7 @@ export function ClinicOnboardingPage() {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Admin Full Name *</label>
+                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Clinic Admin Name *</label>
                       <div className="relative">
                         <User className="absolute left-4 top-3.5 w-4 h-4 text-gray-400" />
                         <input 
@@ -629,7 +618,7 @@ export function ClinicOnboardingPage() {
                     </div>
 
                     <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Secret Password *</label>
+                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Password *</label>
                       <div className="relative">
                         <Lock className="absolute left-4 top-3.5 w-4 h-4 text-gray-400" />
                         <input 
@@ -748,7 +737,7 @@ export function ClinicOnboardingPage() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="bg-white rounded-3xl border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.03)] p-8 md:p-12 text-center"
+              className="bg-white rounded-3xl border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.03)] p-8 md:p-12 text-center max-w-xl mx-auto"
               id="view-success-container"
             >
               <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-500 border border-emerald-100 flex items-center justify-center mx-auto mb-6">
@@ -756,46 +745,8 @@ export function ClinicOnboardingPage() {
               </div>
               <h2 className="font-serif text-2xl text-gray-900 font-bold mb-4">Registration Created Successfully!</h2>
               
-              {/* AC 7 Success message requirement */}
-              <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 max-w-xl mx-auto mb-8">
-                <p className="text-xs text-gray-600 leading-relaxed font-bold italic">
-                  “Your clinic registration has been created successfully. Please continue completing your clinic onboarding information for UCSmile review.”
-                </p>
-              </div>
-
-              <div className="border border-amber-100 bg-amber-50/40 p-6 rounded-2xl max-w-xl mx-auto mb-8 text-left space-y-3">
-                <h4 className="text-xs font-black text-amber-800 uppercase tracking-widest flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-amber-500" /> Account Created Records
-                </h4>
-                <div className="grid grid-cols-2 gap-4 text-xs">
-                  <div>
-                    <span className="text-gray-400 font-extrabold uppercase text-[10px]">Dental Clinic:</span>
-                    <p className="font-bold text-gray-800 mt-0.5">{clinic?.name}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-400 font-extrabold uppercase text-[10px]">Primary Branch:</span>
-                    <p className="font-bold text-gray-800 mt-0.5">{clinic?.primaryBranchId ? 'Linked Branch Created' : 'Created'}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-400 font-extrabold uppercase text-[10px]">Admin Account:</span>
-                    <p className="font-bold text-gray-800 mt-0.5">{adminUser?.fullName}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-400 font-extrabold uppercase text-[10px]">Initial Status:</span>
-                    <span className="inline-block bg-amber-100 text-amber-800 text-[9px] font-black uppercase px-2 py-0.5 rounded-full border border-amber-200 mt-1">
-                      {clinic?.status}
-                    </span>
-                  </div>
-                </div>
-
-                {clinic?.flaggedForReview && (
-                  <div className="p-3 bg-amber-100/50 border border-amber-200 rounded-xl mt-3 flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                    <p className="text-[10px] text-amber-800 leading-relaxed">
-                      <strong>Dual Registration Audit:</strong> A similar clinic name or address exists. Your application has been logged and flagged for Admin verification review. You can continue onboarding normally.
-                    </p>
-                  </div>
-                )}
+              <div className="text-gray-600 text-sm font-semibold mb-8">
+                Dental Clinic: <span className="font-bold text-gray-900">{clinic?.name}</span>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -807,7 +758,7 @@ export function ClinicOnboardingPage() {
                   className="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-amber-500/20 active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer"
                   id="btn-continue-onboarding"
                 >
-                  Continue Onboarding Flow <ChevronRight className="w-4 h-4" />
+                  Continue <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             </motion.div>
@@ -965,8 +916,10 @@ export function ClinicOnboardingPage() {
                     clinicName={clinic?.name}
                     adminName={adminUser?.fullName}
                     onboarding={onboarding} 
-                    onSave={(updatedOnb) => {
+                    clinic={clinic}
+                    onSave={(updatedOnb, updatedClinic) => {
                       setOnboarding(updatedOnb);
+                      if (updatedClinic) setClinic(updatedClinic);
                       showToast("Step 5: Partnership agreement digitally signed.");
                     }}
                     onPrev={() => setOnboarding({ ...onboarding, currentStep: 4 })}
@@ -1014,6 +967,11 @@ function StepProfileSetup({ clinicId, clinic, onboarding, onSave }: { clinicId: 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Legal & Tax variables
+  const [taxCode, setTaxCode] = useState(onboarding?.profileDetails?.taxCode || '');
+  const [operatingLicenceNumber, setOperatingLicenceNumber] = useState(onboarding?.profileDetails?.operatingLicenceNumber || '');
+  const [address, setAddress] = useState(onboarding?.profileDetails?.address || clinic?.address || '');
+
   // Drag and Drop States
   const [dragOverLogo, setDragOverLogo] = useState(false);
   const [dragOverImages, setDragOverImages] = useState(false);
@@ -1037,12 +995,15 @@ function StepProfileSetup({ clinicId, clinic, onboarding, onSave }: { clinicId: 
     setSelectedLangs(["Vietnamese", "English", "Korean"]);
     setSelectedSpecs(["Restorative", "Prosthodontics", "Implants", "Orthodontics"]);
     setSelectedFacs(["3D CT Scanner", "English Speaking Staff", "Korean Speaking Staff", "Private Treatment Rooms", "Free WiFi & Coffee Bar"]);
-    setLogoUrl("https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=300&h=300&fit=crop");
+    setLogoUrl("https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=300&h=300&fit=crop");
     setClinicImages([
       "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?w=800&h=600&fit=crop"
     ]);
+    setTaxCode("4201979449");
+    setOperatingLicenceNumber("0452/ĐNa-GPHĐ");
+    setAddress("140 Thong Nhat, Nha Trang, Khanh Hoa, Vietnam");
     setSuccess("Successfully populated clinic profile with premium demo details!");
   };
 
@@ -1133,6 +1094,16 @@ function StepProfileSetup({ clinicId, clinic, onboarding, onSave }: { clinicId: 
         setLoading(false);
         return;
       }
+      if (!taxCode.trim()) {
+        setError("Mã số thuế (Tax Code) is a required field.");
+        setLoading(false);
+        return;
+      }
+      if (!operatingLicenceNumber.trim()) {
+        setError("Giấy phép hoạt động (Operating Licence Number) is a required field.");
+        setLoading(false);
+        return;
+      }
       if (!desc.trim()) {
         setError("Clinic Description is a required field.");
         setLoading(false);
@@ -1148,11 +1119,19 @@ function StepProfileSetup({ clinicId, clinic, onboarding, onSave }: { clinicId: 
         setLoading(false);
         return;
       }
+      if (!logoUrl || logoUrl === 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=300&h=300&fit=crop') {
+        setError("Clinic Logo is a required field. Please upload your clinic logo.");
+        setLoading(false);
+        return;
+      }
     }
 
     const payload = {
       isDraft,
       clinicDisplayName: displayName.trim(),
+      taxCode: taxCode.trim(),
+      operatingLicenceNumber: operatingLicenceNumber.trim(),
+      address: address.trim(),
       description: desc.trim(),
       whatsAppNumber: whatsAppNumber.trim(),
       languages: selectedLangs,
@@ -1191,7 +1170,6 @@ function StepProfileSetup({ clinicId, clinic, onboarding, onSave }: { clinicId: 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-100 pb-4">
         <div>
           <h2 className="font-serif text-xl font-bold text-gray-900 mb-1">Clinic Profile Setup</h2>
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Configure your branding, facilities, and languages</p>
         </div>
         <button
           type="button"
@@ -1221,36 +1199,6 @@ function StepProfileSetup({ clinicId, clinic, onboarding, onSave }: { clinicId: 
         </div>
       )}
 
-      {/* AC 1: Base Clinic Record Display (Read-only) */}
-      <div className="bg-amber-50/20 border border-amber-100/30 rounded-2xl p-5 space-y-3" id="base-clinic-record-panel">
-        <h3 className="text-xs font-black uppercase tracking-widest text-amber-800 flex items-center gap-1.5">
-          <Building className="w-4 h-4 text-amber-500" /> Clinic Registration Records (Read-Only)
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-2">
-          <div>
-            <span className="text-gray-400 font-extrabold uppercase text-[9px] block">Registered Legal Name</span>
-            <span className="font-bold text-gray-800">{clinic?.name}</span>
-          </div>
-          <div>
-            <span className="text-gray-400 font-extrabold uppercase text-[9px] block">Contact Person</span>
-            <span className="font-bold text-gray-800">{clinic?.contactPerson}</span>
-          </div>
-          <div>
-            <span className="text-gray-400 font-extrabold uppercase text-[9px] block">Official Email</span>
-            <span className="font-bold text-gray-800">{clinic?.contactEmail}</span>
-          </div>
-          <div>
-            <span className="text-gray-400 font-extrabold uppercase text-[9px] block">Registration Phone</span>
-            <span className="font-bold text-gray-800">{clinic?.contactPhone}</span>
-          </div>
-          <div className="md:col-span-2">
-            <span className="text-gray-400 font-extrabold uppercase text-[9px] block">Accredited Base Address</span>
-            <span className="font-bold text-gray-800 flex items-center gap-1 mt-0.5">
-              <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" /> {clinic?.primaryBranchAddress || "Viet Nam Branch Office"}
-            </span>
-          </div>
-        </div>
-      </div>
 
       <div className="space-y-6">
         {/* PUBLIC PROFILE INPUTS */}
@@ -1286,6 +1234,37 @@ function StepProfileSetup({ clinicId, clinic, onboarding, onSave }: { clinicId: 
                 id="input-whatsapp"
               />
             </div>
+          </div>
+        </div>
+
+        {/* LEGAL REGISTRATION DETAILS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Tax Code */}
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Mã số thuế / Tax Code *</label>
+            <input 
+              type="text"
+              required
+              placeholder="Ví dụ: 4201979449"
+              value={taxCode}
+              onChange={e => setTaxCode(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 px-4 text-xs font-bold text-gray-800 focus:outline-none focus:border-amber-400 focus:bg-white transition-all"
+              id="input-taxcode"
+            />
+          </div>
+
+          {/* Operating Licence */}
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Giấy phép hoạt động / Operating Licence *</label>
+            <input 
+              type="text"
+              required
+              placeholder="Ví dụ: 0452/ĐNa-GPHĐ"
+              value={operatingLicenceNumber}
+              onChange={e => setOperatingLicenceNumber(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 px-4 text-xs font-bold text-gray-800 focus:outline-none focus:border-amber-400 focus:bg-white transition-all"
+              id="input-licence"
+            />
           </div>
         </div>
 
@@ -1355,7 +1334,7 @@ function StepProfileSetup({ clinicId, clinic, onboarding, onSave }: { clinicId: 
 
         {/* BRAND LOGO UPLOADER (AC 6: Drag-and-drop & File check) */}
         <div className="space-y-3">
-          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Clinic Logo (Optional)</label>
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Clinic Logo *</label>
           <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-gray-50 rounded-2xl border border-gray-100">
             <div className="relative group shrink-0">
               <img 
@@ -1474,18 +1453,8 @@ function StepProfileSetup({ clinicId, clinic, onboarding, onSave }: { clinicId: 
 
       </div>
 
-      {/* Action Buttons (Drafting and Step Continuation - AC 3 & AC 7) */}
-      <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => handleSave(true)}
-          disabled={loading}
-          className="px-6 py-2.5 border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-bold text-gray-500 cursor-pointer disabled:opacity-50"
-          id="btn-save-draft"
-        >
-          {loading ? 'Processing...' : 'Save as Draft'}
-        </button>
-
+      {/* Action Buttons (Step Continuation - AC 7) */}
+      <div className="pt-6 border-t border-gray-100 flex items-center justify-end">
         <button
           type="button"
           onClick={() => handleSave(false)}
@@ -1524,7 +1493,7 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
           customUnitName: savedItem?.customUnitName || '',
           priceUnit: savedItem?.priceUnit || std.priceUnit,
           currency: savedItem?.currency || std.currency,
-          enabled: savedItem ? (savedItem.enabled !== undefined ? savedItem.enabled : true) : (std.id === 'gen-1' || std.id === 'gen-2' || std.id === 'gen-4' || std.id === 'std-others'), // default popular ones on
+          enabled: savedItem ? (savedItem.enabled !== undefined ? savedItem.enabled : false) : false,
           isDetail: false
         };
       });
@@ -1559,7 +1528,7 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
       customUnitName: '',
       priceUnit: s.priceUnit,
       currency: s.currency,
-      enabled: s.id === 'gen-1' || s.id === 'gen-2' || s.id === 'gen-4' || s.id === 'std-others', // Enable Cleaning, Teeth Whitening, Dental Implant in General by default
+      enabled: false,
       isDetail: false
     }));
   });
@@ -1580,13 +1549,9 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
   const [detailCustomUnitName, setDetailCustomUnitName] = useState('');
 
   const fillServicesDemoData = () => {
-    // Enable only gen-1 (Cleaning), gen-2 (Teeth Whitening), gen-4 (Dental Implant)
-    const customId1 = `S-DETAIL-DEMO1-${Date.now()}`;
-    const customId2 = `S-DETAIL-DEMO2-${Date.now()}`;
-    const customId3 = `S-DETAIL-DEMO3-${Date.now()}`;
+    const enabledDemoServiceIds = ['gen-1', 'gen-2', 'gen-4', 'pro-1', 'ort-2'];
 
     const demoServices = STANDARD_SERVICES.map(std => {
-      const isDemoEnabled = std.id === 'gen-1' || std.id === 'gen-2' || std.id === 'gen-4' || std.id === 'std-others';
       return {
         serviceId: std.id,
         category: std.category,
@@ -1597,30 +1562,72 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
         customUnitName: '',
         priceUnit: std.priceUnit,
         currency: std.currency,
-        enabled: isDemoEnabled,
+        enabled: enabledDemoServiceIds.includes(std.id),
         isDetail: false
       };
     });
 
     const demoDetails = [
+      // gen-1 (Cleaning) Specific Treatments (4 items)
       {
-        serviceId: customId1,
+        serviceId: `S-DETAIL-${Date.now()}-1`,
         parentServiceId: 'gen-1',
         category: 'General',
-        serviceName: 'Ultrasonic Scaling & Air Polish',
-        customPrice: 55,
-        treatmentUnit: 'Session',
+        serviceName: 'Ultrasonic Scale & Polish (Regular)',
+        customPrice: 45,
+        treatmentUnit: 'Visit',
         customUnitName: '',
-        priceUnit: 'per Session',
+        priceUnit: 'per Visit',
         currency: 'USD',
         enabled: true,
         isDetail: true
       },
       {
-        serviceId: customId2,
+        serviceId: `S-DETAIL-${Date.now()}-2`,
+        parentServiceId: 'gen-1',
+        category: 'General',
+        serviceName: 'Deep Scale & Root Planing (per Quadrant)',
+        customPrice: 120,
+        treatmentUnit: 'Visit',
+        customUnitName: '',
+        priceUnit: 'per Visit',
+        currency: 'USD',
+        enabled: true,
+        isDetail: true
+      },
+      {
+        serviceId: `S-DETAIL-${Date.now()}-3`,
+        parentServiceId: 'gen-1',
+        category: 'General',
+        serviceName: 'Air-Powder Stain Blast & Airflow Polish',
+        customPrice: 65,
+        treatmentUnit: 'Visit',
+        customUnitName: '',
+        priceUnit: 'per Visit',
+        currency: 'USD',
+        enabled: true,
+        isDetail: true
+      },
+      {
+        serviceId: `S-DETAIL-${Date.now()}-4`,
+        parentServiceId: 'gen-1',
+        category: 'General',
+        serviceName: 'Topical Fluoride Therapy & Polish',
+        customPrice: 35,
+        treatmentUnit: 'Visit',
+        customUnitName: '',
+        priceUnit: 'per Visit',
+        currency: 'USD',
+        enabled: true,
+        isDetail: true
+      },
+
+      // gen-2 (Teeth Whitening) Specific Treatments (3 items)
+      {
+        serviceId: `S-DETAIL-${Date.now()}-5`,
         parentServiceId: 'gen-2',
         category: 'General',
-        serviceName: 'In-office Laser Whitening (Zoom II)',
+        serviceName: 'In-Office Zoom! Laser Whitening Session',
         customPrice: 180,
         treatmentUnit: 'Session',
         customUnitName: '',
@@ -1630,14 +1637,163 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
         isDetail: true
       },
       {
-        serviceId: customId3,
+        serviceId: `S-DETAIL-${Date.now()}-6`,
+        parentServiceId: 'gen-2',
+        category: 'General',
+        serviceName: 'Home Whitening Kit with Custom Laboratory Trays',
+        customPrice: 110,
+        treatmentUnit: 'Session',
+        customUnitName: '',
+        priceUnit: 'per Session',
+        currency: 'USD',
+        enabled: true,
+        isDetail: true
+      },
+      {
+        serviceId: `S-DETAIL-${Date.now()}-7`,
+        parentServiceId: 'gen-2',
+        category: 'General',
+        serviceName: 'Dual Action Laser & Take-home Premium Kit',
+        customPrice: 260,
+        treatmentUnit: 'Session',
+        customUnitName: '',
+        priceUnit: 'per Session',
+        currency: 'USD',
+        enabled: true,
+        isDetail: true
+      },
+
+      // gen-4 (Dental Implant) Specific Treatments (4 items)
+      {
+        serviceId: `S-DETAIL-${Date.now()}-8`,
         parentServiceId: 'gen-4',
         category: 'General',
-        serviceName: 'Premium Straumann Implant Restoration',
+        serviceName: 'Premium Straumann SLA Active Implant (Fixture)',
         customPrice: 1450,
         treatmentUnit: 'Tooth',
         customUnitName: '',
         priceUnit: 'per Tooth',
+        currency: 'USD',
+        enabled: true,
+        isDetail: true
+      },
+      {
+        serviceId: `S-DETAIL-${Date.now()}-9`,
+        parentServiceId: 'gen-4',
+        category: 'General',
+        serviceName: 'Standard Neo Biotech SLA Implant System',
+        customPrice: 750,
+        treatmentUnit: 'Tooth',
+        customUnitName: '',
+        priceUnit: 'per Tooth',
+        currency: 'USD',
+        enabled: true,
+        isDetail: true
+      },
+      {
+        serviceId: `S-DETAIL-${Date.now()}-10`,
+        parentServiceId: 'gen-4',
+        category: 'General',
+        serviceName: 'Osstem TSIII Premium SLA Active Implant',
+        customPrice: 950,
+        treatmentUnit: 'Tooth',
+        customUnitName: '',
+        priceUnit: 'per Tooth',
+        currency: 'USD',
+        enabled: true,
+        isDetail: true
+      },
+      {
+        serviceId: `S-DETAIL-${Date.now()}-11`,
+        parentServiceId: 'gen-4',
+        category: 'General',
+        serviceName: 'Custom Titanium Implant Abutment',
+        customPrice: 280,
+        treatmentUnit: 'Tooth',
+        customUnitName: '',
+        priceUnit: 'per Tooth',
+        currency: 'USD',
+        enabled: true,
+        isDetail: true
+      },
+
+      // pro-1 (Dental Crown) Specific Treatments (3 items)
+      {
+        serviceId: `S-DETAIL-${Date.now()}-12`,
+        parentServiceId: 'pro-1',
+        category: 'Prosthodontics',
+        serviceName: 'LAVA Esthetic High-Translucency Zirconia Crown',
+        customPrice: 380,
+        treatmentUnit: 'Tooth',
+        customUnitName: '',
+        priceUnit: 'per Tooth',
+        currency: 'USD',
+        enabled: true,
+        isDetail: true
+      },
+      {
+        serviceId: `S-DETAIL-${Date.now()}-13`,
+        parentServiceId: 'pro-1',
+        category: 'Prosthodontics',
+        serviceName: 'IPS e.max Premium CAD/CAM Porcelain Crown',
+        customPrice: 480,
+        treatmentUnit: 'Tooth',
+        customUnitName: '',
+        priceUnit: 'per Tooth',
+        currency: 'USD',
+        enabled: true,
+        isDetail: true
+      },
+      {
+        serviceId: `S-DETAIL-${Date.now()}-14`,
+        parentServiceId: 'pro-1',
+        category: 'Prosthodontics',
+        serviceName: 'Standard Porcelain-Fused-to-Metal (PFM) Crown',
+        customPrice: 220,
+        treatmentUnit: 'Tooth',
+        customUnitName: '',
+        priceUnit: 'per Tooth',
+        currency: 'USD',
+        enabled: true,
+        isDetail: true
+      },
+
+      // ort-2 (Invisalign) Specific Treatments (3 items)
+      {
+        serviceId: `S-DETAIL-${Date.now()}-15`,
+        parentServiceId: 'ort-2',
+        category: 'Orthodontics',
+        serviceName: 'Invisalign Full/Comprehensive Unlimited Treatment',
+        customPrice: 3800,
+        treatmentUnit: 'Case',
+        customUnitName: '',
+        priceUnit: 'per Case',
+        currency: 'USD',
+        enabled: true,
+        isDetail: true
+      },
+      {
+        serviceId: `S-DETAIL-${Date.now()}-16`,
+        parentServiceId: 'ort-2',
+        category: 'Orthodontics',
+        serviceName: 'Invisalign Lite (Dual Arch - Up to 14 Aligners)',
+        customPrice: 2200,
+        treatmentUnit: 'Case',
+        customUnitName: '',
+        priceUnit: 'per Case',
+        currency: 'USD',
+        enabled: true,
+        isDetail: true
+      },
+      {
+        serviceId: `S-DETAIL-${Date.now()}-17`,
+        parentServiceId: 'ort-2',
+        category: 'Orthodontics',
+        serviceName: 'Invisalign Express/iGo (Single Arch Minor Fix)',
+        customPrice: 1400,
+        treatmentUnit: 'Case',
+        customUnitName: '',
+        priceUnit: 'per Case',
         currency: 'USD',
         enabled: true,
         isDetail: true
@@ -1875,7 +2031,6 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-100 pb-4">
         <div>
           <h2 className="font-serif text-xl font-bold text-gray-900 mb-1">Dental Services & Pricing</h2>
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Configure your treatments and costs</p>
         </div>
         <button
           type="button"
@@ -1948,9 +2103,6 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
                               {s.serviceName}
                             </p>
                             <div className="flex items-center gap-2">
-                              {s.priceRange && (
-                                <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">UCSmile Average: {s.priceRange}</span>
-                              )}
                               {s.enabled && (
                                 nestedDetails.length > 0 ? (
                                   <span className="inline-block bg-emerald-50 text-emerald-700 text-[8px] font-black uppercase px-1 rounded border border-emerald-100">
@@ -1991,8 +2143,7 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
 
                       {/* Render nested Sub-services / Detailed Treatments */}
                       {s.enabled && nestedDetails.length > 0 && (
-                        <div className="ml-8 pl-4 border-l-2 border-amber-200 space-y-2 text-left bg-gray-50/50 p-3 rounded-2xl">
-                          <p className="text-[9px] font-black uppercase tracking-wider text-amber-800 mb-1">Specific treatments offered under {s.serviceName}:</p>
+                        <div className="ml-8 pl-4 space-y-2 text-left bg-gray-50/50 p-3 rounded-2xl">
                           <div className="space-y-2">
                             {nestedDetails.map(detail => {
                               const dIdx = services.findIndex(item => item.serviceId === detail.serviceId);
@@ -2002,7 +2153,6 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
                                     <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                                     <div>
                                       <p className="font-extrabold text-gray-800 leading-none">{detail.serviceName}</p>
-                                      <p className="text-[9px] text-gray-400 mt-0.5">Category: {detail.category}</p>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-4">
@@ -2071,26 +2221,11 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
                             >
                               <option value="Tooth">Tooth</option>
                               <option value="Arch">Arch</option>
-                              <option value="Jaw">Jaw</option>
                               <option value="Session">Session</option>
                               <option value="Case">Case</option>
                               <option value="Visit">Visit</option>
-                              <option value="Custom Unit">Custom Unit</option>
                             </select>
                           </div>
-
-                          {/* Custom unit name (if active) */}
-                          {detailUnit === 'Custom Unit' && (
-                            <div className="w-24 shrink-0">
-                              <input 
-                                type="text" 
-                                placeholder="Unit name" 
-                                value={detailCustomUnitName}
-                                onChange={e => setDetailCustomUnitName(e.target.value)}
-                                className="w-full bg-white border border-gray-200 rounded-xl py-2 px-3 text-xs font-bold text-gray-800 focus:outline-none focus:border-amber-400"
-                              />
-                            </div>
-                          )}
 
                           {/* Action Buttons: Check / Tick (Submit) and Cancel */}
                           <div className="flex items-center gap-1.5 shrink-0">
@@ -2135,16 +2270,6 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
         </button>
 
         <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => handleSaveStep(true)}
-            disabled={loading}
-            className="px-6 py-2.5 border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-bold text-gray-500 cursor-pointer disabled:opacity-50"
-            id="btn-save-services-draft"
-          >
-            {loading ? 'Processing...' : 'Save as Draft'}
-          </button>
-
           <button
             type="button"
             onClick={() => handleSaveStep(false)}
@@ -2351,7 +2476,7 @@ function StepHoursSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId: st
           className="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-amber-500/20 active:scale-[0.98] transition-all disabled:bg-gray-300 cursor-pointer"
           id="btn-save-hours"
         >
-          {loading ? 'Saving Hours...' : 'Save & Continue to Agreement'}
+          {loading ? 'Saving Hours...' : 'Save & Continue'}
         </button>
       </div>
 
@@ -2379,10 +2504,10 @@ function StepAdditionalInfo({
 }) {
   // Pre-set standard avatars
   const PRESET_AVATARS = [
+    "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop", // Stethoscope / neutral placeholder
     "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&h=200&fit=crop",
     "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop",
-    "https://images.unsplash.com/photo-1594824813573-246434de83fb?w=200&h=200&fit=crop",
-    "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop"
+    "https://images.unsplash.com/photo-1594824813573-246434de83fb?w=200&h=200&fit=crop"
   ];
 
   // Primary branch info fallback from registration
@@ -2423,17 +2548,14 @@ function StepAdditionalInfo({
 
   // 3. Dentist Form States
   const [dName, setDName] = useState('');
-  const [dPos, setDPos] = useState('Head Dentist');
   const [dSpec, setDSpec] = useState('Implants & Oral Surgery');
-  const [dExp, setDExp] = useState('10 years');
+  const [dExp, setDExp] = useState('');
   const [dLangs, setDLangs] = useState('Vietnamese, English');
   const [dPhoto, setDPhoto] = useState(PRESET_AVATARS[0]);
-  const [dBio, setDBio] = useState('');
   const [showAddDentist, setShowAddDentist] = useState(false);
 
   // 4. Document Form States
   const [docName, setDocName] = useState('');
-  const [docType, setDocType] = useState('Clinic License');
   const [showAddDoc, setShowAddDoc] = useState(false);
   const [dragOverDoc, setDragOverDoc] = useState(false);
 
@@ -2458,22 +2580,18 @@ function StepAdditionalInfo({
       {
         id: `DENT-${Date.now()}-1`,
         name: "Dr. Minh Nguyen",
-        position: "Head Specialist",
         specialization: "Implants & Oral Surgery",
         experience: "15 years",
         languages: "Vietnamese, English",
-        photo: PRESET_AVATARS[0],
-        bio: "Dr. Minh Nguyen is a board-certified implantologist with over 1,500 successful implant cases. He obtained his specialization in Switzerland and loves dental tourism."
+        photo: PRESET_AVATARS[0]
       },
       {
         id: `DENT-${Date.now()}-2`,
         name: "Dr. Sophia Le",
-        position: "Senior Aesthetic Dentist",
         specialization: "Cosmetic Dentistry & Orthodontics",
         experience: "8 years",
         languages: "Vietnamese, English, Korean",
-        photo: PRESET_AVATARS[1],
-        bio: "Dr. Sophia is passionate about creating natural-looking smiles. She is certified in Invisalign and advanced veneer bonding techniques."
+        photo: PRESET_AVATARS[1]
       }
     ];
 
@@ -2546,19 +2664,22 @@ function StepAdditionalInfo({
       setError("Dentist Name is required.");
       return;
     }
+    if (!dExp.trim()) {
+      setError("Years of Experience is required.");
+      return;
+    }
     const newD = {
       id: `DENT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       name: dName.trim(),
-      position: dPos,
       specialization: dSpec.trim(),
-      experience: dExp.trim() || undefined,
+      experience: dExp.trim(),
       languages: dLangs.trim() || "Vietnamese, English",
-      photo: dPhoto,
-      bio: dBio.trim() || undefined
+      photo: dPhoto
     };
     setDentists(prev => [...prev, newD]);
     setDName('');
-    setDBio('');
+    setDExp('');
+    setDPhoto(PRESET_AVATARS[0]);
     setShowAddDentist(false);
     setSuccess(`Dentist profile for "${newD.name}" added successfully.`);
   };
@@ -2613,7 +2734,7 @@ function StepAdditionalInfo({
       const parsed = await validateAndReadFile(file);
       const newDoc = {
         name: docName.trim() ? `${docName.trim()} (${parsed.name})` : parsed.name,
-        type: docType,
+        type: "Document",
         url: parsed.dataUrl,
         uploadedAt: new Date().toLocaleDateString('vi-VN'),
         fileSize: parsed.sizeStr
@@ -2857,15 +2978,11 @@ function StepAdditionalInfo({
                 />
                 <div className="space-y-1 text-xs">
                   <p className="font-extrabold text-gray-900 leading-tight">{d.name}</p>
-                  <p className="text-amber-700 font-bold text-[10px] uppercase tracking-wide">{d.position}</p>
                   <p className="text-gray-500 font-medium">Specialty: {d.specialization}</p>
                   {d.experience && (
                     <p className="text-gray-400 font-medium text-[10px]">Experience: {d.experience}</p>
                   )}
                   <p className="text-gray-400 font-medium text-[10px]">Languages: {d.languages}</p>
-                  {d.bio && (
-                    <p className="text-gray-500 mt-2 italic text-[10px] leading-relaxed border-t border-gray-50 pt-1.5">{d.bio}</p>
-                  )}
                 </div>
                 <button
                   type="button"
@@ -2898,19 +3015,6 @@ function StepAdditionalInfo({
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-extrabold uppercase text-gray-400 tracking-wider mb-1">Position / Title *</label>
-                <select 
-                  value={dPos}
-                  onChange={e => setDPos(e.target.value)}
-                  className="w-full bg-white border border-gray-200 rounded-xl py-2.5 px-3 font-bold text-gray-800 focus:outline-none"
-                >
-                  <option value="Head Dentist">Head Dentist</option>
-                  <option value="Senior Specialist">Senior Specialist</option>
-                  <option value="Resident Doctor">Resident Doctor</option>
-                  <option value="Associate Clinician">Associate Clinician</option>
-                </select>
-              </div>
-              <div>
                 <label className="block text-[10px] font-extrabold uppercase text-gray-400 tracking-wider mb-1">Specialization *</label>
                 <input 
                   type="text" 
@@ -2922,9 +3026,10 @@ function StepAdditionalInfo({
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-extrabold uppercase text-gray-400 tracking-wider mb-1">Years of Experience (Optional)</label>
+                <label className="block text-[10px] font-extrabold uppercase text-gray-400 tracking-wider mb-1">Years of Experience *</label>
                 <input 
                   type="text" 
+                  required
                   placeholder="e.g. 12 years"
                   value={dExp}
                   onChange={e => setDExp(e.target.value)}
@@ -2941,34 +3046,44 @@ function StepAdditionalInfo({
                   className="w-full bg-white border border-gray-200 rounded-xl py-2 px-3 font-bold text-gray-800 focus:outline-none"
                 />
               </div>
-
-              <div>
-                <label className="block text-[10px] font-extrabold uppercase text-gray-400 tracking-wider mb-1">Select Profile Photo Avatar</label>
-                <div className="flex items-center gap-2 pt-1.5">
-                  {PRESET_AVATARS.map((av, index) => (
-                    <img 
-                      key={index}
-                      src={av}
-                      alt="Preset avatar"
-                      onClick={() => setDPhoto(av)}
-                      className={`w-9 h-9 rounded-full object-cover cursor-pointer border-2 transition-all hover:scale-105 ${
-                        dPhoto === av ? 'border-amber-500 scale-110 shadow' : 'border-transparent opacity-70'
-                      }`}
-                      referrerPolicy="no-referrer"
-                    />
-                  ))}
-                </div>
-              </div>
-
+ 
               <div className="sm:col-span-2">
-                <label className="block text-[10px] font-extrabold uppercase text-gray-400 tracking-wider mb-1">Bio / Introduction (Optional)</label>
-                <textarea 
-                  rows={2}
-                  placeholder="Write a brief professional summary for the clinician..."
-                  value={dBio}
-                  onChange={e => setDBio(e.target.value)}
-                  className="w-full bg-white border border-gray-200 rounded-xl py-2 px-3 font-bold text-gray-800 focus:outline-none focus:border-amber-400"
-                />
+                <label className="block text-[10px] font-extrabold uppercase text-gray-400 tracking-wider mb-1">Profile Photo (Optional)</label>
+                <div className="flex items-center gap-3 pt-1">
+                  <img 
+                    src={dPhoto || 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop'} 
+                    alt="Dentist Photo Preview" 
+                    className="w-12 h-12 rounded-full object-cover border-2 border-gray-100 shadow-sm"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="flex flex-col gap-1 text-left">
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('dentist-photo-file-input')?.click()}
+                      className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-[10px] font-bold rounded-lg cursor-pointer transition-colors shadow-sm text-gray-700 flex items-center justify-center gap-1"
+                    >
+                      Choose Photo File
+                    </button>
+                    <p className="text-[9px] text-gray-400">Supported: JPEG, PNG, WEBP. Max 5MB.</p>
+                    <input 
+                      type="file"
+                      id="dentist-photo-file-input"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          try {
+                            const parsed = await validateAndReadFile(e.target.files[0]);
+                            setDPhoto(parsed.dataUrl);
+                            setSuccess("Dentist profile photo uploaded successfully!");
+                          } catch (err: any) {
+                            setError(err.message || "Failed to upload photo.");
+                          }
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -3022,7 +3137,6 @@ function StepAdditionalInfo({
               <thead className="bg-gray-50 text-[10px] font-extrabold uppercase text-gray-400 tracking-wider">
                 <tr>
                   <th className="p-3">Document Name</th>
-                  <th className="p-3">Type</th>
                   <th className="p-3 hidden sm:table-cell">Uploaded Date</th>
                   <th className="p-3 text-right">Size / Action</th>
                 </tr>
@@ -3032,11 +3146,6 @@ function StepAdditionalInfo({
                   <tr key={idx} className="hover:bg-gray-50/50">
                     <td className="p-3 font-extrabold text-gray-900 truncate max-w-xs sm:max-w-md">
                       📄 {doc.name}
-                    </td>
-                    <td className="p-3">
-                      <span className="bg-amber-50 text-amber-800 border border-amber-100/50 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wide">
-                        {doc.type}
-                      </span>
                     </td>
                     <td className="p-3 hidden sm:table-cell text-gray-400">{doc.uploadedAt}</td>
                     <td className="p-3 text-right font-bold text-gray-400 flex items-center justify-end gap-3">
@@ -3060,7 +3169,7 @@ function StepAdditionalInfo({
         {/* Add document form */}
         {showAddDoc && (
           <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-4 animate-fade-in text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-[10px] font-extrabold uppercase text-gray-400 tracking-wider mb-1.5">Document Label / Name (Optional)</label>
                 <input 
@@ -3070,21 +3179,6 @@ function StepAdditionalInfo({
                   onChange={e => setDocName(e.target.value)}
                   className="w-full bg-white border border-gray-200 rounded-xl py-2 px-3 font-bold text-gray-800 focus:outline-none focus:border-amber-400"
                 />
-              </div>
-              <div>
-                <label className="block text-[10px] font-extrabold uppercase text-gray-400 tracking-wider mb-1.5">Certification Type *</label>
-                <select 
-                  value={docType}
-                  onChange={e => setDocType(e.target.value)}
-                  className="w-full bg-white border border-gray-200 rounded-xl py-2.5 px-3 font-bold text-gray-800 focus:outline-none"
-                >
-                  <option value="Clinic License">Clinic License</option>
-                  <option value="Dentist Certificates">Dentist Certificate</option>
-                  <option value="Clinic Images">Clinic Display Image</option>
-                  <option value="Treatment Result Images">Treatment Result Image</option>
-                  <option value="Warranty Policy Document">Warranty Policy Document</option>
-                  <option value="Other Documents">Other Related Documents</option>
-                </select>
               </div>
             </div>
 
@@ -3147,7 +3241,7 @@ function StepAdditionalInfo({
             className="px-6 py-2.5 border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-bold text-gray-500 cursor-pointer disabled:opacity-50"
             id="btn-skip-additional"
           >
-            {loading ? 'Processing...' : 'Skip / Save as Draft'}
+            {loading ? 'Processing...' : 'Skip'}
           </button>
 
           <button
@@ -3170,42 +3264,382 @@ function StepAdditionalInfo({
 /* ==========================================
    SUB-COMPONENT: STEP 5 - PARTNERSHIP AGREEMENT
    ========================================== */
-function StepAgreementSetup({ clinicId, clinicName, adminName, onboarding, onSave, onPrev }: { clinicId: string, clinicName: string, adminName: string, onboarding: any, onSave: (onb: any) => void, onPrev: () => void }) {
-  const [signature, setSignature] = useState(onboarding?.agreementDetails?.signedName || '');
-  const [agreed, setAgreed] = useState(!!onboarding?.agreementCompleted);
+function StepAgreementSetup({ 
+  clinicId, 
+  clinicName, 
+  adminName, 
+  onboarding, 
+  clinic,
+  onSave, 
+  onPrev 
+}: { 
+  clinicId: string, 
+  clinicName: string, 
+  adminName: string, 
+  onboarding: any, 
+  clinic: any,
+  onSave: (onb: any, clinic?: any) => void, 
+  onPrev: () => void 
+}) {
+  const [repName, setRepName] = useState(onboarding?.agreementDetails?.signedName || adminName || clinic?.contactPerson || '');
+  const [repPosition, setRepPosition] = useState(onboarding?.agreementDetails?.representativePosition || 'Managing Director');
+  const [checkboxes, setCheckboxes] = useState<boolean[]>([
+    !!onboarding?.agreementCompleted,
+    !!onboarding?.agreementCompleted,
+    !!onboarding?.agreementCompleted,
+    !!onboarding?.agreementCompleted,
+    !!onboarding?.agreementCompleted,
+    !!onboarding?.agreementCompleted
+  ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(!!onboarding?.agreementCompleted);
 
+  const legalClinicName = clinic?.name || clinicName || "YOUR CLINIC CO., LTD";
+  const tradingName = onboarding?.profileDetails?.clinicDisplayName || clinic?.name || clinicName || "YOUR CLINIC TRADING NAME";
+  const taxCode = onboarding?.profileDetails?.taxCode || "4201979449";
+  const clinicAddress = onboarding?.profileDetails?.address || clinic?.address || "140 Thong Nhat, Nha Trang, Khanh Hoa, Vietnam";
+  const clinicEmail = clinic?.contactEmail || "contact171@elitedentaldanang.com";
+  const clinicPhone = clinic?.contactPhone || "+84905333555";
+  const operatingLicenceNumber = onboarding?.profileDetails?.operatingLicenceNumber || "0452/ĐNa-GPHĐ";
+  const applicationID = clinicId || "APP-CLN-2026-X";
+  const agreementNumber = `AGR-${applicationID.replace("C-REG-", "").substring(0, 8).toUpperCase()}-2026`;
+  const agreementVersion = "v1.5-partner-2026";
+  const currentDate = "13/7/2026";
+
+  const enabledServices = onboarding?.services?.filter((s: any) => s.enabled) || [];
+
+  const articles = [
+    { id: 1, title: "ARTICLE 1: PURPOSE AND SCOPE (Mục đích và Phạm vi)" },
+    { id: 2, title: "ARTICLE 2: CLINIC LICENCES AND RESPONSIBILITY (Giấy phép và Trách nhiệm)" },
+    { id: 3, title: "ARTICLE 3: PRICE TRANSPARENCY (Minh bạch Giá cả)" },
+    { id: 4, title: "ARTICLE 4: SERVICE FEE (Phí Dịch vụ)" },
+    { id: 5, title: "ARTICLE 5: BOOKING DEPOSIT (Tiền đặt cọc đặt chỗ)" },
+    { id: 6, title: "ARTICLE 6: PREMIUM CONCIERGE SERVICES (Dịch vụ Hỗ trợ Cao cấp)" },
+    { id: 7, title: "ARTICLE 7: MONTHLY RECONCILIATION (Đối soát Hàng tháng)" },
+    { id: 8, title: "ARTICLE 8: REFERRED CUSTOMERS AND NON-CIRCUMVENTION (Khách hàng và Chống lách luật)" },
+    { id: 9, title: "ARTICLE 9: QR CHECK-IN (Check-in bằng mã QR)" },
+    { id: 10, title: "ARTICLE 10: WARRANTY AND POST-TREATMENT SUPPORT (Bảo hành và Hỗ trợ sau điều trị)" },
+    { id: 11, title: "ARTICLE 11: MARKETING AND MEDIA (Truyền thông và Marketing)" },
+    { id: 12, title: "ARTICLE 12: PROMOTIONS (Chương trình Khuyến mãi)" },
+    { id: 13, title: "ARTICLE 13: PERSONAL DATA AND CONFIDENTIALITY (Bảo mật thông tin và Dữ liệu)" },
+    { id: 14, title: "ARTICLE 14: ACCOUNT SUSPENSION (Đình chỉ tài khoản)" },
+    { id: 15, title: "ARTICLE 15: TERM AND TERMINATION (Thời hạn và Chấm dứt)" },
+    { id: 16, title: "ARTICLE 16: ELECTRONIC ACCEPTANCE (Chấp thuận điện tử)" },
+    { id: 17, title: "ARTICLE 17: NOTICES (Thông báo)" },
+    { id: 18, title: "ARTICLE 18: GOVERNING LAW AND DISPUTES (Luật áp dụng và Giải quyết tranh chấp)" }
+  ];
+
   const fillAgreementDemoData = () => {
-    setAgreed(true);
-    setSignature(adminName || "Nhung Phan");
+    setRepName(adminName || clinic?.contactPerson || "Nguyen Van Binh");
+    setRepPosition("Managing Director & Chief Doctor");
+    setCheckboxes([true, true, true, true, true, true]);
     setHasScrolledToBottom(true);
+    // Auto-scroll to bottom of contract container for simulated review
+    setTimeout(() => {
+      if (containerRef.current) {
+        containerRef.current.scrollTop = containerRef.current.scrollHeight;
+      }
+    }, 100);
   };
 
   const handleScroll = () => {
     const container = containerRef.current;
     if (!container) return;
-    const threshold = 15;
+    const threshold = 30;
     const isBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + threshold;
     if (isBottom) {
       setHasScrolledToBottom(true);
     }
   };
 
-  useEffect(() => {
-    if (onboarding?.agreementCompleted) {
-      setHasScrolledToBottom(true);
-      return;
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-    const container = containerRef.current;
-    if (!container) return;
-    if (container.scrollHeight <= container.clientHeight) {
-      setHasScrolledToBottom(true);
-    }
-  }, [onboarding?.agreementCompleted]);
+  };
+
+  const handleCheckboxChange = (index: number) => {
+    const updated = [...checkboxes];
+    updated[index] = !updated[index];
+    setCheckboxes(updated);
+  };
+
+  // Check if all steps completed
+  const allRequiredStepsCompleted = !!(onboarding?.profileSetupCompleted && onboarding?.servicesCompleted && onboarding?.workingHoursCompleted);
+
+  // Generate plain-text or HTML content for snapshot & download
+  const getFullAgreementText = () => {
+    return `
+FRAMEWORK BUSINESS COOPERATION AGREEMENT
+Ref No: ${agreementNumber}
+Version: ${agreementVersion}
+Application ID: ${applicationID}
+
+PARITES:
+PARTY A – PLATFORM OPERATOR
+Company name: UCTALENT LABS COMPANY LIMITED
+Tax code: 0402238274
+Registered address: 50 Hoang Hiep Street, Hoa Xuan Ward, Da Nang City, Vietnam
+Office: Software Park 2, Thuan Phuoc Ward, Da Nang City
+Representative: Mr. Nguyen Ngoc Duong (Django) - Position: Director
+
+PARTY B – DENTAL CLINIC
+Legal clinic name: ${legalClinicName}
+Trading name: ${tradingName}
+Tax code: ${taxCode}
+Registered Address: ${clinicAddress}
+Representative: ${repName} - Position: ${repPosition}
+Clinic Email: ${clinicEmail} | Phone: ${clinicPhone}
+Operating licence number: ${operatingLicenceNumber}
+
+The parties agree to the following 18 Articles:
+
+1. ARTICLE 1: PURPOSE AND SCOPE (Mục đích và Phạm vi)
+Party A operates the UCSmile digital dental tourism connecting platform ("Da Nang Trust Shield") to route premium international dental tourists to accredited dental clinics in Vietnam. Party B is a fully-licensed dental healthcare clinic. Party B appoints Party A as its platform agent to promote, facilitate, and coordinate medical tourism consultations and treatment sessions.
+
+2. ARTICLE 2: CLINIC LICENCES AND RESPONSIBILITY (Giấy phép và Trách nhiệm Chuyên môn)
+Party B guarantees it holds valid licences and operating approvals required under Vietnamese laws. Party B is solely and fully liable for all clinical dental procedures, diagnostic checks, treatments, and post-treatment dental safety.
+
+3. ARTICLE 3: PRICE TRANSPARENCY (Minh bạch Giá cả)
+Party B commits to rigid price integrity. The actual fees charged to referred patients at the clinic physical counter must exactly match or be lower than the prices declared and saved during onboarding. No unapproved upselling or secret surcharges are permitted.
+
+4. ARTICLE 4: SERVICE FEE (Phí Dịch vụ)
+Party B shall pay Party A a standard digital brokerage fee of 25% of the total final bill paid by each referred patient (including crowns, implants, veneers, and supplementary procedures) for routing, software coordination, translation assistance, and marketing signals.
+
+5. ARTICLE 5: BOOKING DEPOSIT (Tiền đặt cọc đặt chỗ)
+Patients pay a secure booking deposit to Party A during virtual slot scheduling. This deposit is fully credited to the patient's final physical bill at Party B's counter during checkout.
+
+6. ARTICLE 6: PREMIUM CONCIERGE SERVICES (Dịch vụ Hỗ trợ Cao cấp)
+Party A provides advanced international concierge elements (bilingual chat translation, medical record uploads, local support). Party B shall cooperate to receive concierge staff or coordinators assisting patients on-site.
+
+7. ARTICLE 7: MONTHLY RECONCILIATION (Đối soát Hàng tháng)
+Reconciliation of referred patients, treatments performed, deposits credited, and service fees due is completed digitally within the first five (5) business days of each calendar month. Payments must be processed within ten (10) business days thereafter.
+
+8. ARTICLE 8: REFERRED CUSTOMERS AND NON-CIRCUMVENTION (Khách hàng giới thiệu và Chống lách luật)
+Any patient introduced or routed through UCSmile belongs to the platform ecosystem. Party B is strictly prohibited from bypassing the platform, offering direct offline bookings to referred patients, or splitting treatments outside the system for a period of 24 months.
+
+9. ARTICLE 9: QR CHECK-IN (Check-in bằng mã QR)
+Party B's reception desk must scan the patient's digital QR Pass (Digital Trust Pass) immediately upon physical entry to activate international treatment records and coordinate concierge coverage.
+
+10. ARTICLE 10: WARRANTY AND POST-TREATMENT SUPPORT (Bảo hành và Hỗ trợ sau điều trị)
+Party B guarantees a comprehensive medical warranty for implants (minimum 10 years), veneers, and crowns (minimum 5 years). Any clinical complications or adjustments required must be completed free of charge by Party B.
+
+11. ARTICLE 11: MARKETING AND MEDIA (Truyền thông và Marketing)
+Party B agrees to dedicate up to four (4) hours weekly during the first six months for video production, clinical interviews, and English-speaking doctor highlight Reels created by Party A's media team to build trust signals.
+
+12. ARTICLE 12: PROMOTIONS (Chương trình Khuyến mãi)
+Any custom discounts, seasonal packages, or exclusive tourism campaigns marketed on UCSmile must be synchronized and pre-approved by both parties in writing.
+
+13. ARTICLE 13: PERSONAL DATA AND CONFIDENTIALITY (Bảo mật thông tin và Dữ liệu cá nhân)
+Both parties shall protect patient medical records and personal data strictly complying with Vietnam's Decree 13/2023/ND-CP on Personal Data Protection and international standard guidelines (GDPR/HIPAA).
+
+14. ARTICLE 14: ACCOUNT SUSPENSION (Đình chỉ tài khoản)
+Any verified breach of pricing integrity, failure to scan QR Check-Ins, platform circumvention, or professional negligence will result in immediate suspension of Party B's active portal account and listing.
+
+15. ARTICLE 15: TERM AND TERMINATION (Thời hạn và Chấm dứt)
+This agreement remains active for an initial term of one (1) year and auto-renews. Either party can terminate this agreement for convenience with thirty (30) days prior written notice.
+
+16. ARTICLE 16: ELECTRONIC ACCEPTANCE (Chấp thuận điện tử)
+The digital checking of required checkboxes, entry of representative details, and clicking of "Accept and Submit" constitute a legal digital signature and formal execution of this Agreement under the Law on E-Transactions of Vietnam.
+
+17. ARTICLE 17: NOTICES (Thông báo)
+All official communications and notices shall be sent to the registered clinic email (${clinicEmail}) or Party A's official operations center.
+
+18. ARTICLE 18: GOVERNING LAW AND DISPUTES (Luật áp dụng và Giải quyết tranh chấp)
+This Agreement is governed by the laws of Vietnam. Any unresolved dispute arising from or related to this partnership shall be submitted to the Da Nang International Arbitration Center (DAC) or competent courts in Da Nang.
+
+ANNEX A: REGISTERED SERVICES AND STANDARD PRICING
+${enabledServices.length > 0 
+  ? enabledServices.map((s: any) => `- ${s.serviceName} (${s.category}): ${s.currency === 'VND' ? '₫' : '$'}${s.customPrice?.toLocaleString()} per ${s.treatmentUnit === 'Custom Unit' ? s.customUnitName : s.treatmentUnit}`).join('\n')
+  : "No specific services custom registered. Using standard platform default pricing sheets."
+}
+
+ELECTRONIC ACCEPTANCE EVIDENCE RECORD:
+- Signatory: ${repName}
+- Position: ${repPosition}
+- IP Address: 192.168.1.42 (Authorized Client Signature Node)
+- Consent Time: ${currentDate}
+- Watermark Status: ACCEPTED BY CLINIC – PENDING ADMIN APPROVAL
+`;
+  };
+
+  const downloadAgreementHTML = () => {
+    const agreementText = getFullAgreementText();
+    const formattedText = agreementText.replace(/\n/g, '<br>');
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>UCSmile Partnership Agreement - ${agreementNumber}</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; line-height: 1.6; max-width: 800px; margin: auto; background-color: #fcfcfc; }
+          .container { background-color: #ffffff; padding: 50px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 10px 25px rgba(0,0,0,0.03); position: relative; }
+          h1, h2, h3, h4 { color: #111827; font-family: 'Georgia', serif; }
+          .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 32px; color: rgba(239, 68, 68, 0.08); font-weight: 900; pointer-events: none; z-index: 1000; text-align: center; border: 6px solid rgba(239, 68, 68, 0.08); padding: 15px 30px; text-transform: uppercase; white-space: nowrap; border-radius: 8px; }
+          .header { text-align: center; border-bottom: 2px solid #f3f4f6; padding-bottom: 25px; margin-bottom: 30px; }
+          .party-box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; }
+          .meta-info { font-family: monospace; font-size: 11px; color: #4b5563; margin-bottom: 20px; background: #fffbeb; border: 1px solid #fef3c7; padding: 12px; border-radius: 6px; }
+          .footer-sig { display: flex; justify-content: space-between; margin-top: 50px; }
+          .sig-box { width: 45%; border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; text-align: center; background: #f9fafb; font-size: 13px; }
+          .signature-cursive { font-family: 'Georgia', serif; font-style: italic; font-weight: bold; font-size: 22px; color: #0284c7; margin: 15px 0; border-bottom: 1px dashed #cbd5e1; display: inline-block; padding-bottom: 5px; }
+          .content-block { font-size: 13px; text-align: justify; }
+          .annex-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
+          .annex-table th, .annex-table td { border: 1px solid #e5e7eb; padding: 8px 12px; text-align: left; }
+          .annex-table th { background-color: #f3f4f6; }
+        </style>
+      </head>
+      <body>
+        <div class="watermark">ACCEPTED BY CLINIC<br>PENDING ADMIN APPROVAL</div>
+        <div class="container">
+          <div class="header">
+            <h3 style="margin: 0; font-size: 14px; letter-spacing: 1px; font-family: sans-serif;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h3>
+            <p style="margin: 3px 0 15px 0; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; font-family: sans-serif;">Độc lập - Tự do - Hạnh phúc</p>
+            <h2 style="margin: 10px 0 5px 0; font-size: 20px;">HỢP ĐỒNG HỢP TÁC KHUNG</h2>
+            <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #6b7280; font-weight: normal; letter-spacing: 1px;">FRAMEWORK BUSINESS COOPERATION AGREEMENT</h4>
+            <p style="margin: 0; font-size: 11px; color: #4b5563;"><strong>No:</strong> ${agreementNumber} | <strong>Version:</strong> ${agreementVersion}</p>
+          </div>
+          
+          <div class="meta-info">
+            <strong>APPLICATION ID:</strong> ${applicationID}<br>
+            <strong>ELECTRONIC RECORD HASH:</strong> ${onboarding?.agreementDetails?.agreementHash || "COMPUTED ON SUBMIT"}<br>
+            <strong>DATE REGISTERED:</strong> ${currentDate}
+          </div>
+
+          <p style="font-size: 13px;">Hôm nay, thỏa thuận này được lập kỹ thuật số và ghi nhận sự đồng thuận song phương giữa:</p>
+          
+          <div class="party-box">
+            <strong>BÊN A / PARTY A: CÔNG TY TNHH UCTALENT LABS (UCSmile Platform)</strong><br>
+            Mã số thuế / Tax Code: 0402238274<br>
+            Địa chỉ đăng ký / Address: 50 Hoang Hiep Street, Hoa Xuan Ward, Da Nang, Vietnam<br>
+            Người đại diện / Representative: Mr. Nguyen Ngoc Duong (Django) - Giám đốc / Director
+          </div>
+
+          <div class="party-box">
+            <strong>BÊN B / PARTY B: ${legalClinicName} (${tradingName})</strong><br>
+            Mã số thuế / Tax Code: ${taxCode}<br>
+            Địa chỉ đăng ký / Registered Address: ${clinicAddress}<br>
+            Người đại diện / Representative: ${repName}<br>
+            Chức vụ / Position: ${repPosition}<br>
+            Email: ${clinicEmail} | Phone: ${clinicPhone}<br>
+            Giấy phép hoạt động / Licence No: ${operatingLicenceNumber}
+          </div>
+
+          <div class="content-block">
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 1: PHẠM VI DỊCH VỤ VÀ MÔ HÌNH HOẠT ĐỘNG / ARTICLE 1: PURPOSE AND SCOPE</h4>
+            <p>Bên A vận hành nền tảng nha khoa quốc tế UCSmile ("Da Nang Trust Shield") kết nối bệnh nhân nước ngoài. Bên B cung cấp năng lực y khoa và dịch vụ lâm sàng. Hai bên phối hợp cung cấp dịch vụ chất lượng cao.</p>
+            
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 2: GIẤY PHÉP PHÒNG KHÁM / ARTICLE 2: CLINIC LICENCES & SAFETY</h4>
+            <p>Bên B bảo đảm và duy trì đầy đủ giấy phép hoạt động khám chữa bệnh hợp pháp. Bên B tự chịu trách nhiệm chuyên môn tối cao và toàn bộ kết quả lâm sàng của khách hàng.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 3: MINH BẠCH GIÁ / ARTICLE 3: PRICE INTEGRITY</h4>
+            <p>Bên B cam kết giữ vững bảng giá dịch vụ đã khai báo trên hệ thống, không tự ý thu thêm phụ phí ngoài y tế chưa được thông báo trước bằng văn bản.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 4: PHÍ DỊCH VỤ NỀN TẢNG / ARTICLE 4: PLATFORM COMMISSION</h4>
+            <p>Bên B chi trả cho Bên A phí dịch vụ tiêu chuẩn là <strong>25%</strong> trên tổng hóa đơn thanh toán cuối cùng của mỗi bệnh nhân do Bên A giới thiệu.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 5: TIỀN ĐẶT CỌC GIỮ CHỖ / ARTICLE 5: BOOKING DEPOSIT</h4>
+            <p>Khoản cọc giữ chỗ (Trust Shield Deposit) khách hàng trả trước cho Bên A sẽ được khấu trừ trực tiếp vào hóa đơn của khách hàng khi thực hiện thanh toán tại Bên B.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 6: DỊCH VỤ HỖ TRỢ CAO CẤP / ARTICLE 6: PREMIUM CONCIERGE</h4>
+            <p>Bên A cung cấp điều phối viên hỗ trợ dịch thuật và đưa đón. Bên B cam kết tạo điều kiện tối đa hỗ trợ điều phối viên tại phòng khám.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 7: ĐỐI SOÁT HÀNG THÁNG / ARTICLE 7: MONTHLY RECONCILIATION</h4>
+            <p>Đối soát hoàn thành trong 5 ngày làm việc đầu tiên của tháng tiếp theo. Thanh toán hoàn thành trong vòng 10 ngày làm việc.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 8: CHỐNG LÁCH LUẬT / ARTICLE 8: NON-CIRCUMVENTION</h4>
+            <p>Bên B không được giao dịch riêng hoặc tự ý giảm giá trực tiếp ngoại tuyến để tránh phí nền tảng trong thời hạn 24 tháng kể từ lần gặp mặt đầu tiên của bệnh nhân.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 9: QUY TRÌNH CHECK-IN / ARTICLE 9: QR CHECK-IN</h4>
+            <p>Bên B có nghĩa vụ thực hiện quét mã QR check-in cho bệnh nhân ngay khi đến để kích hoạt bảo hành toàn cầu.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 10: CHẾ ĐỘ BẢO HÀNH Y KHOA / ARTICLE 10: MEDICAL WARRANTY</h4>
+            <p>Bên B cam kết bảo hành các dịch vụ phục hình sứ thẩm mỹ và implant theo chuẩn chất lượng cao nhất, hoàn thành chỉnh sửa miễn phí nếu xảy ra lỗi vật liệu y tế.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 11: TRUYỀN THÔNG VÀ MEDIA / ARTICLE 11: MARKETING & MEDIA</h4>
+            <p>Bên B cam kết hợp tác dành ra 4 giờ mỗi tuần để quay phim quảng cáo và thực hiện phỏng vấn xây dựng lòng tin trực tuyến bằng tiếng Anh.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 12: CHƯƠNG TRÌNH KHUYẾN MÃI / ARTICLE 12: PROMOTIONS</h4>
+            <p>Các chương trình khuyến mãi được thiết kế riêng trên hệ thống phải đạt sự đồng thuận chung trước khi tung ra thị trường.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 13: BẢO MẬT DỮ LIỆU / ARTICLE 13: DATA CONFIDENTIALITY</h4>
+            <p>Cam kết bảo mật tuyệt đối hồ sơ bệnh án và lịch sử điều trị của khách hàng theo quy định bảo vệ dữ liệu cá nhân Nghị định 13/2023/ND-CP.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 14: BIỆN PHÁP CHẾ TÀI / ARTICLE 14: ACCOUNT SUSPENSION</h4>
+            <p>Mọi phát hiện phá vỡ quy định về giá, cố tình trốn tránh hoa hồng hoặc phản hồi chuyên môn kém sẽ bị đóng tài khoản cổng đối tác ngay lập tức.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 15: THỜI HẠN VÀ CHẤM DỨT / ARTICLE 15: TERM & TERMINATION</h4>
+            <p>Hợp đồng có giá trị 01 năm và tự động gia hạn. Một bên có quyền chấm dứt bằng cách gửi thông báo trước 30 ngày.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 16: CHẤP THUẬN ĐIỆN TỬ / ARTICLE 16: E-ACCEPTANCE</h4>
+            <p>Xác nhận bằng cổng thông tin điện tử onboarding thay thế chữ ký tay truyền thống và có giá trị pháp lý tương đương theo Luật Giao dịch điện tử.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 17: PHƯƠNG THỨC THÔNG BÁO / ARTICLE 17: NOTICES</h4>
+            <p>Mọi thông báo gửi đến email của các bên được coi là đã nhận thành công sau 24 giờ kể từ thời điểm gửi đi.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 18: LUẬT ÁP DỤNG / ARTICLE 18: GOVERNING LAW & DISPUTES</h4>
+            <p>Hợp đồng chịu sự điều chỉnh của pháp luật Việt Nam. Mọi tranh chấp được ưu tiên thương lượng, hoặc đưa ra Trung tâm Trọng tài Quốc tế Đà Nẵng (DAC).</p>
+
+            <h4 style="margin-top: 30px; color: #0284c7;">ANNEX A: SERVICES AND STANDARDS PRICING</h4>
+            ${enabledServices.length > 0 
+              ? `
+              <table class="annex-table">
+                <thead>
+                  <tr>
+                    <th>Dịch vụ / Service</th>
+                    <th>Chuyên khoa / Category</th>
+                    <th>Đơn vị tính / Unit</th>
+                    <th>Đơn giá cam kết / Standard Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${enabledServices.map((s: any) => `
+                    <tr>
+                      <td><strong>${s.serviceName}</strong></td>
+                      <td>${s.category}</td>
+                      <td>${s.treatmentUnit === 'Custom Unit' ? s.customUnitName : s.treatmentUnit}</td>
+                      <td><span style="font-family: monospace; font-weight: bold; color: #b45309;">${s.currency === 'VND' ? '₫' : '$'}${s.customPrice?.toLocaleString()}</span></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+              `
+              : `<p style="font-style: italic; color: #6b7280;">Sử dụng bảng giá chuẩn mặc định của nền tảng đối tác.</p>`
+            }
+          </div>
+
+          <div class="footer-sig">
+            <div class="sig-box">
+              <strong>BÊN A / PARTY A</strong><br>
+              UCTALENT LABS CO., LTD<br>
+              <div class="signature-cursive">Django Nguyen</div>
+              <p>Nguyễn Ngọc Dương<br>Managing Director</p>
+            </div>
+            <div class="sig-box">
+              <strong>BÊN B / PARTY B</strong><br>
+              ${legalClinicName}<br>
+              <div class="signature-cursive">${repName || "Chờ ký điện tử"}</div>
+              <p>${repName}<br>${repPosition}</p>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Partnership_Agreement_${agreementNumber}_ACCEPTED.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -3213,31 +3647,45 @@ function StepAgreementSetup({ clinicId, clinicName, adminName, onboarding, onSav
     setLoading(true);
 
     if (!hasScrolledToBottom) {
-      setError("Vui lòng cuộn xem hết toàn bộ văn bản hợp đồng trước khi thực hiện ký kết.");
+      setError("Please scroll to the very bottom of the agreement document to unlock the electronic acceptance checkboxes and signing fields.");
       setLoading(false);
       return;
     }
 
-    if (!agreed) {
-      setError("Please check the box to declare you agree with the Partnership Terms of Service.");
+    if (checkboxes.some(c => !c)) {
+      setError("All 6 agreement checkboxes must be explicitly selected to verify compliance.");
       setLoading(false);
       return;
     }
 
-    if (!signature.trim()) {
-      setError("Please sign the agreement by typing your official full name.");
+    if (!repName.trim()) {
+      setError("Representative Signatory Full Name is required.");
+      setLoading(false);
+      return;
+    }
+
+    if (!repPosition.trim()) {
+      setError("Representative Signatory Position is required.");
+      setLoading(false);
+      return;
+    }
+
+    if (!allRequiredStepsCompleted) {
+      setError("You cannot sign the agreement yet because you have incomplete previous onboarding steps. Please verify steps 1, 2, and 3 are marked complete.");
       setLoading(false);
       return;
     }
 
     const payload = {
-      signedName: signature.trim(),
-      signedAt: new Date().toISOString(),
-      termsVersion: 'v1.4-partner-2026',
-      agreementStatus: 'AGREEMENT_ACCEPTED',
-      acceptedAt: new Date().toISOString(),
-      ipAddress: '192.168.1.42', // Mock IP for client-side audit
-      userAgent: navigator.userAgent
+      representativeName: repName.trim(),
+      representativePosition: repPosition.trim(),
+      agreementText: getFullAgreementText(),
+      checkboxes,
+      termsVersion: agreementVersion,
+      agreementNumber,
+      ipAddress: '192.168.1.42', // Simulated Secure Node Client Hashing
+      userAgent: navigator.userAgent,
+      clinicEmail: clinicEmail
     };
 
     try {
@@ -3247,8 +3695,9 @@ function StepAgreementSetup({ clinicId, clinicName, adminName, onboarding, onSav
         body: JSON.stringify({ step: 5, data: payload })
       });
       const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Failed to sign partnership agreement.");
-      onSave(result.onboarding);
+      if (!res.ok) throw new Error(result.error || "Failed to accept and submit partnership agreement.");
+      
+      onSave(result.onboarding, result.clinic);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -3258,23 +3707,22 @@ function StepAgreementSetup({ clinicId, clinicName, adminName, onboarding, onSav
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 font-sans text-left">
-      {/* Step Header */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-100 pb-5">
         <div>
-          <span className="text-[10px] bg-amber-500/10 text-amber-700 font-extrabold px-2.5 py-1 rounded-full uppercase tracking-widest border border-amber-500/20">
-            Step 5 of 6: Partnership Contract
-          </span>
-          <h2 className="font-serif text-xl font-bold text-gray-900 mt-2.5">Partnership Agreement</h2>
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-0.5">Review and sign partnership terms</p>
+          <h2 className="font-serif text-xl font-bold text-gray-900 mb-1">Step 5: Partnership Agreement</h2>
+          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-0.5">Review, verify auto-filled credentials and digitally sign partnership terms</p>
         </div>
-        <button
-          type="button"
-          onClick={fillAgreementDemoData}
-          className="flex items-center justify-center gap-1.5 px-4 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-extrabold rounded-xl text-xs cursor-pointer transition-colors shadow-sm shrink-0"
-          id="btn-fill-agreement-demo"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" /> Điền thông tin mẫu (Demo Fill)
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={fillAgreementDemoData}
+            className="flex items-center justify-center gap-1.5 px-4 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-extrabold rounded-xl text-xs cursor-pointer transition-colors shadow-sm shrink-0"
+            id="btn-fill-agreement-demo"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" /> Điền thông tin mẫu (Demo Fill)
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -3284,297 +3732,419 @@ function StepAgreementSetup({ clinicId, clinicName, adminName, onboarding, onSav
         </div>
       )}
 
-      {/* FORMAL BILINGUAL PARTNERSHIP AGREEMENT (Scroll to Unlock) */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
-            <h3 className="text-sm font-bold text-gray-900 font-serif flex items-center gap-1.5">
-              <FileText className="w-4 h-4 text-amber-500" /> Văn Bản Dự Thảo Thỏa Thuận Hợp Tác Khung (Bilingual)
-            </h3>
-            <p className="text-[11px] text-gray-400 mt-0.5">Vui lòng cuộn xuống cuối văn bản dưới đây để kích hoạt và mở khóa các ô chữ ký điện tử.</p>
+      {/* Main Layout Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        {/* Clickable Table of Contents Sidebar */}
+        <div className="lg:col-span-1 space-y-3 bg-gray-50/50 p-4 rounded-3xl border border-gray-100/60 max-h-[460px] overflow-y-auto custom-scrollbar">
+          <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Table of Contents</h4>
+          <div className="space-y-1">
+            {articles.map((art) => (
+              <button
+                key={art.id}
+                type="button"
+                onClick={() => scrollToSection(`art-head-${art.id}`)}
+                className="w-full text-left p-2 rounded-xl text-[10px] font-bold text-gray-500 hover:text-gray-950 hover:bg-white transition-all border border-transparent hover:border-gray-100 cursor-pointer block truncate"
+              >
+                {art.id}. {art.title}
+              </button>
+            ))}
           </div>
-          <div>
+        </div>
+
+        {/* Scrollable Agreement E-Doc */}
+        <div className="lg:col-span-3 space-y-3 relative">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[11px] font-bold text-gray-400">AGREEMENT NO: <strong className="font-mono text-gray-700">{agreementNumber}</strong></span>
+            <span className="text-[11px] font-bold text-gray-400">VERSION: <strong className="font-mono text-gray-700">{agreementVersion}</strong></span>
+          </div>
+
+          <div 
+            ref={containerRef}
+            onScroll={handleScroll}
+            className="bg-[#fcfcfc] border border-gray-200 rounded-3xl p-6 sm:p-8 h-[460px] overflow-y-auto text-xs text-gray-700 leading-relaxed space-y-6 custom-scrollbar shadow-inner text-left font-sans relative border-t-8 border-t-amber-500/80"
+          >
+            {/* Watermark background */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none">
+              <h1 className="text-7xl font-black tracking-widest font-sans rotate-12">UCSMILE PARTNER</h1>
+            </div>
+
+            <div className="text-center space-y-1 border-b border-gray-100 pb-5">
+              <h3 className="font-bold text-gray-900 text-xs uppercase tracking-widest">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h3>
+              <p className="font-bold text-gray-700 text-[10px] tracking-wider">Độc lập - Tự do - Hạnh phúc</p>
+              <div className="w-24 h-0.5 bg-amber-600/30 mx-auto mt-2"></div>
+              
+              <div className="pt-3">
+                <h3 className="font-bold text-gray-500 text-[10px] uppercase tracking-widest">SOCIALIST REPUBLIC OF VIETNAM</h3>
+                <p className="font-semibold text-gray-400 text-[9px] tracking-wider">Independence - Freedom - Happiness</p>
+              </div>
+            </div>
+
+            <div className="text-center space-y-1 pt-2">
+              <h4 className="font-serif font-black text-gray-900 text-sm uppercase">HỢP ĐỒNG HỢP TÁC KHUNG</h4>
+              <p className="font-serif font-bold text-gray-400 text-[10px] uppercase -mt-1">FRAMEWORK BUSINESS COOPERATION AGREEMENT</p>
+              <p className="italic text-[10px] text-gray-500 font-bold">(V/v: Hạ tầng kết nối du lịch nha khoa Da Nang Trust Shield / Provision of Dental Tourism Platform)</p>
+              <p className="text-[9px] text-gray-400 font-mono font-medium">Ref No: {agreementNumber}</p>
+            </div>
+
+            {/* PARTIES DETAILS */}
+            <div className="space-y-4 pt-4 border-t border-gray-100">
+              <div className="bg-amber-50/20 border border-amber-100/40 rounded-2xl p-4 space-y-2">
+                <h5 className="font-black text-amber-900 text-[10px] uppercase tracking-wider">BÊN A / PARTY A: CÔNG TY TNHH UCTALENT LABS</h5>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-gray-600 text-[10px]">
+                  <p><strong className="text-gray-700">Mã số thuế / Tax Code:</strong> 0402238274</p>
+                  <p><strong className="text-gray-700">Địa chỉ / Address:</strong> 50 Hoang Hiep Street, Hoa Xuan Ward, Da Nang City, Vietnam</p>
+                  <p className="sm:col-span-2"><strong className="text-gray-700">Người đại diện / Representative:</strong> Mr. Nguyen Ngoc Duong (Django) - Giám đốc / Director</p>
+                </div>
+              </div>
+
+              <div className="bg-sky-50/20 border border-sky-100/40 rounded-2xl p-4 space-y-2">
+                <h5 className="font-black text-sky-900 text-[10px] uppercase tracking-wider">BÊN B / PARTY B: {legalClinicName.toUpperCase()}</h5>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-gray-600 text-[10px]">
+                  <p><strong className="text-gray-700">Tên thương mại / Trading Name:</strong> {tradingName}</p>
+                  <p><strong className="text-gray-700">Mã số thuế / Tax Code:</strong> {taxCode}</p>
+                  <p className="sm:col-span-2"><strong className="text-gray-700">Địa chỉ đăng ký / Registered Address:</strong> {clinicAddress}</p>
+                  <p><strong className="text-gray-700">Người đại diện / Representative:</strong> {repName || "Clinical Representative"} - {repPosition}</p>
+                  <p><strong className="text-gray-700">Liên hệ / Contact:</strong> {clinicEmail} | {clinicPhone}</p>
+                  <p><strong className="text-gray-700">Giấy phép hoạt động / Licence No:</strong> {operatingLicenceNumber}</p>
+                  <p><strong className="text-gray-700">Mã hồ sơ / Application ID:</strong> {applicationID}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* THE 18 ARTICLES CONTENT */}
+            <div className="space-y-6 pt-4 border-t border-gray-100 text-[11px] text-gray-600 text-justify">
+              
+              <div id="art-head-1" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 1: Mục đích và Phạm vi hợp tác / Article 1: Purpose and Scope</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Bên A vận hành nền tảng nha khoa kỹ thuật số UCSmile ("Da Nang Trust Shield") để định tuyến và tư vấn du khách nha khoa nước ngoài đến điều trị y khoa. Bên B cung cấp năng lực khám, chẩn đoán, điều trị nha khoa kỹ thuật cao đạt chuẩn quốc tế.</p>
+                <p><strong>English:</strong> Party A operates the digital dental tourism coordination platform UCSmile ("Da Nang Trust Shield") routing premium international patient flows. Party B delivers advanced dental diagnostic and treatments meeting global safety standards.</p>
+              </div>
+
+              <div id="art-head-2" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 2: Giấy phép hoạt động và Trách nhiệm chuyên môn / Article 2: Clinic Licences and Responsibility</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Bên B bảo đảm nắm giữ đầy đủ giấy phép hoạt động khám chữa bệnh nha khoa hợp pháp từ Bộ Y Tế. Bên B chịu trách nhiệm độc lập và tối cao về toàn bộ kết quả chẩn đoán, phác đồ điều trị và rủi ro y khoa phát sinh.</p>
+                <p><strong>English:</strong> Party B guarantees maintaining valid clinical operations licences from the Ministry of Health. Party B accepts supreme, sole professional liability for all diagnostics, treatments, and medical events.</p>
+              </div>
+
+              <div id="art-head-3" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 3: Chính sách minh bạch giá cả / Article 3: Price Transparency</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Bên B cam kết thực thi chính sách minh bạch giá y khoa. Đơn giá thực tế thu của khách hàng tại quầy lễ tân phải khớp hoặc thấp hơn mức giá cam kết đã khai báo trên hệ thống onboarding. Nghiêm cấm các phụ phí ẩn chưa được khách hàng đồng ý.</p>
+                <p><strong>English:</strong> Party B commits to medical price integrity. Final on-site fees collected must strictly match or stay below onboarding prices. Unapproved hidden surcharges or aggressive sales tactics are forbidden.</p>
+              </div>
+
+              <div id="art-head-4" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 4: Phí dịch vụ giới thiệu kết nối / Article 4: Service Fee</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Phí dịch vụ nền tảng cố định là <strong>25%</strong> tính trên tổng giá trị hóa đơn điều trị cuối cùng của khách hàng (bao gồm mọi thủ thuật, răng sứ, implant phát sinh). Phí này chi trả cho công tác vận hành hệ thống, AI, truyền thông và định tuyến quốc tế.</p>
+                <p><strong>English:</strong> Party B pays a flat 25% brokerage commission calculated on the final payment invoice of referred customers (including extra materials or treatments). This fee funds routing, AI agents, translation, and CRM coordination.</p>
+              </div>
+
+              <div id="art-head-5" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 5: Tiền đặt cọc giữ chỗ trực tuyến / Article 5: Booking Deposit</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Tiền cọc giữ chỗ (Trust Shield Deposit) từ 500k-3 triệu VND bệnh nhân trả trước cho Bên A trực tuyến để khóa lịch sẽ được Bên B trừ thẳng trực tiếp vào hóa đơn điều trị cuối cùng của khách hàng tại quầy thanh toán.</p>
+                <p><strong>English:</strong> Virtual booking deposits secured by Party A during virtual slot locks will be fully deducted from the patient's final checkout payment bill at Party B's physical desk.</p>
+              </div>
+
+              <div id="art-head-6" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 6: Dịch vụ hỗ trợ y tế cao cấp / Article 6: Premium Concierge Services</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Bên A vận hành mạng lưới hỗ trợ y tế bao gồm đưa đón sân bay, điều phối viên ngôn ngữ, phiên dịch số bệnh án. Bên B có nghĩa vụ phối hợp, bố trí không gian làm việc hoặc tiếp đón điều phối viên đi kèm bệnh nhân hỗ trợ thủ tục.</p>
+                <p><strong>English:</strong> Party A deploys VIP medical travel concierge services (airport pickups, live translation, records digital parsing). Party B shall accommodate accompanying concierge personnel and support on-site patient care.</p>
+              </div>
+
+              <div id="art-head-7" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 7: Kỳ đối soát và thanh toán hàng tháng / Article 7: Monthly Reconciliation</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Công tác đối soát danh sách bệnh nhân và doanh thu dịch vụ được thực hiện tự động qua cổng đối tác trong 05 ngày làm việc đầu tiên của tháng tiếp theo. Việc thanh quyết toán chiết khấu phải hoàn thành trong vòng 10 ngày làm việc sau đối soát.</p>
+                <p><strong>English:</strong> Reconciliation of patients, procedures, deposits, and service fees is processed within the first 5 business days of each calendar month. Brokerage fees must be paid within 10 business days following reconciliation.</p>
+              </div>
+
+              <div id="art-head-8" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 8: Quyền sở hữu khách hàng giới thiệu và Chống lách luật / Article 8: Referred Customers and Non-Circumvention</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Khách hàng tiếp cận thông qua hệ thống của Bên A thuộc bản quyền dữ liệu của Bên A trong thời hạn 24 tháng. Bên B nghiêm cấm mọi hành vi dụ dỗ, thỏa thuận riêng ngoại tuyến, hoặc trốn tránh khai báo điều trị nhằm lách phí hoa hồng.</p>
+                <p><strong>English:</strong> Patients introduced via UCSmile remain proprietary to Party A's database for 24 months. Party B is strictly forbidden from bypass booking attempts, offering secret cash discounts offline, or failure to register extra procedures.</p>
+              </div>
+
+              <div id="art-head-9" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 9: Quy trình quét mã check-in y tế QR / Article 9: QR Check-In</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Nhân viên quầy tiếp tân Bên B có trách nhiệm hướng dẫn khách hàng quét mã QR (Digital Trust Pass) ngay khi đặt chân đến cơ sở phòng khám để đồng bộ hồ sơ số và kích hoạt chế độ bảo vệ y tế quốc tế.</p>
+                <p><strong>English:</strong> Party B's reception desk is obligated to scan the patient's QR-based Digital Trust Pass immediately upon physical arrival to synchronize cloud records and activate global insurance overlays.</p>
+              </div>
+
+              <div id="art-head-10" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 10: Chế độ bảo hành quốc tế và Chăm sóc hậu điều trị / Article 10: Warranty and Post-Treatment Support</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Bên B cam kết cung cấp chính sách bảo hành chính hãng tối thiểu 10 năm cho Implant và 5 năm cho Răng sứ thẩm mỹ. Mọi điều chỉnh khớp cắn, xử lý đào thải vật liệu y tế phải được thực hiện hoàn toàn miễn phí cho khách hàng.</p>
+                <p><strong>English:</strong> Party B guarantees structured warranties (minimum 10 years for Implants, 5 years for Veneers/Crowns). Any necessary adjustments, follow-up diagnostics, or minor material revisions must be provided free of charge.</p>
+              </div>
+
+              <div id="art-head-11" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 11: Hợp tác sản xuất truyền thông và Marketing / Article 11: Marketing and Media</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Để củng cố "Tín hiệu uy tín" (Trust Signals), Bên B cam kết phối hợp phân bổ ít nhất 04 giờ làm việc mỗi tuần cho đội ngũ media Bên A thực hiện ghi hình lâm sàng, chụp ảnh cơ sở và phỏng vấn tiếng Anh với đội ngũ bác sĩ.</p>
+                <p><strong>English:</strong> To build powerful Trust Signals, Party B agrees to designate 4 hours weekly for Party A's media production team to perform clinical videography, facility photography, and native English doctor showcase interviews.</p>
+              </div>
+
+              <div id="art-head-12" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 12: Chương trình khuyến mãi và Gói dịch vụ / Article 12: Promotions</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Các gói dịch vụ, mã giảm giá du lịch, hoặc quà tặng kèm y khoa đăng tải trên UCSmile phải đạt sự thống nhất bằng văn bản (email hoặc chat) giữa hai bên trước khi chính thức hiển thị trực tuyến.</p>
+                <p><strong>English:</strong> Promotional campaigns, package discounts, or specific dental travel giveaways on the platform must be synchronized and agreed upon in writing (email/chat) before publishing.</p>
+              </div>
+
+              <div id="art-head-13" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 13: Bảo mật thông tin bệnh án và Dữ liệu cá nhân / Article 13: Personal Data and Confidentiality</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Hai bên cam kết bảo vệ tuyệt mật hồ sơ y tế, phim chụp CT, thông tin cá nhân và liên lạc của khách hàng, tuân thủ nghiêm ngặt Luật Bảo vệ dữ liệu cá nhân Nghị định 13/2023/NĐ-CP của Việt Nam và GDPR.</p>
+                <p><strong>English:</strong> Both parties shall secure medical records, CT scans, and contact data, strictly complying with Vietnam's Decree 13/2023/ND-CP on Personal Data Protection and global privacy standards.</p>
+              </div>
+
+              <div id="art-head-14" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 14: Biện pháp chế tài và Đình chỉ tài khoản / Article 14: Account Suspension</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Mọi hành vi cố tình báo khống giá, trốn tránh đóng phí dịch vụ nền tảng, hoặc bị phản hồi tiêu cực về chất lượng y tế từ 2 lần trở lên sẽ bị đình chỉ tư cách đối tác và khóa tài khoản vĩnh viễn không cần báo trước.</p>
+                <p><strong>English:</strong> Any verified bypass bookings, fee tax avoidance, active price double-standards, or receiving multiple clinical quality complaints will trigger immediate account suspension and platform blacklisting.</p>
+              </div>
+
+              <div id="art-head-15" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 15: Thời hạn hợp tác và Chấm dứt / Article 15: Term and Termination</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Thỏa thuận này có hiệu lực 01 năm kể từ ngày ký và tự động gia hạn thêm hàng năm. Một bên có quyền đơn phương chấm dứt hợp đồng vì nhu cầu riêng bằng cách gửi thông báo bằng văn bản trước 30 ngày.</p>
+                <p><strong>English:</strong> This agreement is active for 1 year and auto-renews. Either party can terminate this agreement for convenience by delivering 30 days prior written notice.</p>
+              </div>
+
+              <div id="art-head-16" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 16: Chấp thuận kỹ thuật số trực tuyến / Article 16: Electronic Acceptance</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Sự đồng ý thông qua việc tích chọn các ô cam kết, nhập thông tin người đại diện pháp luật, và nhấn "Ký chấp thuận và nộp hồ sơ" tại cổng Onboarding có giá trị pháp lý tương đương chữ ký số chính thức.</p>
+                <p><strong>English:</strong> Selecting required compliance tickboxes, entering signatory credentials, and clicking the submission prompt constitutes a legally binding digital handshake under the Law on E-Transactions of Vietnam.</p>
+              </div>
+
+              <div id="art-head-17" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 17: Quy trình gửi thông báo pháp lý / Article 17: Notices</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Mọi thông báo chính thức được gửi dưới dạng thư điện tử đến hòm thư đã xác minh đăng ký (${clinicEmail}) và được coi là hoàn thành việc giao nhận sau 24 giờ kể từ lúc gửi đi thành công.</p>
+                <p><strong>English:</strong> Official notices sent to the clinic's verified email account (${clinicEmail}) are legally deemed received and active twenty-four (24) hours following transmission.</p>
+              </div>
+
+              <div id="art-head-18" className="scroll-mt-4">
+                <h5 className="font-black text-gray-900 text-xs border-b border-gray-100 pb-1 mb-2 uppercase">Điều 18: Luật áp dụng và Giải quyết tranh chấp / Article 18: Governing Law and Disputes</h5>
+                <p className="mb-1"><strong>Tiếng Việt:</strong> Thỏa thuận chịu sự điều chỉnh của luật pháp nước Cộng hòa Xã hội Chủ nghĩa Việt Nam. Mọi mâu thuẫn tranh chấp phát sinh ưu tiên thương lượng song phương, trường hợp bế tắc sẽ được đệ trình lên Trung tâm Trọng tài Quốc tế Đà Nẵng (DAC).</p>
+                <p><strong>English:</strong> This partnership is governed by the laws of the Socialist Republic of Vietnam. Any unresolved dispute or claim shall be submitted to the Da Nang International Arbitration Center (DAC) or competent local courts.</p>
+              </div>
+
+              {/* Annex Services inside the agreement container */}
+              <div id="annex-a" className="mt-8 pt-4 border-t border-dashed border-gray-200">
+                <h5 className="font-black text-amber-700 text-xs uppercase mb-2">ANNEX A: SERVICE SPECIFICATIONS AND CAMPAIGN PRICING</h5>
+                <p className="text-[10px] text-gray-400 mb-3">The following services and custom pricing sheets are locked into this agreement snapshot upon digital submission:</p>
+                {enabledServices.length > 0 ? (
+                  <div className="border border-gray-150 rounded-2xl overflow-hidden bg-white">
+                    <table className="w-full text-left text-[10px] border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 text-gray-500 font-extrabold border-b border-gray-150">
+                          <th className="p-2.5">Service Name</th>
+                          <th className="p-2.5">Category</th>
+                          <th className="p-2.5">Treatment Unit</th>
+                          <th className="p-2.5 text-right">Cam Price</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {enabledServices.map((s: any) => (
+                          <tr key={s.serviceId} className="hover:bg-gray-55/30">
+                            <td className="p-2.5 font-bold text-gray-950">{s.serviceName}</td>
+                            <td className="p-2.5 text-gray-500">{s.category}</td>
+                            <td className="p-2.5 text-gray-400 font-medium">{s.treatmentUnit === 'Custom Unit' ? s.customUnitName : s.treatmentUnit}</td>
+                            <td className="p-2.5 text-right font-mono font-black text-amber-800">{s.currency === 'VND' ? '₫' : '$'}{s.customPrice?.toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="p-4 border border-dashed border-gray-200 rounded-2xl bg-gray-50 text-center text-gray-400 italic font-medium">
+                    No custom services listed in Step 2. Using standard global system default service pricing.
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* Ending details */}
+            <p className="text-center font-bold text-gray-800 border-t border-gray-100 pt-4 text-[10px]">
+              Thỏa thuận được lập thành hai bản kỹ thuật số có giá trị pháp lý tương đương / Digitally executed in two copies of equal legal validity.
+            </p>
+          </div>
+
+          {/* Floating indicator */}
+          <div className="flex justify-between items-center pt-1 px-1">
+            <button
+              type="button"
+              onClick={downloadAgreementHTML}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold rounded-xl text-[10px] cursor-pointer transition-colors shadow-sm"
+              title="Download draft document as HTML/Print format"
+            >
+              <Download className="w-3.5 h-3.5" /> Tải về Bản dự thảo / Download Draft (HTML)
+            </button>
+            
             {hasScrolledToBottom ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 text-emerald-700 font-extrabold rounded-md text-[9px] border border-emerald-150 uppercase tracking-wider">
-                <Check className="w-3 h-3" /> Unlocked
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 font-extrabold rounded-full text-[10px] border border-emerald-150 uppercase tracking-wider">
+                <Check className="w-3.5 h-3.5" /> Đã đọc hết - Đã mở khóa / Document Unlocked
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 text-amber-700 font-extrabold rounded-md text-[9px] border border-amber-150 uppercase tracking-wider animate-pulse">
-                Locked
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-700 font-extrabold rounded-full text-[10px] border border-amber-150 uppercase tracking-wider animate-pulse">
+                Locked - Cuộn xem hết hợp đồng để mở khóa
               </span>
             )}
           </div>
         </div>
 
-        {/* E-Document Formal Container with onScroll listener */}
-        <div 
-          ref={containerRef}
-          onScroll={handleScroll}
-          className="bg-[#fdfdfd] border border-gray-200 rounded-3xl p-8 h-96 overflow-y-auto text-xs text-gray-700 leading-relaxed space-y-6 custom-scrollbar shadow-inner text-left font-sans relative border-t-8 border-t-amber-600/80"
-        >
-          {/* Watermark background */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none">
-            <h1 className="text-8xl font-black tracking-widest font-sans rotate-12">TRUST SHIELD</h1>
-          </div>
-
-          <div className="text-center space-y-1 border-b border-gray-100 pb-5">
-            <h3 className="font-bold text-gray-900 text-xs uppercase tracking-widest">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h3>
-            <p className="font-bold text-gray-700 text-[10px] tracking-wider">Độc lập - Tự do - Hạnh phúc</p>
-            <div className="w-24 h-0.5 bg-amber-600/30 mx-auto mt-2"></div>
-            
-            <div className="pt-3">
-              <h3 className="font-bold text-gray-500 text-[10px] uppercase tracking-widest">SOCIALIST REPUBLIC OF VIETNAM</h3>
-              <p className="font-semibold text-gray-400 text-[9px] tracking-wider">Independence - Freedom - Happiness</p>
-            </div>
-          </div>
-
-          <div className="text-center space-y-2 pt-2">
-            <h4 className="font-serif font-black text-gray-900 text-sm uppercase">HỢP ĐỒNG HỢP TÁC KHUNG</h4>
-            <p className="font-serif font-bold text-gray-400 text-[10px] uppercase -mt-1">FRAMEWORK BUSINESS COOPERATION AGREEMENT</p>
-            <p className="italic text-[10px] text-gray-500 font-bold">(V/v: Cung cấp nền tảng kết nối và tư vấn du lịch nha khoa / Provision of Dental Tourism Platform & Consultation)</p>
-            <p className="text-[9px] text-gray-400 font-mono font-medium">Ref No: ……../2026/BCC-UCT</p>
-          </div>
-
-          <div className="space-y-1 text-gray-500 italic text-[10px] border-l-2 border-amber-600/20 pl-4 py-1">
-            <p>Căn cứ Bộ luật Dân sự số 91/2015/QH13 và Luật Thương mại số 36/2005/QH13 của Việt Nam;</p>
-            <p>Pursuant to the Civil Code of Vietnam No. 91/2015/QH13 and Commercial Law No. 36/2005/QH13;</p>
-            <p>Căn cứ nhu cầu và năng lực vận hành thực tế của cả hai bên / Based on the mutual demand and operational capabilities.</p>
-          </div>
-
-          <p className="font-medium text-gray-800">
-            Hôm nay, ngày {new Date().getDate()} tháng {new Date().getMonth() + 1} năm {new Date().getFullYear()}, thỏa thuận này được ký kết tại Đà Nẵng giữa:
-          </p>
-
-          {/* Party A Details */}
-          <div className="bg-amber-50/20 border border-amber-100/40 rounded-2xl p-4 space-y-2">
-            <h5 className="font-black text-amber-900 text-[11px] uppercase tracking-wider">BÊN A / PARTY A: CÔNG TY TNHH UCTALENT LABS</h5>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-gray-600 text-[10px]">
-              <p><strong className="text-gray-700">Mã số thuế / Tax Code:</strong> 0402238274</p>
-              <p><strong className="text-gray-700">Văn phòng / Office:</strong> Software Park 2, Thuan Phuoc Ward, Da Nang City</p>
-              <p className="sm:col-span-2"><strong className="text-gray-700">Người đại diện / Representative:</strong> Mr. Nguyen Ngoc Duong (Django) - Giám đốc / Managing Director</p>
-              <p className="sm:col-span-2"><strong className="text-gray-700">Tài khoản thanh toán / Settlement Account:</strong> 888911 at Techcombank (CN Đà Nẵng).</p>
-            </div>
-          </div>
-
-          {/* Party B Details */}
-          <div className="bg-sky-50/20 border border-sky-100/40 rounded-2xl p-4 space-y-2">
-            <h5 className="font-black text-sky-900 text-[11px] uppercase tracking-wider">BÊN B / PARTY B: {clinicName ? clinicName.toUpperCase() : "DUY TAM DENTAL CLINIC"}</h5>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-gray-600 text-[10px]">
-              <p className="sm:col-span-2"><strong className="text-gray-700">Địa chỉ đăng ký / Registered Address:</strong> {onboarding?.profileDetails?.address || "140 Thong Nhat, Nha Trang, Khanh Hoa, Vietnam"}</p>
-              <p><strong className="text-gray-700">Người đại diện / Representative:</strong> {adminName || "Đại diện lâm sàng"} - Giám Đốc</p>
-              <p><strong className="text-gray-700">Mã số thuế / Tax Code:</strong> {onboarding?.profileDetails?.taxCode || "4201979449"}</p>
-            </div>
-          </div>
-
-          <p className="font-bold text-gray-800">
-            Hai bên thống nhất ký kết Hợp đồng khung với các điều khoản cụ thể dưới đây / Both parties hereby agree to the following terms and conditions:
-          </p>
-
-          {/* Terms Articles */}
-          <div className="space-y-5 text-[11px]">
-            <div>
-              <h5 className="font-black text-gray-900 text-xs uppercase border-b border-gray-100 pb-1 mb-2">ĐIỀU 1: PHẠM VI DỊCH VỤ VÀ MÔ HÌNH VẬN HÀNH / ARTICLE 1: SCOPE OF SERVICES</h5>
-              <ul className="list-decimal pl-4 space-y-1.5 text-gray-600">
-                <li>Bên A cung cấp hạ tầng kết nối <strong>"Da Nang Trust Shield"</strong> để định tuyến du khách nha khoa quốc tế (Mỹ, Anh, Úc, Singapore) đến với dịch vụ của Bên B.</li>
-                <li>Bên A vận hành hệ thống hỗ trợ <strong>AI Concierge</strong> (tư vấn 24/7) và Hồ sơ bệnh án số <strong>Digital Dental Passport</strong>.</li>
-                <li>Bên B là đơn vị chuyên môn được cấp phép, chịu trách nhiệm hoàn toàn về chất lượng điều trị và chăm sóc y khoa.</li>
-              </ul>
-            </div>
-
-            <div>
-              <h5 className="font-black text-gray-900 text-xs uppercase border-b border-gray-100 pb-1 mb-2">ĐIỀU 2: CAM KẾT GIÁ VÀ BẢO VỆ KHÁCH HÀNG / ARTICLE 2: PRICE INTEGRITY</h5>
-              <ul className="list-decimal pl-4 space-y-1.5 text-gray-600">
-                <li>Bên B cam kết giữ giá điều trị thực tế tại phòng khám khớp hoặc thấp hơn mức báo giá đã chốt trên nền tảng (ngoại trừ các phát sinh y khoa bắt buộc được xác nhận bằng văn bản).</li>
-                <li>Nếu thu quá giá cam kết, Bên B có nghĩa vụ hoàn trả phần chênh lệch trực tiếp cho khách hàng hoặc đối soát giảm trừ vào kỳ thanh toán gần nhất với Bên A.</li>
-              </ul>
-            </div>
-
-            <div>
-              <h5 className="font-black text-gray-900 text-xs uppercase border-b border-gray-100 pb-1 mb-2">ĐIỀU 3: CHIẾT KHẤU DỊCH VỤ VÀ HOÀN CỌC / ARTICLE 3: PLATFORM COMMISSION</h5>
-              <ul className="list-decimal pl-4 space-y-1.5 text-gray-600">
-                <li>Phí dịch vụ kết nối và giới thiệu tiêu chuẩn là <strong>25%</strong> tính trên tổng hóa đơn thanh toán cuối cùng của khách hàng.</li>
-                <li>Tiền đặt cọc giữ chỗ (Trust Shield Deposit) từ 500.000 đến 3.000.000 VND khách hàng trả trước cho Bên A sẽ được khấu trừ thẳng vào hóa đơn thanh toán cuối của khách hàng tại phòng khám.</li>
-              </ul>
-            </div>
-
-            <div>
-              <h5 className="font-black text-gray-900 text-xs uppercase border-b border-gray-100 pb-1 mb-2">ĐIỀU 4: BẢO MẬT VÀ CHỐNG GIAO DỊCH NGOÀI / ARTICLE 4: ANTI-BYPASS</h5>
-              <ul className="list-decimal pl-4 space-y-1.5 text-gray-600">
-                <li>Bên B có nghĩa vụ quét mã QR của khách hàng (Digital Trust Pass) ngay khi khách hàng đến check-in tại cơ sở điều trị để kích hoạt bảo hành quốc tế.</li>
-                <li>Khách hàng tiếp cận thông qua nền tảng thuộc quyền sở hữu của Bên A, Bên B nghiêm cấm mọi hành vi giao dịch trực tiếp không qua hệ thống để tránh chi phí dịch vụ.</li>
-              </ul>
-            </div>
-
-            <div>
-              <h5 className="font-black text-gray-900 text-xs uppercase border-b border-gray-100 pb-1 mb-2">ĐIỀU 5: HỢP TÁC TRUYỀN THÔNG VÀ SẢN XUẤT MEDIA / ARTICLE 5: MEDIA PRODUCTION</h5>
-              <ul className="list-decimal pl-4 space-y-1.5 text-gray-600">
-                <li>Trong 06 tháng đầu, Bên B cam kết phối hợp phân bổ ít nhất <strong>04 giờ mỗi tuần</strong> để đội ngũ truyền thông ghi hình thực tế và thực hiện phỏng vấn tiếng Anh với bác sĩ nhằm xây dựng "Trust Signals".</li>
-                <li>Bên A nắm bản quyền sử dụng vĩnh viễn các tư liệu này trên các kênh truyền thông du lịch nha khoa quốc tế.</li>
-              </ul>
-            </div>
-
-            <div>
-              <h5 className="font-black text-gray-900 text-xs uppercase border-b border-gray-100 pb-1 mb-2">ĐIỀU 6: ĐIỀU KHOẢN CHUNG VÀ GIẢI QUYẾT TRANH CHẤP / ARTICLE 6: GENERAL PROVISIONS</h5>
-              <ul className="list-decimal pl-4 space-y-1.5 text-gray-600">
-                <li>Mọi sửa đổi, bổ sung hợp đồng khung này phải được thống nhất bằng văn bản chính thức dưới dạng phụ lục hợp đồng.</li>
-                <li>Trường hợp phát sinh mâu thuẫn hoặc tranh chấp, hai bên ưu tiên thương lượng hòa giải trên tinh thần đồng kiến tạo hệ sinh thái du lịch nha khoa vững mạnh tại Đà Nẵng, Việt Nam.</li>
-              </ul>
-            </div>
-          </div>
-
-          <p className="text-center font-bold text-gray-800 border-t border-gray-100 pt-4 text-[10px]">
-            Thỏa thuận được lập thành hai bản kỹ thuật số có giá trị pháp lý tương đương / Digitally executed in two copies of equal legal validity.
-          </p>
-        </div>
-
-        {/* Scroll status hint under the document container */}
-        <div className="flex justify-end pt-1">
-          {hasScrolledToBottom ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 font-extrabold rounded-full text-[10px] border border-emerald-200 uppercase tracking-wider">
-              <CheckCircle className="w-3.5 h-3.5" /> Đã rà soát hết hợp đồng - Đã mở khóa ký điện tử
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 font-extrabold rounded-full text-[10px] border border-amber-200 uppercase tracking-wider animate-pulse">
-              <HelpCircle className="w-3.5 h-3.5" /> Hãy cuộn xuống cuối bản hợp đồng trên để mở khóa ký kết
-            </span>
-          )}
-        </div>
       </div>
 
-      {/* Agreed checkbox */}
-      <div className={`flex items-start gap-3 p-4 border rounded-2xl transition-all ${
+      {/* Checkboxes compliance area */}
+      <div className={`space-y-4 p-6 border rounded-3xl transition-all ${
         hasScrolledToBottom 
-          ? 'bg-amber-500/5 border-amber-100/40 cursor-pointer' 
-          : 'bg-gray-50 border-gray-100 opacity-60 cursor-not-allowed select-none'
-      }`}>
-        <input 
-          type="checkbox"
-          required
-          disabled={!hasScrolledToBottom}
-          checked={agreed}
-          onChange={() => setAgreed(!agreed)}
-          className="w-5 h-5 text-amber-600 border-gray-200 focus:ring-amber-500 rounded mt-0.5 cursor-pointer accent-amber-600 disabled:cursor-not-allowed"
-          id="checkbox-terms"
-        />
-        <label className={`text-xs font-bold leading-relaxed ${
-          hasScrolledToBottom ? 'text-gray-600 cursor-pointer' : 'text-gray-400'
-        }`} htmlFor="checkbox-terms">
-          Chúng tôi đã rà soát kỹ các điều khoản nêu trên và đại diện cho phòng khám cam kết hoàn thành đầy đủ nghĩa vụ đối tác theo chuẩn vận hành Da Nang Trust Shield. * {!hasScrolledToBottom && "(Hãy cuộn xem hết hợp đồng để xác nhận)"}
-        </label>
-      </div>
-
-      {/* BILATERAL DIGITAL SIGN-OFF PANEL (Dành cho ký kết song phương) */}
-      <div className={`border border-gray-100 rounded-3xl p-6 bg-gray-50/50 space-y-6 transition-all ${
-        hasScrolledToBottom ? '' : 'opacity-50 select-none pointer-events-none'
+          ? 'bg-amber-500/5 border-amber-100/40' 
+          : 'bg-gray-50/50 border-gray-100 opacity-60 select-none pointer-events-none'
       }`}>
         <div>
-          <h4 className="text-xs font-black text-gray-900 uppercase tracking-wider">Khung Ký Kết Kỹ Thuật Số (Bilateral Digital Signatures)</h4>
-          <p className="text-[11px] text-gray-400 font-medium">Bản ký điện tử chính thức được mã hóa trên hệ thống blockchain của Da Nang Trust Shield</p>
+          <h4 className="text-xs font-black text-gray-900 uppercase tracking-widest flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-amber-500" /> Xác nhận tuân thủ & Chấp thuận các điều khoản / Compliance & Acceptance
+          </h4>
+          <p className="text-[11px] text-gray-400 mt-1">Vui lòng rà soát và tích chọn đầy đủ 6 cam kết bắt buộc sau đây / Please review and check all 6 declarations:</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Party A Pre-signed panel */}
-          <div className="bg-white border border-gray-150 rounded-2xl p-5 flex flex-col justify-between h-48 shadow-sm">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <div>
-                <span className="text-[9px] bg-emerald-50 text-emerald-700 font-black px-2 py-0.5 rounded-md border border-emerald-100 uppercase tracking-wide">
-                  Đã Duyệt / Pre-Signed
-                </span>
-                <p className="text-[11px] text-gray-900 font-black uppercase mt-1">PARTY A: UCTALENT LABS</p>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100">
-                <Check className="w-4 h-4 text-emerald-600" />
-              </div>
+        <div className="space-y-3">
+          {[
+            "I confirm that I am the legal representative of the clinic or have been validly authorized to represent the clinic. (Tôi xác nhận mình là người đại diện hợp pháp hoặc được ủy quyền hợp lệ để ký kết cho phòng khám)",
+            "I confirm that the clinic holds valid licences and approvals required to provide dental services. (Tôi xác nhận phòng khám sở hữu đầy đủ giấy phép hoạt động chuyên môn nha khoa hợp lệ)",
+            "I confirm that all information, pricing and documents submitted during onboarding are complete, accurate and current. (Tôi xác nhận mọi thông tin, bảng giá và hồ sơ tài liệu đã cung cấp là hoàn toàn chính xác và trung thực)",
+            "I have read and agree to the Partnership Agreement, including the service fee, deposit, reconciliation and referred customer provisions. (Tôi đã đọc và đồng ý với các điều khoản về phí dịch vụ 25%, tiền cọc, đối soát và bảo vệ khách hàng giới thiệu)",
+            "I agree that my representative information, acceptance time, Agreement version, IP address and acceptance records may be stored as evidence of electronic acceptance. (Tôi đồng ý thông tin ký điện tử, IP, thời gian ký sẽ được lưu trữ làm bằng chứng giao dịch hợp pháp)",
+            "I understand that submitting this Agreement does not immediately activate the clinic account. The partnership only becomes active after Admin Review and approval. (Tôi hiểu rằng việc nộp hồ sơ này chưa kích hoạt tài khoản ngay. Hợp tác chỉ chính thức kích hoạt sau khi Admin duyệt hồ sơ)"
+          ].map((text, idx) => (
+            <div key={idx} className="flex items-start gap-3 p-3 bg-white border border-gray-150 rounded-2xl hover:border-amber-200 transition-all cursor-pointer">
+              <input 
+                type="checkbox"
+                required
+                disabled={!hasScrolledToBottom}
+                checked={checkboxes[idx]}
+                onChange={() => handleCheckboxChange(idx)}
+                className="w-4 h-4 text-amber-600 border-gray-200 focus:ring-amber-500 rounded mt-0.5 cursor-pointer accent-amber-600 disabled:cursor-not-allowed shrink-0"
+                id={`checkbox-compliance-${idx}`}
+              />
+              <label 
+                className="text-[11px] text-gray-600 font-semibold leading-relaxed cursor-pointer select-none"
+                htmlFor={`checkbox-compliance-${idx}`}
+              >
+                {text}
+              </label>
             </div>
+          ))}
+        </div>
+      </div>
 
-            {/* Signature Graphic Mock */}
-            <div className="py-2 text-center">
-              <span className="font-serif italic text-emerald-700 text-xl font-black tracking-wide bg-emerald-50/20 px-4 py-2 border-b border-dashed border-emerald-200 inline-block font-medium select-none">
-                Django Nguyen
-              </span>
-              <p className="text-[9px] text-gray-400 font-mono mt-1">ID: uctlabs-mgmt-99a3c8</p>
-            </div>
-
-            <div className="text-[10px] text-gray-400 border-t border-gray-50 pt-2 flex justify-between items-center">
-              <span>Đại diện: Nguyễn Ngọc Dương</span>
-              <span className="font-mono text-[9px] text-gray-300">Da Nang, VN</span>
-            </div>
-          </div>
-
-          {/* Party B Clinic Signature Pad */}
-          <div className={`bg-white border rounded-2xl p-5 flex flex-col justify-between h-48 shadow-sm transition-all ${
-            signature.trim() ? 'border-sky-200 bg-sky-50/5' : 'border-gray-200'
-          }`}>
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <div>
-                <span className={`text-[9px] font-black px-2 py-0.5 rounded-md border uppercase tracking-wide ${
-                  signature.trim()
-                    ? 'bg-sky-50 text-sky-700 border-sky-100'
-                    : 'bg-amber-50 text-amber-700 border-amber-100'
-                }`}>
-                  {signature.trim() ? 'Đã ký / Co-Signed' : 'Chờ Ký / Pending'}
-                </span>
-                <p className="text-[11px] text-gray-900 font-black uppercase mt-1">PARTY B: {clinicName || "YOUR CLINIC"}</p>
-              </div>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${
-                signature.trim()
-                  ? 'bg-sky-50 border-sky-100 text-sky-600'
-                  : 'bg-amber-50 border-amber-100 text-amber-500'
-              }`}>
-                {signature.trim() ? <Check className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
-              </div>
-            </div>
-
-            {/* Dynamic cursive handwritten signature */}
-            <div className="py-2 text-center min-h-[48px] flex flex-col items-center justify-center">
-              {signature.trim() ? (
-                <div className="animate-fade-in text-center">
-                  <span className="font-serif italic text-sky-600 text-xl font-black tracking-wide bg-sky-50/30 px-4 py-1.5 border-b border-dashed border-sky-300 inline-block font-medium">
-                    {signature.trim()}
-                  </span>
-                  <p className="text-[8px] text-sky-400 font-mono mt-1">SECURE IP HASH: {clinicId?.substring(0, 8) || "onb-auth-cln"}</p>
-                </div>
-              ) : (
-                <span className="text-[10px] text-gray-300 italic">
-                  {hasScrolledToBottom ? "Vui lòng nhập tên người đại diện ký phía dưới" : "Cần cuộn xem hết hợp đồng để nhập chữ ký"}
-                </span>
-              )}
-            </div>
-
-            <div className="text-[10px] text-gray-400 border-t border-gray-50 pt-2 flex justify-between items-center">
-              <span>Chức vụ: Người đại diện pháp luật</span>
-              <span className="font-mono text-[9px] text-gray-300">IP Authorized</span>
-            </div>
-          </div>
+      {/* Representative Information & Signatory Details */}
+      <div className={`space-y-6 transition-all ${
+        hasScrolledToBottom ? '' : 'opacity-40 select-none pointer-events-none'
+      }`}>
+        <div>
+          <h4 className="text-xs font-black text-gray-900 uppercase tracking-widest flex items-center gap-1.5">
+            <Lock className="w-4 h-4 text-gray-400" /> Thông tin người đại diện ký (Representative Information)
+          </h4>
+          <p className="text-[11px] text-gray-400 font-medium">Vui lòng cung cấp chính xác thông tin người đại diện theo pháp luật hoặc người được ủy quyền để ký kết Hợp đồng này.</p>
         </div>
 
-        {/* Input box to enter signature name */}
-        <div className="p-5 bg-white border border-gray-150 rounded-2xl max-w-xl shadow-sm space-y-3">
-          <div>
-            <label className="block text-xs font-extrabold text-gray-400 uppercase tracking-widest mb-1.5">
-              Họ Tên Người Đại Diện Ký (Type full legal name to sign) *
+        {/* Dynamic input textareas for Signatory Name and Position */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="p-4 bg-white border border-gray-150 rounded-2xl shadow-sm space-y-1.5">
+            <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">
+              Representative Full Name (Họ tên người ký đại diện) *
             </label>
             <div className="relative">
-              <FileText className="absolute left-4 top-3.5 w-4 h-4 text-gray-400" />
+              <User className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
               <input 
                 type="text"
                 required
                 disabled={!hasScrolledToBottom}
-                placeholder="Ví dụ: Nguyễn Lương Duy"
-                value={signature}
-                onChange={e => setSignature(e.target.value)}
-                className="w-full bg-gray-50/50 border border-gray-200 focus:bg-white focus:border-amber-500 rounded-xl py-3 pl-11 pr-4 text-xs font-extrabold text-gray-800 focus:outline-none transition-all placeholder-gray-400 disabled:cursor-not-allowed"
-                id="input-signature"
+                placeholder="Nguyen Van A"
+                value={repName}
+                onChange={e => setRepName(e.target.value)}
+                className="w-full bg-gray-50/50 border border-gray-200 focus:bg-white focus:border-amber-500 rounded-xl py-2 pl-9 pr-3 text-xs font-bold text-gray-800 focus:outline-none transition-all placeholder-gray-400 disabled:cursor-not-allowed"
               />
             </div>
-            <p className="text-[9px] text-gray-400 font-bold uppercase mt-2">
-              Đại diện pháp luật đã đăng ký: <strong className="text-gray-600">{adminName || "Đại diện phòng khám"}</strong>
-            </p>
+          </div>
+
+          <div className="p-4 bg-white border border-gray-150 rounded-2xl shadow-sm space-y-1.5">
+            <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">
+              Representative Position (Chức danh đại diện ký) *
+            </label>
+            <div className="relative">
+              <Building className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+              <input 
+                type="text"
+                required
+                disabled={!hasScrolledToBottom}
+                placeholder="Managing Director"
+                value={repPosition}
+                onChange={e => setRepPosition(e.target.value)}
+                className="w-full bg-gray-50/50 border border-gray-200 focus:bg-white focus:border-amber-500 rounded-xl py-2 pl-9 pr-3 text-xs font-bold text-gray-800 focus:outline-none transition-all placeholder-gray-400 disabled:cursor-not-allowed"
+              />
+            </div>
           </div>
         </div>
+
+        {/* Verification Meta details display */}
+        <div className="bg-gray-50 border border-gray-150 rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold">
+          <div className="space-y-0.5">
+            <p className="text-[9px] text-gray-400 uppercase tracking-widest">Verified Email</p>
+            <p className="text-gray-700 truncate">{clinicEmail}</p>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[9px] text-gray-400 uppercase tracking-widest">Agreement Version</p>
+            <p className="text-gray-700 font-mono">{agreementVersion}</p>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[9px] text-gray-400 uppercase tracking-widest">Current Date</p>
+            <p className="text-gray-700">{currentDate}</p>
+          </div>
+        </div>
+
       </div>
 
-      {/* Navigation */}
+      {/* Required Onboarding steps validation banner */}
+      {!allRequiredStepsCompleted && (
+        <div className="p-4 bg-red-50 border border-red-150 rounded-2xl flex items-start gap-2.5">
+          <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+          <div>
+            <h4 className="text-xs font-black text-red-800 uppercase tracking-wider">Incomplete Onboarding Requirements</h4>
+            <p className="text-[11px] text-red-700 leading-relaxed mt-1">
+              You must complete all required preceding onboarding steps before submitting this agreement:
+            </p>
+            <ul className="list-disc pl-4 mt-1 text-[11px] text-red-600 space-y-0.5">
+              {!onboarding?.profileSetupCompleted && <li>Step 1: Clinic Profile Setup is not marked complete</li>}
+              {!onboarding?.servicesCompleted && <li>Step 2: Dental Services & Pricing is not marked complete</li>}
+              {!onboarding?.workingHoursCompleted && <li>Step 3: Operational Working Hours is not marked complete</li>}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Explanation of post-agreement workflow */}
+      {hasScrolledToBottom && checkboxes.every(c => c) && repName.trim() && repPosition.trim() && (
+        <div className="p-4 bg-emerald-50 border border-emerald-150 rounded-2xl animate-fade-in space-y-1.5">
+          <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide flex items-center gap-1.5">
+            <CheckCircle className="w-4.5 h-4.5 text-emerald-500" /> QUY TRÌNH TIẾP THEO SAU KHI ĐỒNG Ý & GỬI HỒ SƠ
+          </p>
+          <div className="text-[11px] text-emerald-700 leading-relaxed space-y-1">
+            <p>
+              Ngay sau khi bạn nhấn nút <strong>"Accept and Submit for Review"</strong> dưới đây:
+            </p>
+            <ul className="list-disc pl-4 space-y-1 text-[11px]">
+              <li>
+                Hệ thống sẽ gửi một Email xác nhận kèm bản sao hợp đồng điện tử có đánh dấu chờ duyệt đến hòm thư <strong className="underline">{clinicEmail}</strong>.
+              </li>
+              <li>
+                UCSmile sẽ kiểm tra hồ sơ và phê duyệt phòng khám của bạn trong vòng 24 giờ làm việc.
+              </li>
+              <li>
+                Bạn sẽ được chuyển đến Dashboard theo dõi trực quan trạng thái, xem email mô phỏng và tải bản hợp đồng điện tử đã ký.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom Action Navigation */}
       <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
         <button
           type="button"
@@ -3587,11 +4157,18 @@ function StepAgreementSetup({ clinicId, clinicName, adminName, onboarding, onSav
 
         <button
           type="submit"
-          disabled={loading || !hasScrolledToBottom || !agreed || !signature.trim()}
-          className="px-8 py-3.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-amber-500/20 active:scale-[0.98] transition-all disabled:bg-gray-300 disabled:shadow-none cursor-pointer flex items-center gap-1.5 disabled:cursor-not-allowed"
+          disabled={
+            loading || 
+            !hasScrolledToBottom || 
+            checkboxes.some(c => !c) || 
+            !repName.trim() || 
+            !repPosition.trim() || 
+            !allRequiredStepsCompleted
+          }
+          className="px-8 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-500/20 active:scale-[0.98] transition-all disabled:bg-gray-300 disabled:shadow-none cursor-pointer flex items-center gap-1.5 disabled:cursor-not-allowed"
           id="btn-save-agreement"
         >
-          {loading ? 'Processing signature...' : 'Accept terms & digitally sign'}
+          {loading ? 'Submitting Application...' : 'Accept and Submit for Review'}
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
@@ -3603,9 +4180,37 @@ function StepAgreementSetup({ clinicId, clinicName, adminName, onboarding, onSav
 /* ==========================================
    SUB-COMPONENT: STEP 5 - SUBMISSION & REVIEW
    ========================================== */
-function StepSubmissionReview({ clinicId, onboarding, clinic, admin, onSubmitted, onPrev }: { clinicId: string, onboarding: any, clinic: any, admin: any, onSubmitted: (onb: any, clinic: any) => void, onPrev: () => void }) {
+function StepSubmissionReview({ 
+  clinicId, 
+  onboarding, 
+  clinic, 
+  admin, 
+  onSubmitted, 
+  onPrev 
+}: { 
+  clinicId: string, 
+  onboarding: any, 
+  clinic: any, 
+  admin: any, 
+  onSubmitted: (onb: any, clinic: any) => void, 
+  onPrev: () => void 
+}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'agreement' | 'hash' | 'emails'>('agreement');
+  const [emails, setEmails] = useState<any[]>([]);
+
+  // Fetch simulated emails sent for this clinic on mount
+  useEffect(() => {
+    fetch(`/api/clinic/onboarding/${clinicId}/emails`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.emails) {
+          setEmails(data.emails);
+        }
+      })
+      .catch(err => console.error("Error fetching emails:", err));
+  }, [clinicId]);
 
   const handleSubmitReview = async () => {
     if (!onboarding.agreementCompleted) {
@@ -3631,43 +4236,372 @@ function StepSubmissionReview({ clinicId, onboarding, clinic, admin, onSubmitted
     }
   };
 
-  const isSubmitted = clinic?.status === 'PENDING_REVIEW' || clinic?.status === 'APPROVED';
+  const isSubmitted = clinic?.status === 'UNDER_REVIEW' || clinic?.status === 'PENDING_REVIEW' || clinic?.status === 'APPROVED';
+
+  // Helper to trigger HTML Agreement download
+  const downloadAgreementSnapshot = () => {
+    const agreementDetails = onboarding?.agreementDetails;
+    const agreementNumber = agreementDetails?.agreementNumber || `AGR-${clinicId.substring(0, 8).toUpperCase()}-2026`;
+    const repName = agreementDetails?.signedName || clinic?.contactPerson || admin?.fullName || "Representative";
+    const repPosition = agreementDetails?.representativePosition || "Managing Director";
+    const clinicEmail = clinic?.contactEmail || "contact171@elitedentaldanang.com";
+    const clinicPhone = clinic?.contactPhone || "+84905333555";
+    const clinicAddress = onboarding?.profileDetails?.address || clinic?.address || "Vietnam Address";
+    const operatingLicenceNumber = onboarding?.profileDetails?.operatingLicenceNumber || "0452/ĐNa-GPHĐ";
+    const taxCode = onboarding?.profileDetails?.taxCode || "4201979449";
+    const currentDate = "13/7/2026";
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>UCSmile Partnership Agreement - ${agreementNumber}</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; line-height: 1.6; max-width: 800px; margin: auto; background-color: #fcfcfc; }
+          .container { background-color: #ffffff; padding: 50px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 10px 25px rgba(0,0,0,0.03); position: relative; }
+          h1, h2, h3, h4 { color: #111827; font-family: 'Georgia', serif; }
+          .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 32px; color: rgba(239, 68, 68, 0.08); font-weight: 900; pointer-events: none; z-index: 1000; text-align: center; border: 6px solid rgba(239, 68, 68, 0.08); padding: 15px 30px; text-transform: uppercase; white-space: nowrap; border-radius: 8px; }
+          .header { text-align: center; border-bottom: 2px solid #f3f4f6; padding-bottom: 25px; margin-bottom: 30px; }
+          .party-box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; }
+          .meta-info { font-family: monospace; font-size: 11px; color: #4b5563; margin-bottom: 20px; background: #fffbeb; border: 1px solid #fef3c7; padding: 12px; border-radius: 6px; }
+          .footer-sig { display: flex; justify-content: space-between; margin-top: 50px; }
+          .sig-box { width: 45%; border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; text-align: center; background: #f9fafb; font-size: 13px; }
+          .signature-cursive { font-family: 'Georgia', serif; font-style: italic; font-weight: bold; font-size: 22px; color: #0284c7; margin: 15px 0; border-bottom: 1px dashed #cbd5e1; display: inline-block; padding-bottom: 5px; }
+          .content-block { font-size: 13px; text-align: justify; }
+        </style>
+      </head>
+      <body>
+        <div class="watermark">ACCEPTED BY CLINIC<br>PENDING ADMIN APPROVAL</div>
+        <div class="container">
+          <div class="header">
+            <h3 style="margin: 0; font-size: 14px; letter-spacing: 1px; font-family: sans-serif;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h3>
+            <p style="margin: 3px 0 15px 0; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; font-family: sans-serif;">Độc lập - Tự do - Hạnh phúc</p>
+            <h2 style="margin: 10px 0 5px 0; font-size: 20px;">HỢP ĐỒNG HỢP TÁC KHUNG</h2>
+            <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #6b7280; font-weight: normal; letter-spacing: 1px;">FRAMEWORK BUSINESS COOPERATION AGREEMENT</h4>
+            <p style="margin: 0; font-size: 11px; color: #4b5563;"><strong>No:</strong> ${agreementNumber} | <strong>Version:</strong> ${agreementDetails?.termsVersion || "v1.5-partner-2026"}</p>
+          </div>
+          
+          <div class="meta-info">
+            <strong>APPLICATION ID:</strong> ${clinicId}<br>
+            <strong>ELECTRONIC RECORD HASH:</strong> ${agreementDetails?.agreementHash || "SECURE-SHA-256-HASH-GENERATED"}<br>
+            <strong>DATE REGISTERED:</strong> ${currentDate}
+          </div>
+
+          <p style="font-size: 13px;">Hôm nay, thỏa thuận này được lập kỹ thuật số và ghi nhận sự đồng thuận song phương giữa:</p>
+          
+          <div class="party-box">
+            <strong>BÊN A / PARTY A: CÔNG TY TNHH UCTALENT LABS (UCSmile Platform)</strong><br>
+            Mã số thuế / Tax Code: 0402238274<br>
+            Địa chỉ đăng ký / Address: 50 Hoang Hiep Street, Hoa Xuan Ward, Da Nang, Vietnam<br>
+            Người đại diện / Representative: Mr. Nguyen Ngoc Duong (Django) - Giám đốc / Director
+          </div>
+
+          <div class="party-box">
+            <strong>BÊN B / PARTY B: ${clinic?.name || "YOUR CLINIC"}</strong><br>
+            Mã số thuế / Tax Code: ${taxCode}<br>
+            Địa chỉ đăng ký / Registered Address: ${clinicAddress}<br>
+            Người đại diện / Representative: ${repName}<br>
+            Chức vụ / Position: ${repPosition}<br>
+            Email: ${clinicEmail} | Phone: ${clinicPhone}<br>
+            Giấy phép hoạt động / Licence No: ${operatingLicenceNumber}
+          </div>
+
+          <div class="content-block">
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 1: PHẠM VI DỊCH VỤ VÀ MÔ HÌNH HOẠT ĐỘNG / ARTICLE 1: PURPOSE AND SCOPE</h4>
+            <p>Bên A vận hành nền tảng nha khoa quốc tế UCSmile ("Da Nang Trust Shield") kết nối bệnh nhân nước ngoài. Bên B cung cấp năng lực y khoa và dịch vụ lâm sàng. Hai bên phối hợp cung cấp dịch vụ chất lượng cao.</p>
+            
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 2: GIẤY PHÉP PHÒNG KHÁM / ARTICLE 2: CLINIC LICENCES & SAFETY</h4>
+            <p>Bên B bảo đảm và duy trì đầy đủ giấy phép hoạt động khám chữa bệnh hợp pháp. Bên B tự chịu trách nhiệm chuyên môn tối cao và toàn bộ kết quả lâm sàng của khách hàng.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 3: MINH BẠCH GIÁ / ARTICLE 3: PRICE INTEGRITY</h4>
+            <p>Bên B cam kết giữ vững bảng giá dịch vụ đã khai báo trên hệ thống, không tự ý thu thêm phụ phí ngoài y tế chưa được thông báo trước bằng văn bản.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 4: PHÍ DỊCH VỤ NỀN TẢNG / ARTICLE 4: PLATFORM COMMISSION</h4>
+            <p>Bên B chi trả cho Bên A phí dịch vụ tiêu chuẩn là 25% trên tổng hóa đơn thanh toán cuối cùng của mỗi bệnh nhân do Bên A giới thiệu.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 5: TIỀN ĐẶT CỌC GIỮ CHỖ / ARTICLE 5: BOOKING DEPOSIT</h4>
+            <p>Khoản cọc giữ chỗ (Trust Shield Deposit) khách hàng trả trước cho Bên A sẽ được khấu trừ trực tiếp vào hóa đơn của khách hàng khi thực hiện thanh toán tại Bên B.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 6: DỊCH VỤ HỖ TRỢ CAO CẤP / ARTICLE 6: PREMIUM CONCIERGE</h4>
+            <p>Bên A cung cấp điều phối viên hỗ trợ dịch thuật và đưa đón. Bên B cam kết tạo điều kiện tối đa hỗ trợ điều phối viên tại phòng khám.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 7: ĐỐI SOÁT HÀNG THÁNG / ARTICLE 7: MONTHLY RECONCILIATION</h4>
+            <p>Đối soát hoàn thành trong 5 ngày làm việc đầu tiên của tháng tiếp theo. Thanh toán hoàn thành trong vòng 10 ngày làm việc.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 8: CHỐNG LÁCH LUẬT / ARTICLE 8: NON-CIRCUMVENTION</h4>
+            <p>Bên B không được giao dịch riêng hoặc tự ý giảm giá trực tiếp ngoại tuyến để tránh phí nền tảng trong thời hạn 24 tháng kể từ lần gặp mặt đầu tiên của bệnh nhân.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 9: QUY TRÌNH CHECK-IN / ARTICLE 9: QR CHECK-IN</h4>
+            <p>Bên B có nghĩa vụ thực hiện quét mã QR check-in cho bệnh nhân ngay khi đến để kích hoạt bảo hành toàn cầu.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 10: CHẾ ĐỘ BẢO HÀNH Y KHOA / ARTICLE 10: MEDICAL WARRANTY</h4>
+            <p>Bên B cam kết bảo hành các dịch vụ phục hình sứ thẩm mỹ và implant theo chuẩn chất lượng cao nhất, hoàn thành chỉnh sửa miễn phí nếu xảy ra lỗi vật liệu y tế.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 11: TRUYỀN THÔNG VÀ MEDIA / ARTICLE 11: MARKETING & MEDIA</h4>
+            <p>Bên B cam kết hợp tác dành ra 4 giờ mỗi tuần để quay phim quảng cáo và thực hiện phỏng vấn xây dựng lòng tin trực tuyến bằng tiếng Anh.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 12: CHƯƠNG TRÌNH KHUYẾN MÃI / ARTICLE 12: PROMOTIONS</h4>
+            <p>Các chương trình khuyến mãi được thiết kế riêng trên hệ thống phải đạt sự đồng thuận chung trước khi tung ra thị trường.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 13: BẢO MẬT DỮ LIỆU / ARTICLE 13: DATA CONFIDENTIALITY</h4>
+            <p>Cam kết bảo mật tuyệt đối hồ sơ bệnh án và lịch sử điều trị của khách hàng theo quy định bảo vệ dữ liệu cá nhân Nghị định 13/2023/ND-CP.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 14: BIỆN PHÁP CHẾ TÀI / ARTICLE 14: ACCOUNT SUSPENSION</h4>
+            <p>Mọi phát hiện phá vỡ quy định về giá, cố tình trốn tránh hoa hồng hoặc phản hồi chuyên môn kém sẽ bị đóng tài khoản cổng đối tác ngay lập tức.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 15: THỜI HẠN VÀ CHẤM DỨT / ARTICLE 15: TERM & TERMINATION</h4>
+            <p>Hợp đồng có giá trị 01 năm và tự động gia hạn. Một bên có quyền chấm dứt bằng cách gửi thông báo trước 30 ngày.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 16: CHẤP THUẬN ĐIỆN TỬ / ARTICLE 16: E-ACCEPTANCE</h4>
+            <p>Xác nhận bằng cổng thông tin điện tử onboarding thay thế chữ ký tay truyền thống và có giá trị pháp lý tương đương theo Luật Giao dịch điện tử.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 17: PHƯƠNG THỨC THÔNG BÁO / ARTICLE 17: NOTICES</h4>
+            <p>Mọi thông báo gửi đến email của các bên được coi là đã nhận thành công sau 24 giờ kể từ thời điểm gửi đi.</p>
+
+            <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 18: LUẬT ÁP DỤNG / ARTICLE 18: GOVERNING LAW & DISPUTES</h4>
+            <p>Hợp đồng chịu sự điều chỉnh của pháp luật Việt Nam. Mọi tranh chấp được ưu tiên thương lượng, hoặc đưa ra Trung tâm Trọng tài Quốc tế Đà Nẵng (DAC).</p>
+          </div>
+
+          <div class="footer-sig">
+            <div class="sig-box">
+              <strong>BÊN A / PARTY A</strong><br>
+              UCTALENT LABS CO., LTD<br>
+              <div class="signature-cursive">Django Nguyen</div>
+              <p>Nguyễn Ngọc Dương<br>Managing Director</p>
+            </div>
+            <div class="sig-box">
+              <strong>BÊN B / PARTY B</strong><br>
+              ${clinic?.name || "YOUR CLINIC"}<br>
+              <div class="signature-cursive">${repName}</div>
+              <p>${repName}<br>${repPosition}</p>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Partnership_Agreement_${agreementNumber}_EXECUTED.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-8 font-sans">
-      <div>
-        <h2 className="font-serif text-xl font-bold text-gray-900 mb-1">Onboarding Verification Review</h2>
-        <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">
-          {isSubmitted ? 'Onboarding profile submitted for review' : 'Submit your onboarding profile details for UCSmile review'}
-        </p>
-      </div>
+      
+      {/* 1. STATE 1: REVIEWS (UNDER_REVIEW / PENDING_REVIEW) SUCCESS DASHBOARD */}
+      {(clinic?.status === 'UNDER_REVIEW' || clinic?.status === 'PENDING_REVIEW') && (
+        <div className="space-y-8 animate-fade-in" id="panel-under-review">
+          
+          {/* Main Success Banner */}
+          <div className="p-8 bg-emerald-500/5 border border-emerald-150 rounded-3xl flex flex-col md:flex-row items-center gap-6 text-left">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0">
+              <Check className="w-8 h-8 stroke-[3]" />
+            </div>
+            <div className="space-y-1.5">
+              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                Submission Completed
+              </span>
+              <h2 className="font-serif text-xl font-bold text-gray-900">Application Submitted Successfully</h2>
+              <p className="text-xs text-gray-500 leading-relaxed max-w-2xl">
+                “Your Partnership Agreement has been accepted and submitted for Admin Review. Your clinic will become an active UCSmile partner only after approval.”
+              </p>
+            </div>
+          </div>
 
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-          <p className="text-xs text-red-700">{error}</p>
+          {/* Key Application Metadata Bento Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            
+            <div className="p-5 border border-gray-100 rounded-2xl bg-white shadow-sm space-y-2">
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Clinic Identity</p>
+              <p className="font-bold text-sm text-gray-900 truncate">{clinic?.name}</p>
+              <p className="text-[10px] text-gray-400 font-semibold truncate">App ID: <span className="font-mono">{clinicId}</span></p>
+            </div>
+
+            <div className="p-5 border border-gray-100 rounded-2xl bg-white shadow-sm space-y-2">
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Contract Info</p>
+              <p className="font-bold text-sm text-gray-900 truncate">{onboarding?.agreementDetails?.agreementNumber || `AGR-${clinicId.substring(0,8).toUpperCase()}-2026`}</p>
+              <p className="text-[10px] text-gray-400 font-semibold truncate">Version: <span className="font-mono">{onboarding?.agreementDetails?.termsVersion || "v1.5-partner-2026"}</span></p>
+            </div>
+
+            <div className="p-5 border border-gray-100 rounded-2xl bg-white shadow-sm space-y-2 sm:col-span-2 lg:col-span-1">
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Verification Status</p>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></span>
+                <span className="font-black text-xs text-blue-700 uppercase tracking-wide">Under Review</span>
+              </div>
+              <p className="text-[10px] text-gray-400 font-semibold truncate">
+                Submitted: {onboarding?.agreementDetails?.signedAt ? new Date(onboarding.agreementDetails.signedAt).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN')}
+              </p>
+            </div>
+
+          </div>
+
+          {/* Secondary Action Areas Tabs */}
+          <div className="space-y-4">
+            
+            {/* Tab selection bar */}
+            <div className="flex border-b border-gray-100 gap-2 overflow-x-auto pb-px">
+              {[
+                { id: 'agreement', name: 'Agreement Snapshot', desc: 'Immutable snapshot of contract' },
+                { id: 'hash', name: 'SHA-256 Hash Verification', desc: 'Secure blockchain footprint' },
+                { id: 'emails', name: 'Simulated System Notifications', desc: 'Emails & PDF attachments sent' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`py-3 px-4 font-bold text-xs uppercase tracking-wider border-b-2 transition-all whitespace-nowrap cursor-pointer ${
+                    activeTab === tab.id 
+                      ? 'border-amber-500 text-gray-900 font-extrabold' 
+                      : 'border-transparent text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  {tab.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab content panel */}
+            <div className="border border-gray-100 rounded-3xl bg-white shadow-sm overflow-hidden min-h-[340px]">
+              
+              {/* Tab 1: Agreement Snapshot */}
+              {activeTab === 'agreement' && (
+                <div className="p-6 space-y-4 text-left animate-fade-in">
+                  <div className="flex items-center justify-between border-b border-gray-50 pb-3">
+                    <div>
+                      <h4 className="font-serif font-bold text-gray-900 text-sm">Agreement E-Document Snapshot</h4>
+                      <p className="text-[11px] text-gray-400">This snapshot is saved securely as proof of electronic signature and contract execution.</p>
+                    </div>
+                    <button
+                      onClick={downloadAgreementSnapshot}
+                      className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-extrabold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
+                    >
+                      <Download className="w-3.5 h-3.5" /> Download Signed Agreement (HTML)
+                    </button>
+                  </div>
+
+                  <div className="bg-gray-50 border border-gray-150 rounded-2xl p-6 h-72 overflow-y-auto text-[11px] leading-relaxed text-gray-600 custom-scrollbar font-mono relative">
+                    {/* Watermark overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none">
+                      <h2 className="text-4xl font-black text-red-600 rotate-12 text-center border-4 border-red-600 p-4 rounded-xl uppercase">
+                        ACCEPTED BY CLINIC<br />PENDING ADMIN APPROVAL
+                      </h2>
+                    </div>
+                    <pre className="whitespace-pre-wrap text-left text-xs font-mono pr-2">
+                      {onboarding?.agreementDetails?.agreementSnapshot || "Loading snapshot agreement text..."}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 2: SHA-256 Hash Verification */}
+              {activeTab === 'hash' && (
+                <div className="p-8 space-y-6 text-left animate-fade-in max-w-3xl">
+                  <div className="space-y-1.5">
+                    <h4 className="font-serif font-bold text-gray-900 text-sm flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-amber-500" /> Secure SHA-256 Hash Fingerprint
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      An immutable cryptographic SHA-256 signature hash has been compiled from the agreement snapshot during acceptance. This acts as a global seal proving the agreement contents cannot be modified.
+                    </p>
+                  </div>
+
+                  <div className="p-5 bg-gray-50 border border-gray-150 rounded-2xl space-y-3">
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest font-mono">Immutable Cryptographic Fingerprint</p>
+                    <div className="p-3.5 bg-white border border-gray-200 rounded-xl font-mono text-xs font-black text-amber-800 break-all select-all">
+                      {onboarding?.agreementDetails?.agreementHash || "COMPUTING-SHA-256-BLOCKCHAIN-AUTHENTICATION-SEAL"}
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-gray-400 font-semibold">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                      <span>Verified secure with UTC timestamp mapping: {new Date(onboarding?.agreementDetails?.signedAt || Date.now()).toISOString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-gray-500 leading-relaxed border-l-4 border-amber-500/30 pl-4 py-1 italic">
+                    Note: UCSmile Da Nang Trust Shield enforces absolute price integrity and medical credentials checking. The secure hashing architecture prevents any post-signing alterations to pricing sheets and compliance declarations.
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 3: Simulated notifications / emails */}
+              {activeTab === 'emails' && (
+                <div className="p-6 space-y-4 text-left animate-fade-in">
+                  <div>
+                    <h4 className="font-serif font-bold text-gray-900 text-sm">Simulated Notifications & PDF Delivery</h4>
+                    <p className="text-[11px] text-gray-400">The following is a live simulation of the email dispatch log sent to the clinic containing the agreement watermark PDF.</p>
+                  </div>
+
+                  {emails.length === 0 ? (
+                    <div className="p-12 text-center border border-dashed border-gray-200 rounded-2xl bg-gray-50 space-y-2">
+                      <Clock className="w-8 h-8 text-gray-300 mx-auto animate-spin" />
+                      <p className="text-xs text-gray-400 font-bold">Simulating mailroom queue connection...</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {emails.map((em: any) => (
+                        <div key={em.id} className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm font-sans text-xs">
+                          {/* Email Headers */}
+                          <div className="bg-gray-50 border-b border-gray-150 p-4 space-y-1 text-[11px] text-gray-500 font-semibold">
+                            <p><strong className="text-gray-400 uppercase font-bold text-[9px] mr-1 inline-block w-12">From:</strong> compliance@ucsmile.io (UCSmile Platform Compliance)</p>
+                            <p><strong className="text-gray-400 uppercase font-bold text-[9px] mr-1 inline-block w-12">To:</strong> {em.to}</p>
+                            <p><strong className="text-gray-400 uppercase font-bold text-[9px] mr-1 inline-block w-12">Subject:</strong> {em.subject}</p>
+                            <p><strong className="text-gray-400 uppercase font-bold text-[9px] mr-1 inline-block w-12">Sent At:</strong> {new Date(em.sentAt).toLocaleString('vi-VN')}</p>
+                          </div>
+
+                          {/* Email Body */}
+                          <div className="p-5 whitespace-pre-wrap leading-relaxed text-gray-700 bg-[#fffdfa] border-b border-gray-100 min-h-[140px] font-sans text-[11px]">
+                            {em.body}
+                          </div>
+
+                          {/* Attachment Block */}
+                          {em.attachmentName && (
+                            <div className="bg-amber-500/5 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-[11px]">
+                              <div className="flex items-center gap-2 text-amber-900">
+                                <FileText className="w-5 h-5 text-amber-500" />
+                                <div>
+                                  <p className="font-bold">{em.attachmentName}</p>
+                                  <p className="text-[9px] text-gray-400 uppercase font-semibold">Simulated Attached Secure PDF Document ({em.attachmentWatermark})</p>
+                                </div>
+                              </div>
+                              <button
+                                onClick={downloadAgreementSnapshot}
+                                className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold rounded-lg text-[10px] cursor-pointer shadow-sm self-start sm:self-center uppercase tracking-wider"
+                              >
+                                View PDF Layout
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+          </div>
+
+          {/* Verification Warning message footer */}
+          <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl flex items-start gap-2.5 text-left text-xs">
+            <Clock className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-gray-800">Review SLA Status Details</p>
+              <p className="text-[11px] text-gray-500 leading-relaxed mt-0.5">
+                Our vetting coordinators review clinic profiles, medical licenses, and pricing sheets within <strong>24-48 business hours</strong>. You can periodically monitor your status on this portal dashboard. In case of inquiries, please contact our team at <strong className="text-gray-700 font-extrabold">nhung.phan230206@vnuk.edu.vn</strong>.
+              </p>
+            </div>
+          </div>
+
         </div>
       )}
 
-      {/* STATE 1: PENDING REVIEW DISPLAY */}
-      {clinic?.status === 'PENDING_REVIEW' && (
-        <div className="p-8 bg-blue-50/50 border border-blue-100 rounded-3xl text-center space-y-4 animate-fade-in" id="panel-pending-review">
-          <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center mx-auto border border-blue-200 animate-pulse">
-            <Clock className="w-8 h-8" />
-          </div>
-          <div className="max-w-lg mx-auto space-y-2">
-            <h3 className="font-serif text-lg font-bold text-gray-900">Application Pending Review</h3>
-            <p className="text-xs text-gray-500 leading-relaxed">
-              Your clinic profile is fully completed and has been submitted to UCSmile Administration. Our vetting team is verifying clinical licenses, address credentials, and standard prices.
-            </p>
-            <p className="text-xs text-amber-600 font-extrabold bg-amber-50/50 border border-amber-100 rounded-xl p-3 inline-block mt-2">
-              Note: You can verify approval status by reloading this page or checking with administrators at nhung.phan230206@vnuk.edu.vn.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* STATE 2: APPROVED DISPLAY */}
+      {/* 2. STATE 2: APPROVED DISPLAY */}
       {clinic?.status === 'APPROVED' && (
         <div className="p-8 bg-emerald-50/50 border border-emerald-100 rounded-3xl text-center space-y-4 animate-fade-in" id="panel-approved">
           <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center mx-auto border border-emerald-200">
@@ -3696,7 +4630,7 @@ function StepSubmissionReview({ clinicId, onboarding, clinic, admin, onSubmitted
         </div>
       )}
 
-      {/* STATE 3: READY TO SUBMIT */}
+      {/* 3. STATE 3: READY TO SUBMIT (IF SOMEHOW ACCESSING WITHOUT AGREEMENT COMPLETED) */}
       {clinic?.status === 'ONBOARDING_IN_PROGRESS' && (
         <div className="space-y-6" id="panel-ready-submit">
           
@@ -3715,7 +4649,7 @@ function StepSubmissionReview({ clinicId, onboarding, clinic, admin, onSubmitted
             {/* Outline 1 */}
             <div className="p-4 grid grid-cols-3 gap-4">
               <span className="text-gray-400 font-extrabold uppercase text-[10px]">1. Clinic Brand Info</span>
-              <div className="col-span-2 text-gray-800 font-bold space-y-1">
+              <div className="col-span-2 text-gray-800 font-bold space-y-1 text-left">
                 <p>Clinic Name: {clinic.name}</p>
                 <p>Contact Email: {clinic.contactEmail}</p>
                 <p className="text-gray-400 font-medium text-[10px]">Profile Setup: {onboarding.profileSetupCompleted ? '✅ Complete' : '❌ Incomplete'}</p>
@@ -3751,7 +4685,7 @@ function StepSubmissionReview({ clinicId, onboarding, clinic, admin, onSubmitted
             {/* Outline 3 */}
             <div className="p-4 grid grid-cols-3 gap-4">
               <span className="text-gray-400 font-extrabold uppercase text-[10px]">3. Operational Hours</span>
-              <div className="col-span-2 text-gray-800 font-bold space-y-1">
+              <div className="col-span-2 text-gray-800 font-bold space-y-1 text-left">
                 <p>Hours Setup: {onboarding.workingHoursCompleted ? '✅ Complete' : '❌ Incomplete'}</p>
               </div>
             </div>
@@ -3759,7 +4693,7 @@ function StepSubmissionReview({ clinicId, onboarding, clinic, admin, onSubmitted
             {/* Outline 4 */}
             <div className="p-4 grid grid-cols-3 gap-4">
               <span className="text-gray-400 font-extrabold uppercase text-[10px]">4. Additional Clinic Info</span>
-              <div className="col-span-2 text-gray-800 font-bold space-y-1.5">
+              <div className="col-span-2 text-gray-800 font-bold space-y-1.5 text-left">
                 <p>Status: {onboarding.additionalInfoCompleted ? '✅ Complete (Optional)' : 'ℹ️ Skipped / Incomplete'}</p>
                 {(onboarding.additionalInfo?.branches?.length || 0) > 0 && (
                   <p className="text-[10px] text-gray-400">Branches Added: {onboarding.additionalInfo.branches.length}</p>
@@ -3776,7 +4710,7 @@ function StepSubmissionReview({ clinicId, onboarding, clinic, admin, onSubmitted
             {/* Outline 5 */}
             <div className="p-4 grid grid-cols-3 gap-4">
               <span className="text-gray-400 font-extrabold uppercase text-[10px]">5. Partnership Contract</span>
-              <div className="col-span-2 text-gray-800 font-bold space-y-1">
+              <div className="col-span-2 text-gray-800 font-bold space-y-1 text-left">
                 <p>Contract Sign: {onboarding.agreementCompleted ? '✅ Digitally Signed' : '❌ Unsigned'}</p>
                 <p className="text-[10px] text-gray-400 font-medium">Authorized Signer: {onboarding.agreementDetails?.signedName || 'None'}</p>
                 <p className="text-[10px] text-gray-400 font-medium">Version Accepted: {onboarding.agreementDetails?.termsVersion || 'v1.0.0-2026'}</p>
