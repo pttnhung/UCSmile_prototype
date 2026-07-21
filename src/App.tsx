@@ -164,8 +164,11 @@ function Layout() {
 }
 
 export default function App() {
+  const isGitHubPages = typeof window !== 'undefined' && window.location.hostname.includes('github.io');
+  const basename = isGitHubPages ? '/UCSmile_prototype' : '/';
+
   return (
-    <Router>
+    <Router basename={basename}>
       <Layout />
     </Router>
   );
