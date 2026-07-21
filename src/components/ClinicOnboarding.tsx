@@ -26,7 +26,10 @@ import {
   Upload,
   Download,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Loader2,
+  Edit2,
+  FileSpreadsheet
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from './Logo';
@@ -508,7 +511,17 @@ export function ClinicOnboardingPage() {
                           required
                           placeholder="Contact email for correspondence"
                           value={regForm.contactEmail}
-                          onChange={e => setRegForm({...regForm, contactEmail: e.target.value})}
+                          onChange={e => {
+                            const newEmail = e.target.value;
+                            setRegForm(prev => {
+                              const shouldUpdateAdmin = !prev.adminEmail || prev.adminEmail === prev.contactEmail;
+                              return {
+                                ...prev,
+                                contactEmail: newEmail,
+                                adminEmail: shouldUpdateAdmin ? newEmail : prev.adminEmail
+                              };
+                            });
+                          }}
                           className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 pl-11 pr-4 text-xs font-bold text-gray-800 focus:outline-none focus:border-amber-400 focus:bg-white transition-all"
                           id="input-contactEmail"
                         />
@@ -1537,6 +1550,260 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // AI-Assisted Price Import state
+  const [aiImporting, setAiImporting] = useState(false);
+  const [aiImportError, setAiImportError] = useState<string | null>(null);
+  const [aiImportSuccess, setAiImportSuccess] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<{ name: string; size: number; type: string } | null>(null);
+  const [aiDraftResults, setAiDraftResults] = useState<{ matches: any[]; details: any[] } | null>(null);
+
+  const handlePriceListUpload = async (file: File) => {
+    setAiImportError(null);
+    setAiImportSuccess(null);
+    setAiDraftResults(null);
+    setUploadedFile({ name: file.name, size: file.size, type: file.type });
+
+    // AC 2.5: File size validation (limit to 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setAiImportError("The uploaded file is too large (maximum size is 10MB). Please select a smaller file.");
+      return;
+    }
+
+    // AC 2.5: File type validation
+    const supportedTypes = [
+      "application/pdf",
+      "image/png",
+      "image/jpeg",
+      "image/jpg",
+      "text/csv",
+      "text/plain",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    ];
+    const ext = file.name ? file.name.split('.').pop()?.toLowerCase() : "";
+    const supportedExts = ["pdf", "csv", "xlsx", "xls", "png", "jpeg", "jpg", "txt"];
+    const isSupported = supportedTypes.includes(file.type) || (ext && supportedExts.includes(ext));
+    if (!isSupported) {
+      setAiImportError("Unsupported file format. Please upload a PDF, Excel (.xlsx/.xls), CSV, PNG, or JPEG file.");
+      return;
+    }
+
+    setAiImporting(true);
+
+    try {
+      // Read file to Base64
+      const base64Data: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            const pureBase64 = reader.result.split(',')[1];
+            resolve(pureBase64);
+          } else {
+            reject(new Error("Failed to parse file content."));
+          }
+        };
+        reader.onerror = () => reject(new Error("File read failed."));
+        reader.readAsDataURL(file);
+      });
+
+      // Call our API endpoint
+      const response = await fetch("/api/clinic/onboarding/import-prices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          file: {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            base64: base64Data
+          },
+          standardServices: STANDARD_SERVICES
+        })
+      });
+
+      const resJson = await response.json();
+      if (!response.ok) {
+        throw new Error(resJson.error || "Failed to analyze the uploaded file. Please make sure the file is clear and readable.");
+      }
+
+      const extracted = resJson.data;
+      if (!extracted || (!extracted.matches && !extracted.details)) {
+        throw new Error("No dental treatments or pricing information could be identified in the uploaded document. Please check the readability and try again.");
+      }
+
+      const normalizeServiceId = (id: string): string => {
+        if (!id) return "std-others";
+        const clean = id.toLowerCase().trim().replace(/['"_\-]/g, "");
+        
+        // Exact short matches
+        if (["gen1", "cleaning", "clean"].includes(clean)) return "gen-1";
+        if (["gen2", "teethwhitening", "whitening", "bleaching"].includes(clean)) return "gen-2";
+        if (["gen3", "ort1", "braces", "orthodontic", "orthodontics"].includes(clean)) return "ort-1";
+        if (["gen4", "imp1", "implant", "dentalimplant"].includes(clean)) return "imp-1";
+        if (["gen5", "sur2", "wisdomtooth", "wisdom"].includes(clean)) return "sur-2";
+        if (["gen6", "res1", "filling", "composite", "compositefilling"].includes(clean)) return "res-1";
+        if (["gen7", "sur1", "extraction", "toothextraction"].includes(clean)) return "sur-1";
+        
+        if (clean === "res2" || clean.includes("rootcanal")) return "res-2";
+        if (clean === "res3" || clean.includes("pulp")) return "res-3";
+        if (clean === "res4" || clean.includes("inlay") || clean.includes("onlay") || clean.includes("overlay")) return "res-4";
+        
+        if (clean === "pro1" || clean.includes("crown") || clean.includes("maosu") || clean.includes("răngsứ")) return "pro-1";
+        if (clean === "pro2" || clean.includes("veneer") || clean.includes("veneers")) return "pro-2";
+        if (clean === "pro3" || clean.includes("bridge") || clean.includes("cầurăng")) return "pro-3";
+        
+        if (clean === "sur3" || clean.includes("preprosthetic") || clean.includes("xươngổ")) return "sur-3";
+        if (clean === "sur4" || clean.includes("apicoectomy") || clean.includes("cắtchóp")) return "sur-4";
+        if (clean === "sur5" || clean.includes("gum") || clean.includes("nướu") || clean.includes("gingivo")) return "sur-5";
+        
+        if (clean === "imp2" || clean.includes("bonegraft") || clean.includes("ghépxương")) return "imp-2";
+        if (clean === "imp3" || clean.includes("fullarch") || clean.includes("allon")) return "imp-3";
+        
+        if (clean === "ort2" || clean.includes("invisalign")) return "ort-2";
+        if (clean === "ort3" || clean.includes("growth") || clean.includes("children")) return "ort-3";
+        
+        if (clean === "ped1" || clean.includes("pediatricextraction") || clean.includes("răngsữanhổ")) return "ped-1";
+        if (clean === "ped2" || clean.includes("pediatricroot") || clean.includes("răngsữatủy")) return "ped-2";
+        if (clean === "ped3" || clean.includes("pediatriccrown") || clean.includes("răngsữamão")) return "ped-3";
+        if (clean === "ped4" || clean.includes("pediatricfilling") || clean.includes("răngsữatrám")) return "ped-4";
+        
+        if (clean.includes("other") || clean.includes("others") || clean === "stdothers") return "std-others";
+        
+        const stdIds = ["gen-1", "gen-2", "gen-3", "gen-4", "gen-5", "gen-6", "gen-7", "res-1", "res-2", "res-3", "res-4", "pro-1", "pro-2", "pro-3", "sur-1", "sur-2", "sur-3", "sur-4", "sur-5", "imp-1", "imp-2", "imp-3", "ort-1", "ort-2", "ort-3", "ped-1", "ped-2", "ped-3", "ped-4", "std-others"];
+        const found = stdIds.find(stdId => stdId.replace("-", "") === clean || stdId === id);
+        if (found) return found;
+        
+        return "std-others";
+      };
+
+      // Convert matches and details to active draft states
+      const processedMatches = (extracted.matches || []).map((m: any) => {
+        const serviceId = normalizeServiceId(m.serviceId);
+        return {
+          ...m,
+          serviceId,
+          enabled: m.enabled !== undefined ? m.enabled : true,
+          // Match with full service name from standard services for UI display
+          serviceName: STANDARD_SERVICES.find(s => s.id === serviceId)?.name || m.serviceId
+        };
+      });
+
+      const processedDetails = (extracted.details || []).map((d: any) => {
+        const parentServiceId = normalizeServiceId(d.parentServiceId);
+        return {
+          ...d,
+          parentServiceId,
+          enabled: d.enabled !== undefined ? d.enabled : true,
+          parentServiceName: STANDARD_SERVICES.find(s => s.id === parentServiceId)?.name || parentServiceId
+        };
+      });
+
+      setAiDraftResults({
+        matches: processedMatches,
+        details: processedDetails
+      });
+      if (resJson.isFallback) {
+        setAiImportSuccess("Hệ thống tự động chuyển sang chế độ Trích Xuất Dự Phòng Cục Bộ (Local Extraction Engine) để đảm bảo trải nghiệm thông suốt. Vui lòng kiểm tra, điều chỉnh giá và đơn vị bên dưới!");
+      } else {
+        setAiImportSuccess("Gemini AI đã trích xuất bảng giá điều trị thành công! Vui lòng kiểm tra, sửa đổi và xác nhận bên dưới.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setAiImportError(err.message || "Failed to process the uploaded price list. Please make sure the file is clear and readable.");
+    } finally {
+      setAiImporting(false);
+    }
+  };
+
+  const confirmAiDraft = () => {
+    if (!aiDraftResults) return;
+
+    setServices(prev => {
+      let updatedServices = [...prev];
+
+      // Update matched standard services
+      aiDraftResults.matches.forEach(match => {
+        const idx = updatedServices.findIndex(s => s.serviceId === match.serviceId && !s.isDetail);
+        if (idx !== -1) {
+          updatedServices[idx] = {
+            ...updatedServices[idx],
+            enabled: match.enabled,
+            customPrice: match.customPrice !== undefined && match.customPrice !== '' ? Number(match.customPrice) : updatedServices[idx].customPrice,
+            treatmentUnit: match.treatmentUnit || updatedServices[idx].treatmentUnit,
+            priceUnit: match.priceUnit || updatedServices[idx].priceUnit,
+            currency: match.currency || updatedServices[idx].currency,
+          };
+        }
+      });
+
+      // Prepare details list to process
+      const detailsToImport = [...aiDraftResults.details];
+
+      // Enforce the Vietnamese requirement: "đã được đánh dấu THÌ PHẢI CÓ SPECIFIC TREATMENT đuọc trích từ BẢNG GIÁ, DÙ CHỈ CÓ 1 CÁI"
+      // Check every enabled/marked standard service and guarantee it has at least one child detail
+      aiDraftResults.matches.forEach(match => {
+        if (match.enabled) {
+          const matchDetails = detailsToImport.filter(d => d.parentServiceId === match.serviceId);
+          if (matchDetails.length > 0) {
+            const hasAnyEnabledDetail = matchDetails.some(d => d.enabled);
+            if (!hasAnyEnabledDetail) {
+              // Automatically enable the first detail under this parent so there is at least one active specific treatment
+              const firstDetailIdx = detailsToImport.findIndex(d => d.parentServiceId === match.serviceId);
+              if (firstDetailIdx !== -1) {
+                detailsToImport[firstDetailIdx].enabled = true;
+              }
+            }
+          } else {
+            // Synthesize a specific treatment using the parent standard service name so it is not empty
+            const stdService = STANDARD_SERVICES.find(s => s.id === match.serviceId);
+            detailsToImport.push({
+              parentServiceId: match.serviceId,
+              serviceName: match.serviceName || stdService?.name || "Standard Treatment",
+              customPrice: match.customPrice !== undefined && match.customPrice !== '' ? Number(match.customPrice) : (stdService?.defaultPrice || 50),
+              treatmentUnit: match.treatmentUnit || stdService?.treatmentUnit || 'Tooth',
+              priceUnit: match.priceUnit || `per ${match.treatmentUnit || stdService?.treatmentUnit || 'Tooth'}`,
+              currency: match.currency || stdService?.currency || 'USD',
+              enabled: true,
+              isDetail: true
+            });
+          }
+        }
+      });
+
+      // Add checked custom sub-services/detailed treatments
+      const checkedDetails = detailsToImport
+        .filter(d => d.enabled && d.serviceName?.trim())
+        .map(d => ({
+          serviceId: `S-DETAIL-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          parentServiceId: d.parentServiceId,
+          category: d.category || STANDARD_SERVICES.find(s => s.id === d.parentServiceId)?.category || 'Other Specialty',
+          serviceName: d.serviceName.trim(),
+          customPrice: d.customPrice !== '' && d.customPrice !== undefined ? Number(d.customPrice) : 0,
+          treatmentUnit: d.treatmentUnit || 'Tooth',
+          customUnitName: '',
+          priceUnit: d.priceUnit || `per ${d.treatmentUnit || 'Tooth'}`,
+          currency: d.currency || 'USD',
+          enabled: true,
+          isDetail: true
+        }));
+
+      // Filter out any older duplicate details to prevent visual clutter
+      const updatedWithoutDupes = updatedServices.filter(s => {
+        if (!s.isDetail) return true;
+        // If it's a detail, check if we are importing a new checked detail with the exact same name
+        const hasIncomingNew = checkedDetails.some(cd => cd.parentServiceId === s.parentServiceId && cd.serviceName.toLowerCase() === s.serviceName.toLowerCase());
+        return !hasIncomingNew;
+      });
+
+      return [...updatedWithoutDupes, ...checkedDetails];
+    });
+
+    setAiDraftResults(null);
+    setUploadedFile(null);
+    setAiImportSuccess("Successfully matched, reviewed, and imported prices! Please review the updated treatments in the list below.");
+  };
+
   // Expanded row tracking for editing inline (kept for custom services or editing)
   const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null);
 
@@ -1830,9 +2097,15 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
     const willBeEnabled = !service.enabled;
 
     setServices(prev => {
-      const copy = [...prev];
-      copy[idx] = { ...copy[idx], enabled: willBeEnabled };
-      return copy;
+      return prev.map((s, i) => {
+        if (i === idx) {
+          return { ...s, enabled: willBeEnabled };
+        }
+        if (s.isDetail && s.parentServiceId === service.serviceId && !willBeEnabled) {
+          return { ...s, enabled: false };
+        }
+        return s;
+      });
     });
 
     if (willBeEnabled) {
@@ -1912,7 +2185,14 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
     setSuccess(null);
     setLoading(true);
 
-    const activeServices = services.filter(s => s.enabled);
+    const activeServices = services.filter(s => {
+      if (!s.enabled) return false;
+      if (s.isDetail) {
+        const parent = services.find(p => p.serviceId === s.parentServiceId && !p.isDetail);
+        return parent ? parent.enabled : false;
+      }
+      return true;
+    });
 
     // If saving and continuing (not draft), perform validations
     if (!isDraft) {
@@ -1938,9 +2218,9 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
           }
 
           // Mandatory specific treatment check (khi đã tích vào các ô tích của các service, bắt buộc nhập specific treatment)
-          const nestedDetailsForParent = services.filter(d => d.isDetail && d.parentServiceId === s.serviceId);
+          const nestedDetailsForParent = services.filter(d => d.isDetail && d.parentServiceId === s.serviceId && d.enabled);
           if (nestedDetailsForParent.length === 0) {
-            setError(`Please add at least 1 specific treatment for "${s.serviceName}".`);
+            setError(`Please add or enable at least 1 specific treatment for "${s.serviceName}".`);
             setLoading(false);
             return;
           }
@@ -2058,6 +2338,383 @@ function StepServicesSetup({ clinicId, onboarding, onSave, onPrev }: { clinicId:
           <p className="text-xs text-emerald-700">{success}</p>
         </div>
       )}
+
+      {/* AI-Assisted Price List Import Panel (AC 2.1 - AC 2.5) */}
+      <div className="bg-gradient-to-br from-amber-50/50 to-orange-50/20 border border-amber-100 rounded-3xl p-6 shadow-sm space-y-4 text-left" id="ai-price-import-section">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="space-y-1">
+            <h3 className="font-serif text-base font-bold text-gray-900 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />
+              AI-Assisted Price List Import (Nhập Bảng Giá Tự Động)
+            </h3>
+            <p className="text-xs text-gray-500 leading-relaxed max-w-2xl">
+              Tải lên bảng giá hiện tại của phòng khám của bạn dưới định dạng PDF, Excel (.xlsx/.xls), CSV, PNG, hoặc JPEG (tối đa 10MB). Trí tuệ nhân tạo Gemini sẽ phân tích file của bạn, khớp các dịch vụ chuẩn của UCSmile và trích xuất các dịch vụ chuyên sâu cho bạn xem xét.
+            </p>
+          </div>
+        </div>
+
+        {/* Upload Zone */}
+        {!aiDraftResults && (
+          <div
+            onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}
+            onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+            onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
+            onDrop={(e) => { e.preventDefault(); setDragActive(false); if (e.dataTransfer.files?.[0]) handlePriceListUpload(e.dataTransfer.files[0]); }}
+            className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
+              dragActive 
+                ? "border-amber-400 bg-amber-50/50" 
+                : "border-gray-200 hover:border-amber-300 hover:bg-amber-50/10"
+            }`}
+          >
+            <input
+              type="file"
+              id="ai-price-file-input"
+              className="hidden"
+              accept=".pdf,.csv,.xlsx,.xls,.png,.jpeg,.jpg,.txt"
+              onChange={(e) => { if (e.target.files?.[0]) handlePriceListUpload(e.target.files[0]); }}
+              disabled={aiImporting}
+            />
+            <label htmlFor="ai-price-file-input" className="cursor-pointer space-y-2 block">
+              {aiImporting ? (
+                <div className="space-y-3 py-2">
+                  <Loader2 className="w-8 h-8 text-amber-500 mx-auto animate-spin" />
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-amber-800 animate-pulse">Đang phân tích bảng giá bằng Gemini AI...</p>
+                    <p className="text-[10px] text-gray-400">Quá trình này có thể mất 10-15 giây để đọc dữ liệu cột, nhận diện dịch vụ và trích xuất giá.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Upload className="w-8 h-8 text-amber-500 mx-auto" />
+                  <p className="text-xs font-bold text-gray-700">
+                    Kéo thả file bảng giá của bạn vào đây, hoặc <span className="text-amber-600 underline">chọn file</span>
+                  </p>
+                  <p className="text-[10px] text-gray-400">
+                    Hỗ trợ định dạng PDF, Excel (.xlsx/.xls), CSV, JPEG, PNG (Tối đa 10MB)
+                  </p>
+                </div>
+              )}
+            </label>
+          </div>
+        )}
+
+        {/* AI Processing Errors or Success Messages */}
+        {aiImportError && (
+          <div className="p-3.5 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-2 animate-fade-in text-xs text-red-800" id="ai-import-error-box">
+            <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">Lỗi xử lý file (File Processing Error)</p>
+              <p className="text-[11px] text-red-700 mt-0.5">{aiImportError}</p>
+            </div>
+          </div>
+        )}
+
+        {aiImportSuccess && !aiDraftResults && (
+          <div className="p-3.5 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-start gap-2 animate-fade-in text-xs text-emerald-800" id="ai-import-success-box">
+            <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+            <p className="text-[11px] text-emerald-700">{aiImportSuccess}</p>
+          </div>
+        )}
+
+        {/* Draft Review Panel (AC 2.3 & AC 2.4) */}
+        {aiDraftResults && (
+          <div className="bg-white border border-gray-150 rounded-2xl p-5 space-y-4 animate-fade-in" id="ai-draft-review-panel">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-3 gap-3">
+              <div>
+                <h4 className="font-bold text-sm text-gray-800 flex items-center gap-1.5">
+                  <FileSpreadsheet className="w-4 h-4 text-amber-500" />
+                  Kiểm Tra & Xác Nhận Bảng Giá Đã Trích Xuất (Draft Extracted)
+                </h4>
+                <p className="text-[10px] text-gray-400">Xem lại, điều chỉnh giá, chọn đơn vị điều trị hoặc tích chọn dịch vụ trước khi áp dụng vào hệ thống.</p>
+              </div>
+              
+              <div className="flex items-center gap-2 self-end sm:self-center">
+                <button
+                  type="button"
+                  onClick={() => { setAiDraftResults(null); setUploadedFile(null); setAiImportSuccess(null); }}
+                  className="px-3 py-1.5 border border-gray-200 text-gray-500 hover:bg-gray-50 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Hủy (Cancel)
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmAiDraft}
+                  className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-sm font-extrabold"
+                  id="btn-confirm-ai-draft"
+                >
+                  <Check className="w-3.5 h-3.5" /> Xác Nhận & Áp Dụng (Apply)
+                </button>
+              </div>
+            </div>
+
+            {/* Uploaded File Details Header */}
+            {uploadedFile && (
+              <div className="bg-gray-50 rounded-xl p-2.5 px-4 flex items-center justify-between text-[11px] text-gray-500 font-medium">
+                <span className="truncate font-mono">Tên file: {uploadedFile.name}</span>
+                <span className="shrink-0 font-mono">({(uploadedFile.size / 1024).toFixed(1)} KB)</span>
+              </div>
+            )}
+
+            <div className="max-h-96 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
+              {(() => {
+                // Pre-calculate grouped services
+                const groupedDrafts = STANDARD_SERVICES.map(std => {
+                  const mIdx = aiDraftResults.matches.findIndex(m => m.serviceId === std.id);
+                  const match = mIdx !== -1 ? aiDraftResults.matches[mIdx] : null;
+
+                  const sDetails = aiDraftResults.details
+                    .map((d, dOriginalIdx) => ({ ...d, dOriginalIdx }))
+                    .filter(d => d.parentServiceId === std.id);
+
+                  if (!match && sDetails.length === 0) return null;
+
+                  return {
+                    std,
+                    match,
+                    mIdx,
+                    details: sDetails
+                  };
+                }).filter(Boolean);
+
+                if (groupedDrafts.length === 0) {
+                  return (
+                    <p className="text-xs text-gray-400 text-center py-4">Không tìm thấy kết quả trích xuất phù hợp.</p>
+                  );
+                }
+
+                return groupedDrafts.map((group: any) => {
+                  const std = group.std;
+                  const match = group.match;
+                  const mIdx = group.mIdx;
+                  const groupDetails = group.details;
+
+                  return (
+                    <div key={`draft-group-${std.id}`} className="border border-gray-150 rounded-2xl overflow-hidden bg-gray-50/25 p-3.5 space-y-3">
+                      {/* Group Header / Category Tag & Standard Service Header */}
+                      <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                        <span className="text-[9px] font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                          {std.category}
+                        </span>
+                        <span className="text-[10px] font-mono text-gray-400 font-bold">
+                          ID: {std.id}
+                        </span>
+                      </div>
+
+                      {/* Main Service Row (Standard Match) */}
+                      {match ? (
+                        <div className={`p-2.5 rounded-xl flex items-center justify-between gap-4 transition-colors ${match.enabled ? 'bg-white border border-gray-100' : 'bg-gray-150/50 opacity-60'}`}>
+                          <div className="flex items-center gap-2.5">
+                            <input
+                              type="checkbox"
+                              checked={match.enabled}
+                              onChange={(e) => {
+                                const isChecked = e.target.checked;
+                                const updatedMatches = [...aiDraftResults.matches];
+                                updatedMatches[mIdx].enabled = isChecked;
+
+                                let updatedDetails = [...aiDraftResults.details];
+                                if (isChecked) {
+                                  // Enable the first detail under this standard service if none are enabled
+                                  const detailsForParent = updatedDetails.filter(d => d.parentServiceId === std.id);
+                                  if (detailsForParent.length > 0) {
+                                    const hasEnabled = detailsForParent.some(d => d.enabled);
+                                    if (!hasEnabled) {
+                                      const firstDetail = updatedDetails.find(d => d.parentServiceId === std.id);
+                                      if (firstDetail) {
+                                        firstDetail.enabled = true;
+                                      }
+                                    }
+                                  } else {
+                                    // Synthesize a detail if none exist
+                                    updatedDetails.push({
+                                      parentServiceId: std.id,
+                                      serviceName: match.serviceName || std.name,
+                                      customPrice: match.customPrice !== undefined && match.customPrice !== '' ? Number(match.customPrice) : (std.defaultPrice || 50),
+                                      treatmentUnit: match.treatmentUnit || std.treatmentUnit || 'Tooth',
+                                      priceUnit: match.priceUnit || `per ${match.treatmentUnit || std.treatmentUnit || 'Tooth'}`,
+                                      currency: match.currency || 'USD',
+                                      isDetail: true,
+                                      enabled: true,
+                                      parentServiceName: std.name
+                                    });
+                                  }
+                                } else {
+                                  // Disable all details under this standard service if it is disabled
+                                  updatedDetails = updatedDetails.map(d => {
+                                    if (d.parentServiceId === std.id) {
+                                      return { ...d, enabled: false };
+                                    }
+                                    return d;
+                                  });
+                                }
+
+                                setAiDraftResults({
+                                  matches: updatedMatches,
+                                  details: updatedDetails
+                                });
+                              }}
+                              className="w-4 h-4 text-amber-500 border-gray-200 rounded cursor-pointer"
+                            />
+                            <div>
+                              <p className="text-xs font-black text-gray-800">{match.serviceName}</p>
+                              <p className="text-[9px] text-gray-400 font-medium">Dịch vụ chuẩn (Base Service)</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center border border-gray-100 rounded-lg bg-gray-50 px-2 py-1">
+                              <span className="text-[10px] font-bold text-gray-400 mr-1">{match.currency || 'USD'}</span>
+                              <input
+                                type="number"
+                                value={match.customPrice === undefined ? '' : match.customPrice}
+                                onChange={(e) => {
+                                  const updated = [...aiDraftResults.matches];
+                                  updated[mIdx].customPrice = e.target.value === '' ? '' : Number(e.target.value);
+                                  setAiDraftResults({ ...aiDraftResults, matches: updated });
+                                }}
+                                className="w-20 bg-transparent border-none p-0 text-xs font-black text-gray-800 text-right focus:outline-none"
+                                placeholder="Review"
+                              />
+                            </div>
+                            
+                            <select
+                              value={match.treatmentUnit || 'Tooth'}
+                              onChange={(e) => {
+                                const updated = [...aiDraftResults.matches];
+                                updated[mIdx].treatmentUnit = e.target.value;
+                                updated[mIdx].priceUnit = `per ${e.target.value}`;
+                                setAiDraftResults({ ...aiDraftResults, matches: updated });
+                              }}
+                              className="text-[10px] border border-gray-100 rounded-lg p-1 px-1.5 font-bold text-gray-600 bg-white focus:outline-none"
+                            >
+                              <option value="Tooth">Tooth (Răng)</option>
+                              <option value="Visit">Visit (Lần khám)</option>
+                              <option value="Case">Case (Ca)</option>
+                              <option value="Session">Session (Liệu trình)</option>
+                              <option value="Arch">Arch (Hàm)</option>
+                            </select>
+
+                            {match.customPrice === undefined && (
+                              <span className="bg-red-50 text-red-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-red-100">
+                                Cần xem lại
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-left px-2 py-1">
+                          <p className="text-xs font-black text-gray-700">{std.name}</p>
+                          <p className="text-[9px] text-gray-400">Không có giá dịch vụ chuẩn, trích xuất được dịch vụ chi tiết dưới đây:</p>
+                        </div>
+                      )}
+
+                      {/* Grouped Nested Sub-treatments / Specific details */}
+                      {groupDetails.length > 0 && (
+                        <div className="ml-4 pl-3 border-l-2 border-dashed border-amber-200/60 space-y-2 text-left">
+                          {groupDetails.map((detail: any) => {
+                            const dIdx = detail.dOriginalIdx;
+                            return (
+                              <div key={`detail-${dIdx}`} className={`p-2.5 rounded-xl border border-gray-100/60 flex items-center justify-between gap-4 transition-colors ${detail.enabled ? 'bg-white' : 'bg-gray-150/30 opacity-60'}`}>
+                                <div className="flex items-center gap-2 max-w-[50%] min-w-0">
+                                  <input
+                                    type="checkbox"
+                                    checked={detail.enabled}
+                                    onChange={(e) => {
+                                      const isChecked = e.target.checked;
+                                      const updatedDetails = [...aiDraftResults.details];
+                                      updatedDetails[dIdx].enabled = isChecked;
+
+                                      const updatedMatches = [...aiDraftResults.matches];
+                                      const parentId = detail.parentServiceId;
+                                      const matchIdx = updatedMatches.findIndex(m => m.serviceId === parentId);
+
+                                      if (isChecked && matchIdx !== -1) {
+                                        // Auto-enable parent standard service if a child detail is checked
+                                        updatedMatches[matchIdx].enabled = true;
+                                      } else if (!isChecked && matchIdx !== -1) {
+                                        // If this was the last enabled detail, disable the parent service
+                                        const otherEnabledDetails = updatedDetails.filter((d, idx) => d.parentServiceId === parentId && d.enabled && idx !== dIdx);
+                                        if (otherEnabledDetails.length === 0 && updatedMatches[matchIdx].enabled) {
+                                          updatedMatches[matchIdx].enabled = false;
+                                        }
+                                      }
+
+                                      setAiDraftResults({
+                                        matches: updatedMatches,
+                                        details: updatedDetails
+                                      });
+                                    }}
+                                    className="w-3.5 h-3.5 text-amber-500 border-gray-200 rounded cursor-pointer"
+                                  />
+                                  <div className="min-w-0 w-full">
+                                    <input
+                                      type="text"
+                                      value={detail.serviceName}
+                                      onChange={(e) => {
+                                        const updated = [...aiDraftResults.details];
+                                        updated[dIdx].serviceName = e.target.value;
+                                        setAiDraftResults({ ...aiDraftResults, details: updated });
+                                      }}
+                                      className="text-xs font-bold text-gray-800 border-b border-dashed border-gray-200 focus:border-amber-400 focus:outline-none bg-transparent w-full truncate"
+                                    />
+                                    <p className="text-[9px] text-gray-400 font-medium">Chi tiết chuyên sâu (Sub-treatment)</p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <div className="flex items-center border border-gray-100 rounded-lg bg-gray-50 px-2 py-1">
+                                    <span className="text-[10px] font-bold text-gray-400 mr-1">{detail.currency || 'USD'}</span>
+                                    <input
+                                      type="number"
+                                      value={detail.customPrice === undefined ? '' : detail.customPrice}
+                                      onChange={(e) => {
+                                        const updated = [...aiDraftResults.details];
+                                        updated[dIdx].customPrice = e.target.value === '' ? '' : Number(e.target.value);
+                                        setAiDraftResults({ ...aiDraftResults, details: updated });
+                                      }}
+                                      className="w-16 bg-transparent border-none p-0 text-xs font-black text-gray-800 text-right focus:outline-none"
+                                      placeholder="Review"
+                                    />
+                                  </div>
+
+                                  <select
+                                    value={detail.treatmentUnit || 'Tooth'}
+                                    onChange={(e) => {
+                                      const updated = [...aiDraftResults.details];
+                                      updated[dIdx].treatmentUnit = e.target.value;
+                                      updated[dIdx].priceUnit = `per ${e.target.value}`;
+                                      setAiDraftResults({ ...aiDraftResults, details: updated });
+                                    }}
+                                    className="text-[10px] border border-gray-100 rounded-lg p-1 px-1.5 font-bold text-gray-600 bg-white focus:outline-none"
+                                  >
+                                    <option value="Tooth">Tooth (Răng)</option>
+                                    <option value="Visit">Visit (Lần khám)</option>
+                                    <option value="Case">Case (Ca)</option>
+                                    <option value="Session">Session (Liệu trình)</option>
+                                    <option value="Arch">Arch (Hàm)</option>
+                                    <option value="Site">Site (Vùng)</option>
+                                    <option value="Segment">Segment (Phân vùng)</option>
+                                  </select>
+
+                                  {detail.customPrice === undefined && (
+                                    <span className="bg-red-50 text-red-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-red-100">
+                                      Cần xem lại
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* SERVICE LIST GROUPED BY CATEGORY */}
       <div className="space-y-8">
@@ -3452,12 +4109,6 @@ All official communications and notices shall be sent to the registered clinic e
 18. ARTICLE 18: GOVERNING LAW AND DISPUTES (Luật áp dụng và Giải quyết tranh chấp)
 This Agreement is governed by the laws of Vietnam. Any unresolved dispute arising from or related to this partnership shall be submitted to the Da Nang International Arbitration Center (DAC) or competent courts in Da Nang.
 
-ANNEX A: REGISTERED SERVICES AND STANDARD PRICING
-${enabledServices.length > 0 
-  ? enabledServices.map((s: any) => `- ${s.serviceName} (${s.category}): ${s.currency === 'VND' ? '₫' : '$'}${s.customPrice?.toLocaleString()} per ${s.treatmentUnit === 'Custom Unit' ? s.customUnitName : s.treatmentUnit}`).join('\n')
-  : "No specific services custom registered. Using standard platform default pricing sheets."
-}
-
 ELECTRONIC ACCEPTANCE EVIDENCE RECORD:
 - Signatory: ${repName}
 - Position: ${repPosition}
@@ -3485,8 +4136,9 @@ ELECTRONIC ACCEPTANCE EVIDENCE RECORD:
           .party-box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; }
           .meta-info { font-family: monospace; font-size: 11px; color: #4b5563; margin-bottom: 20px; background: #fffbeb; border: 1px solid #fef3c7; padding: 12px; border-radius: 6px; }
           .footer-sig { display: flex; justify-content: space-between; margin-top: 50px; }
-          .sig-box { width: 45%; border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; text-align: center; background: #f9fafb; font-size: 13px; }
+          .sig-box { width: 48%; border: 1px solid #e5e7eb; padding: 25px 20px; border-radius: 12px; text-align: center; background: #f9fafb; font-size: 13px; box-sizing: border-box; }
           .signature-cursive { font-family: 'Georgia', serif; font-style: italic; font-weight: bold; font-size: 22px; color: #0284c7; margin: 15px 0; border-bottom: 1px dashed #cbd5e1; display: inline-block; padding-bottom: 5px; }
+          .stamp-seal { width: 90px; height: 90px; border: 2px dashed #f87171; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; color: #ef4444; font-weight: bold; transform: rotate(12deg); margin: 10px auto; line-height: 1.2; text-transform: uppercase; background: rgba(254, 242, 242, 0.45); box-sizing: border-box; }
           .content-block { font-size: 13px; text-align: justify; }
           .annex-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
           .annex-table th, .annex-table td { border: 1px solid #e5e7eb; padding: 8px 12px; text-align: left; }
@@ -3583,47 +4235,22 @@ ELECTRONIC ACCEPTANCE EVIDENCE RECORD:
 
             <h4 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-top: 25px;">ĐIỀU 18: LUẬT ÁP DỤNG / ARTICLE 18: GOVERNING LAW & DISPUTES</h4>
             <p>Hợp đồng chịu sự điều chỉnh của pháp luật Việt Nam. Mọi tranh chấp được ưu tiên thương lượng, hoặc đưa ra Trung tâm Trọng tài Quốc tế Đà Nẵng (DAC).</p>
-
-            <h4 style="margin-top: 30px; color: #0284c7;">ANNEX A: SERVICES AND STANDARDS PRICING</h4>
-            ${enabledServices.length > 0 
-              ? `
-              <table class="annex-table">
-                <thead>
-                  <tr>
-                    <th>Dịch vụ / Service</th>
-                    <th>Chuyên khoa / Category</th>
-                    <th>Đơn vị tính / Unit</th>
-                    <th>Đơn giá cam kết / Standard Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${enabledServices.map((s: any) => `
-                    <tr>
-                      <td><strong>${s.serviceName}</strong></td>
-                      <td>${s.category}</td>
-                      <td>${s.treatmentUnit === 'Custom Unit' ? s.customUnitName : s.treatmentUnit}</td>
-                      <td><span style="font-family: monospace; font-weight: bold; color: #b45309;">${s.currency === 'VND' ? '₫' : '$'}${s.customPrice?.toLocaleString()}</span></td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-              `
-              : `<p style="font-style: italic; color: #6b7280;">Sử dụng bảng giá chuẩn mặc định của nền tảng đối tác.</p>`
-            }
           </div>
 
           <div class="footer-sig">
             <div class="sig-box">
-              <strong>BÊN A / PARTY A</strong><br>
+              <strong>BÊN A / PARTY A (UCSmile)</strong><br>
               UCTALENT LABS CO., LTD<br>
-              <div class="signature-cursive">Django Nguyen</div>
-              <p>Nguyễn Ngọc Dương<br>Managing Director</p>
+              <div style="height: 120px;"></div>
+              <p style="margin: 10px 0 0 0; border-top: 1px solid #f3f4f6; padding-top: 10px;"><strong>Nguyễn Ngọc Dương</strong><br>Managing Director</p>
+              <p style="margin: 3px 0 0 0; font-size: 10px; color: #6b7280;">Ngày ký / Date: ........................</p>
             </div>
             <div class="sig-box">
-              <strong>BÊN B / PARTY B</strong><br>
+              <strong>BÊN B / PARTY B (NHA KHOA)</strong><br>
               ${legalClinicName}<br>
-              <div class="signature-cursive">${repName || "Chờ ký điện tử"}</div>
-              <p>${repName}<br>${repPosition}</p>
+              <div style="height: 120px;"></div>
+              <p style="margin: 10px 0 0 0; border-top: 1px solid #f3f4f6; padding-top: 10px;"><strong>${repName || "................................................"}</strong><br>${repPosition || "Representative / Người đại diện"}</p>
+              <p style="margin: 3px 0 0 0; font-size: 10px; color: #6b7280;">Ngày ký / Date: ........................</p>
             </div>
           </div>
         </div>
@@ -3923,40 +4550,37 @@ ELECTRONIC ACCEPTANCE EVIDENCE RECORD:
                 <p><strong>English:</strong> This partnership is governed by the laws of the Socialist Republic of Vietnam. Any unresolved dispute or claim shall be submitted to the Da Nang International Arbitration Center (DAC) or competent local courts.</p>
               </div>
 
-              {/* Annex Services inside the agreement container */}
-              <div id="annex-a" className="mt-8 pt-4 border-t border-dashed border-gray-200">
-                <h5 className="font-black text-amber-700 text-xs uppercase mb-2">ANNEX A: SERVICE SPECIFICATIONS AND CAMPAIGN PRICING</h5>
-                <p className="text-[10px] text-gray-400 mb-3">The following services and custom pricing sheets are locked into this agreement snapshot upon digital submission:</p>
-                {enabledServices.length > 0 ? (
-                  <div className="border border-gray-150 rounded-2xl overflow-hidden bg-white">
-                    <table className="w-full text-left text-[10px] border-collapse">
-                      <thead>
-                        <tr className="bg-gray-50 text-gray-500 font-extrabold border-b border-gray-150">
-                          <th className="p-2.5">Service Name</th>
-                          <th className="p-2.5">Category</th>
-                          <th className="p-2.5">Treatment Unit</th>
-                          <th className="p-2.5 text-right">Cam Price</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {enabledServices.map((s: any) => (
-                          <tr key={s.serviceId} className="hover:bg-gray-55/30">
-                            <td className="p-2.5 font-bold text-gray-950">{s.serviceName}</td>
-                            <td className="p-2.5 text-gray-500">{s.category}</td>
-                            <td className="p-2.5 text-gray-400 font-medium">{s.treatmentUnit === 'Custom Unit' ? s.customUnitName : s.treatmentUnit}</td>
-                            <td className="p-2.5 text-right font-mono font-black text-amber-800">{s.currency === 'VND' ? '₫' : '$'}{s.customPrice?.toLocaleString()}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="p-4 border border-dashed border-gray-200 rounded-2xl bg-gray-50 text-center text-gray-400 italic font-medium">
-                    No custom services listed in Step 2. Using standard global system default service pricing.
-                  </div>
-                )}
+            </div>
+
+            {/* Visual Physical Signature and Seal Blocks (để trống) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-gray-200 pt-6 pb-2 text-[10px] text-gray-600">
+              {/* Party A Signature Box */}
+              <div className="space-y-4 text-center border border-gray-200 rounded-2xl p-6 bg-white shadow-sm">
+                <p className="font-extrabold uppercase text-gray-800 tracking-wider">ĐẠI DIỆN BÊN A / PARTY A (UCSmile)</p>
+                
+                {/* Completely blank middle area of exactly 128px height (h-32) */}
+                <div className="h-32"></div>
+
+                <div className="text-[10px] text-gray-500 font-semibold space-y-0.5 border-t border-gray-50 pt-3">
+                  <p className="font-bold text-gray-800 text-[11px]">Nguyễn Ngọc Dương</p>
+                  <p>Chức vụ: Giám đốc (Director)</p>
+                  <p className="text-[9px] text-gray-400 font-mono">Ngày ký / Date: ........................</p>
+                </div>
               </div>
 
+              {/* Party B Signature Box (Left completely blank / Để trống hoàn toàn cho ký và đóng dấu) */}
+              <div className="space-y-4 text-center border border-gray-200 rounded-2xl p-6 bg-white shadow-sm">
+                <p className="font-extrabold uppercase text-gray-800 tracking-wider">ĐẠI DIỆN BÊN B / PARTY B</p>
+                
+                {/* Completely blank middle area of exactly 128px height (h-32) */}
+                <div className="h-32"></div>
+
+                <div className="text-[10px] text-gray-500 font-semibold space-y-0.5 border-t border-gray-50 pt-3">
+                  <p className="font-bold text-gray-800 text-[11px]">{repName || "................................................"}</p>
+                  <p>Chức vụ: {repPosition || "Người đại diện / Representative"}</p>
+                  <p className="text-[9px] text-gray-400">Ngày ký / Date: ........................</p>
+                </div>
+              </div>
             </div>
 
             {/* Ending details */}
@@ -4083,21 +4707,7 @@ ELECTRONIC ACCEPTANCE EVIDENCE RECORD:
           </div>
         </div>
 
-        {/* Verification Meta details display */}
-        <div className="bg-gray-50 border border-gray-150 rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold">
-          <div className="space-y-0.5">
-            <p className="text-[9px] text-gray-400 uppercase tracking-widest">Verified Email</p>
-            <p className="text-gray-700 truncate">{clinicEmail}</p>
-          </div>
-          <div className="space-y-0.5">
-            <p className="text-[9px] text-gray-400 uppercase tracking-widest">Agreement Version</p>
-            <p className="text-gray-700 font-mono">{agreementVersion}</p>
-          </div>
-          <div className="space-y-0.5">
-            <p className="text-[9px] text-gray-400 uppercase tracking-widest">Current Date</p>
-            <p className="text-gray-700">{currentDate}</p>
-          </div>
-        </div>
+
 
       </div>
 
@@ -4121,26 +4731,11 @@ ELECTRONIC ACCEPTANCE EVIDENCE RECORD:
 
       {/* Explanation of post-agreement workflow */}
       {hasScrolledToBottom && checkboxes.every(c => c) && repName.trim() && repPosition.trim() && (
-        <div className="p-4 bg-emerald-50 border border-emerald-150 rounded-2xl animate-fade-in space-y-1.5">
-          <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide flex items-center gap-1.5">
-            <CheckCircle className="w-4.5 h-4.5 text-emerald-500" /> QUY TRÌNH TIẾP THEO SAU KHI ĐỒNG Ý & GỬI HỒ SƠ
-          </p>
-          <div className="text-[11px] text-emerald-700 leading-relaxed space-y-1">
-            <p>
-              Ngay sau khi bạn nhấn nút <strong>"Accept and Submit for Review"</strong> dưới đây:
-            </p>
-            <ul className="list-disc pl-4 space-y-1 text-[11px]">
-              <li>
-                Hệ thống sẽ gửi một Email xác nhận kèm bản sao hợp đồng điện tử có đánh dấu chờ duyệt đến hòm thư <strong className="underline">{clinicEmail}</strong>.
-              </li>
-              <li>
-                UCSmile sẽ kiểm tra hồ sơ và phê duyệt phòng khám của bạn trong vòng 24 giờ làm việc.
-              </li>
-              <li>
-                Bạn sẽ được chuyển đến Dashboard theo dõi trực quan trạng thái, xem email mô phỏng và tải bản hợp đồng điện tử đã ký.
-              </li>
-            </ul>
-          </div>
+        <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-[11px] text-emerald-800 leading-relaxed flex items-center gap-2">
+          <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+          <span>
+            Hệ thống sẽ tự động gửi email xác nhận kèm bản sao hợp đồng điện tử chờ duyệt đến hòm thư <strong className="underline">{clinicEmail}</strong> ngay khi bạn gửi hồ sơ thành công.
+          </span>
         </div>
       )}
 
@@ -4266,8 +4861,9 @@ function StepSubmissionReview({
           .party-box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; }
           .meta-info { font-family: monospace; font-size: 11px; color: #4b5563; margin-bottom: 20px; background: #fffbeb; border: 1px solid #fef3c7; padding: 12px; border-radius: 6px; }
           .footer-sig { display: flex; justify-content: space-between; margin-top: 50px; }
-          .sig-box { width: 45%; border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; text-align: center; background: #f9fafb; font-size: 13px; }
+          .sig-box { width: 48%; border: 1px solid #e5e7eb; padding: 25px 20px; border-radius: 12px; text-align: center; background: #f9fafb; font-size: 13px; box-sizing: border-box; }
           .signature-cursive { font-family: 'Georgia', serif; font-style: italic; font-weight: bold; font-size: 22px; color: #0284c7; margin: 15px 0; border-bottom: 1px dashed #cbd5e1; display: inline-block; padding-bottom: 5px; }
+          .stamp-seal { width: 90px; height: 90px; border: 2px dashed #f87171; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; color: #ef4444; font-weight: bold; transform: rotate(12deg); margin: 10px auto; line-height: 1.2; text-transform: uppercase; background: rgba(254, 242, 242, 0.45); box-sizing: border-box; }
           .content-block { font-size: 13px; text-align: justify; }
         </style>
       </head>
@@ -4365,16 +4961,18 @@ function StepSubmissionReview({
 
           <div class="footer-sig">
             <div class="sig-box">
-              <strong>BÊN A / PARTY A</strong><br>
+              <strong>BÊN A / PARTY A (UCSmile)</strong><br>
               UCTALENT LABS CO., LTD<br>
-              <div class="signature-cursive">Django Nguyen</div>
-              <p>Nguyễn Ngọc Dương<br>Managing Director</p>
+              <div style="height: 120px;"></div>
+              <p style="margin: 10px 0 0 0; border-top: 1px solid #f3f4f6; padding-top: 10px;"><strong>Nguyễn Ngọc Dương</strong><br>Managing Director</p>
+              <p style="margin: 3px 0 0 0; font-size: 10px; color: #6b7280;">Ngày ký / Date: ........................</p>
             </div>
             <div class="sig-box">
-              <strong>BÊN B / PARTY B</strong><br>
+              <strong>BÊN B / PARTY B (NHA KHOA)</strong><br>
               ${clinic?.name || "YOUR CLINIC"}<br>
-              <div class="signature-cursive">${repName}</div>
-              <p>${repName}<br>${repPosition}</p>
+              <div style="height: 120px;"></div>
+              <p style="margin: 10px 0 0 0; border-top: 1px solid #f3f4f6; padding-top: 10px;"><strong>${repName || "................................................"}</strong><br>${repPosition || "Representative / Người đại diện"}</p>
+              <p style="margin: 3px 0 0 0; font-size: 10px; color: #6b7280;">Ngày ký / Date: ........................</p>
             </div>
           </div>
         </div>
@@ -4416,186 +5014,28 @@ function StepSubmissionReview({
           </div>
 
           {/* Key Application Metadata Bento Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            <div className="p-5 border border-gray-100 rounded-2xl bg-white shadow-sm space-y-2">
-              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Clinic Identity</p>
-              <p className="font-bold text-sm text-gray-900 truncate">{clinic?.name}</p>
-              <p className="text-[10px] text-gray-400 font-semibold truncate">App ID: <span className="font-mono">{clinicId}</span></p>
+            <div className="p-6 border border-gray-100 rounded-2xl bg-white shadow-sm space-y-2">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Clinic Identity</p>
+              <p className="font-extrabold text-base text-gray-900">{clinic?.name || "Elite Dental Care Da Nang"}</p>
+              <p className="text-xs text-gray-500">App ID: <span className="font-mono font-medium">{clinicId}</span></p>
             </div>
 
-            <div className="p-5 border border-gray-100 rounded-2xl bg-white shadow-sm space-y-2">
-              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Contract Info</p>
-              <p className="font-bold text-sm text-gray-900 truncate">{onboarding?.agreementDetails?.agreementNumber || `AGR-${clinicId.substring(0,8).toUpperCase()}-2026`}</p>
-              <p className="text-[10px] text-gray-400 font-semibold truncate">Version: <span className="font-mono">{onboarding?.agreementDetails?.termsVersion || "v1.5-partner-2026"}</span></p>
+            <div className="p-6 border border-gray-100 rounded-2xl bg-white shadow-sm space-y-2">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Contract Info</p>
+              <p className="font-extrabold text-base text-gray-900">{onboarding?.agreementDetails?.agreementNumber || `AGR-${clinicId.substring(0,8).toUpperCase()}-2026`}</p>
+              <p className="text-xs text-gray-500">Version: <span className="font-mono font-medium">{onboarding?.agreementDetails?.termsVersion || "v1.5-partner-2026"}</span></p>
             </div>
 
-            <div className="p-5 border border-gray-100 rounded-2xl bg-white shadow-sm space-y-2 sm:col-span-2 lg:col-span-1">
-              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Verification Status</p>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></span>
-                <span className="font-black text-xs text-blue-700 uppercase tracking-wide">Under Review</span>
-              </div>
-              <p className="text-[10px] text-gray-400 font-semibold truncate">
-                Submitted: {onboarding?.agreementDetails?.signedAt ? new Date(onboarding.agreementDetails.signedAt).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN')}
+            <div className="p-6 border border-gray-100 rounded-2xl bg-white shadow-sm space-y-2">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Verification Status</p>
+              <p className="font-extrabold text-base text-blue-600">Under Review</p>
+              <p className="text-xs text-gray-500">
+                Submitted: {onboarding?.agreementDetails?.signedAt ? new Date(onboarding.agreementDetails.signedAt).toLocaleDateString('vi-VN') : "14/7/2026"}
               </p>
             </div>
 
-          </div>
-
-          {/* Secondary Action Areas Tabs */}
-          <div className="space-y-4">
-            
-            {/* Tab selection bar */}
-            <div className="flex border-b border-gray-100 gap-2 overflow-x-auto pb-px">
-              {[
-                { id: 'agreement', name: 'Agreement Snapshot', desc: 'Immutable snapshot of contract' },
-                { id: 'hash', name: 'SHA-256 Hash Verification', desc: 'Secure blockchain footprint' },
-                { id: 'emails', name: 'Simulated System Notifications', desc: 'Emails & PDF attachments sent' }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`py-3 px-4 font-bold text-xs uppercase tracking-wider border-b-2 transition-all whitespace-nowrap cursor-pointer ${
-                    activeTab === tab.id 
-                      ? 'border-amber-500 text-gray-900 font-extrabold' 
-                      : 'border-transparent text-gray-400 hover:text-gray-600'
-                  }`}
-                >
-                  {tab.name}
-                </button>
-              ))}
-            </div>
-
-            {/* Tab content panel */}
-            <div className="border border-gray-100 rounded-3xl bg-white shadow-sm overflow-hidden min-h-[340px]">
-              
-              {/* Tab 1: Agreement Snapshot */}
-              {activeTab === 'agreement' && (
-                <div className="p-6 space-y-4 text-left animate-fade-in">
-                  <div className="flex items-center justify-between border-b border-gray-50 pb-3">
-                    <div>
-                      <h4 className="font-serif font-bold text-gray-900 text-sm">Agreement E-Document Snapshot</h4>
-                      <p className="text-[11px] text-gray-400">This snapshot is saved securely as proof of electronic signature and contract execution.</p>
-                    </div>
-                    <button
-                      onClick={downloadAgreementSnapshot}
-                      className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-extrabold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
-                    >
-                      <Download className="w-3.5 h-3.5" /> Download Signed Agreement (HTML)
-                    </button>
-                  </div>
-
-                  <div className="bg-gray-50 border border-gray-150 rounded-2xl p-6 h-72 overflow-y-auto text-[11px] leading-relaxed text-gray-600 custom-scrollbar font-mono relative">
-                    {/* Watermark overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none">
-                      <h2 className="text-4xl font-black text-red-600 rotate-12 text-center border-4 border-red-600 p-4 rounded-xl uppercase">
-                        ACCEPTED BY CLINIC<br />PENDING ADMIN APPROVAL
-                      </h2>
-                    </div>
-                    <pre className="whitespace-pre-wrap text-left text-xs font-mono pr-2">
-                      {onboarding?.agreementDetails?.agreementSnapshot || "Loading snapshot agreement text..."}
-                    </pre>
-                  </div>
-                </div>
-              )}
-
-              {/* Tab 2: SHA-256 Hash Verification */}
-              {activeTab === 'hash' && (
-                <div className="p-8 space-y-6 text-left animate-fade-in max-w-3xl">
-                  <div className="space-y-1.5">
-                    <h4 className="font-serif font-bold text-gray-900 text-sm flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-amber-500" /> Secure SHA-256 Hash Fingerprint
-                    </h4>
-                    <p className="text-xs text-gray-500">
-                      An immutable cryptographic SHA-256 signature hash has been compiled from the agreement snapshot during acceptance. This acts as a global seal proving the agreement contents cannot be modified.
-                    </p>
-                  </div>
-
-                  <div className="p-5 bg-gray-50 border border-gray-150 rounded-2xl space-y-3">
-                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest font-mono">Immutable Cryptographic Fingerprint</p>
-                    <div className="p-3.5 bg-white border border-gray-200 rounded-xl font-mono text-xs font-black text-amber-800 break-all select-all">
-                      {onboarding?.agreementDetails?.agreementHash || "COMPUTING-SHA-256-BLOCKCHAIN-AUTHENTICATION-SEAL"}
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px] text-gray-400 font-semibold">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                      <span>Verified secure with UTC timestamp mapping: {new Date(onboarding?.agreementDetails?.signedAt || Date.now()).toISOString()}</span>
-                    </div>
-                  </div>
-
-                  <div className="text-xs text-gray-500 leading-relaxed border-l-4 border-amber-500/30 pl-4 py-1 italic">
-                    Note: UCSmile Da Nang Trust Shield enforces absolute price integrity and medical credentials checking. The secure hashing architecture prevents any post-signing alterations to pricing sheets and compliance declarations.
-                  </div>
-                </div>
-              )}
-
-              {/* Tab 3: Simulated notifications / emails */}
-              {activeTab === 'emails' && (
-                <div className="p-6 space-y-4 text-left animate-fade-in">
-                  <div>
-                    <h4 className="font-serif font-bold text-gray-900 text-sm">Simulated Notifications & PDF Delivery</h4>
-                    <p className="text-[11px] text-gray-400">The following is a live simulation of the email dispatch log sent to the clinic containing the agreement watermark PDF.</p>
-                  </div>
-
-                  {emails.length === 0 ? (
-                    <div className="p-12 text-center border border-dashed border-gray-200 rounded-2xl bg-gray-50 space-y-2">
-                      <Clock className="w-8 h-8 text-gray-300 mx-auto animate-spin" />
-                      <p className="text-xs text-gray-400 font-bold">Simulating mailroom queue connection...</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {emails.map((em: any) => (
-                        <div key={em.id} className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm font-sans text-xs">
-                          {/* Email Headers */}
-                          <div className="bg-gray-50 border-b border-gray-150 p-4 space-y-1 text-[11px] text-gray-500 font-semibold">
-                            <p><strong className="text-gray-400 uppercase font-bold text-[9px] mr-1 inline-block w-12">From:</strong> compliance@ucsmile.io (UCSmile Platform Compliance)</p>
-                            <p><strong className="text-gray-400 uppercase font-bold text-[9px] mr-1 inline-block w-12">To:</strong> {em.to}</p>
-                            <p><strong className="text-gray-400 uppercase font-bold text-[9px] mr-1 inline-block w-12">Subject:</strong> {em.subject}</p>
-                            <p><strong className="text-gray-400 uppercase font-bold text-[9px] mr-1 inline-block w-12">Sent At:</strong> {new Date(em.sentAt).toLocaleString('vi-VN')}</p>
-                          </div>
-
-                          {/* Email Body */}
-                          <div className="p-5 whitespace-pre-wrap leading-relaxed text-gray-700 bg-[#fffdfa] border-b border-gray-100 min-h-[140px] font-sans text-[11px]">
-                            {em.body}
-                          </div>
-
-                          {/* Attachment Block */}
-                          {em.attachmentName && (
-                            <div className="bg-amber-500/5 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-[11px]">
-                              <div className="flex items-center gap-2 text-amber-900">
-                                <FileText className="w-5 h-5 text-amber-500" />
-                                <div>
-                                  <p className="font-bold">{em.attachmentName}</p>
-                                  <p className="text-[9px] text-gray-400 uppercase font-semibold">Simulated Attached Secure PDF Document ({em.attachmentWatermark})</p>
-                                </div>
-                              </div>
-                              <button
-                                onClick={downloadAgreementSnapshot}
-                                className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold rounded-lg text-[10px] cursor-pointer shadow-sm self-start sm:self-center uppercase tracking-wider"
-                              >
-                                View PDF Layout
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-            </div>
-          </div>
-
-          {/* Verification Warning message footer */}
-          <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl flex items-start gap-2.5 text-left text-xs">
-            <Clock className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold text-gray-800">Review SLA Status Details</p>
-              <p className="text-[11px] text-gray-500 leading-relaxed mt-0.5">
-                Our vetting coordinators review clinic profiles, medical licenses, and pricing sheets within <strong>24-48 business hours</strong>. You can periodically monitor your status on this portal dashboard. In case of inquiries, please contact our team at <strong className="text-gray-700 font-extrabold">nhung.phan230206@vnuk.edu.vn</strong>.
-              </p>
-            </div>
           </div>
 
         </div>
