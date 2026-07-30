@@ -119,8 +119,10 @@ function Layout() {
         <Route path="/referrer" element={<ReferrerLoginPage />} />
         <Route path="/referrer/dashboard" element={<ReferrerDashboardPage />} />
         <Route path="/dashboard" element={<ReferrerDashboardPage />} />
-        <Route path="/clinic/onboarding" element={<ClinicOnboardingPage />} />
+        <Route path="/clinic" element={<ClinicOnboardingPage />} />
+        <Route path="/clinic/login" element={<ClinicOnboardingPage />} />
         <Route path="/clinic/register" element={<ClinicOnboardingPage />} />
+        <Route path="/clinic/onboarding" element={<ClinicOnboardingPage />} />
         <Route path="/referral/:referrerCode" element={<ReferralRedirectHandler />} />
       </Routes>
 
