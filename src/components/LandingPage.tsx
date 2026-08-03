@@ -13,7 +13,12 @@ import {
   Minus,
   X,
   Plane,
-  Search
+  Search,
+  User,
+  Calendar,
+  Clock,
+  FileText,
+  Check
 } from 'lucide-react';
 import { blogData, BlogPost } from '../constants/blogData';
 import BlogModal from './BlogModal';
@@ -32,6 +37,24 @@ export interface Treatment {
   category: string;
   secondaryCategory?: string;
 }
+
+const NATIONALITIES_LIST = [
+  'Enter your nationality',
+  'Australia',
+  'United States',
+  'Singapore',
+  'New Zealand',
+  'United Kingdom',
+  'Canada',
+  'Vietnam',
+  'Germany',
+  'France',
+  'Japan',
+  'South Korea',
+  'Russia',
+  'Thailand',
+  'Other'
+];
 
 export const TREATMENTS: Treatment[] = [
   { 
@@ -355,14 +378,33 @@ export default function LandingPage() {
   const [isComparisonVisible, setIsComparisonVisible] = useState(false);
   const comparisonRef = useRef<HTMLDivElement>(null);
 
-  // States for footer form
+  // States for 2-step wizard booking form
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
   const [nationality, setNationality] = useState('');
-  const [treatment, setTreatment] = useState('Choose your treatment');
-  const [preferredDate, setPreferredDate] = useState('');
   const [whatsappPhone, setWhatsappPhone] = useState('');
+  const [preferredDate, setPreferredDate] = useState('');
+  const [confirmedHour, setConfirmedHour] = useState('');
+  const [preferredCity, setPreferredCity] = useState('Da Nang');
+  const [clinic, setClinic] = useState('Any Vetted Partner Clinic');
+  const [preferredSession, setPreferredSession] = useState<'morning' | 'afternoon'>('morning');
+  const [treatment, setTreatment] = useState('Choose your treatment');
   const [additionalDetails, setAdditionalDetails] = useState('');
   const [formError, setFormError] = useState('');
+
+  // Calculate estimated price range string for selected treatment
+  const getEstimatedPriceText = () => {
+    if (treatment === 'Choose your treatment' || !treatment) return '$0';
+    const found = TREATMENTS.find(t => t.name === treatment || t.id === treatment);
+    if (found && found.prices && found.prices.vn) {
+      if (found.prices.vn.min === found.prices.vn.max) {
+        return `$${found.prices.vn.min}`;
+      }
+      return `$${found.prices.vn.min} - $${found.prices.vn.max}`;
+    }
+    return '$0';
+  };
 
   // Handle routing state-based smooth scrolling on initial mount or path change
   useEffect(() => {
@@ -377,11 +419,33 @@ export default function LandingPage() {
     }
   }, [location.state, navigate]);
 
-  const handleFooterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFooterSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setFormError('');
-    if (!fullName.trim() || !whatsappPhone.trim() || treatment === 'Choose your treatment' || !preferredDate.trim()) {
-      setFormError('Please fill in all required fields marked with *');
+
+    // If currently in step 1 and user clicks Submit Booking Request
+    if (currentStep === 1) {
+      if (!fullName.trim() || !whatsappPhone.trim()) {
+        setFormError('Please enter your Full Name and WhatsApp / Phone number.');
+        return;
+      }
+      // Advance to step 2 if step 2 fields are not complete yet
+      setCurrentStep(2);
+      return;
+    }
+
+    // Step 2 submissions validation
+    if (!fullName.trim() || !whatsappPhone.trim()) {
+      setFormError('Please fill in your Full Name and WhatsApp / Phone number.');
+      setCurrentStep(1);
+      return;
+    }
+    if (!preferredDate.trim()) {
+      setFormError('Please select your Preferred Date.');
+      return;
+    }
+    if (treatment === 'Choose your treatment' || !treatment.trim()) {
+      setFormError('Please choose a Treatment Package.');
       return;
     }
 
@@ -396,14 +460,14 @@ export default function LandingPage() {
       id: uniqueId,
       name: fullName,
       service: treatment,
-      clinic: 'Any Vetted Partner Clinic',
+      clinic: clinic || 'Any Vetted Partner Clinic',
       date: preferredDate,
-      session: 'morning',
+      session: preferredSession || 'morning',
       phone: whatsappPhone,
       nationality: nationality || 'N/A',
-      destination: 'danang',
+      destination: preferredCity === 'Ho Chi Minh' ? 'hcm' : 'danang',
       notes: additionalDetails || '',
-      email: ''
+      email: email || ''
     });
     const qrData = `${window.location.origin}${window.location.pathname || ''}#/verify?p=${token}`;
     const generatedUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}`;
@@ -411,13 +475,14 @@ export default function LandingPage() {
     const bookingSessionData = {
       fullName,
       whatsappPhone,
-      email: '',
+      email: email || '',
       nationality: nationality || 'N/A',
       treatment,
-      destination: 'danang',
-      clinic: 'Any Vetted Partner Clinic',
+      destination: preferredCity === 'Ho Chi Minh' ? 'hcm' : 'danang',
+      clinic: clinic || 'Any Vetted Partner Clinic',
       preferredDate,
-      preferredSession: 'morning',
+      preferredSession: preferredSession || 'morning',
+      confirmedHour: confirmedHour || '09:00 AM',
       additionalDetails,
       bookingId: uniqueId,
       qrCodeUrl: generatedUrl,
@@ -994,111 +1059,324 @@ export default function LandingPage() {
         )}
       </AnimatePresence>
 
-      {/* Footer Form */}
-      <section id="booking" className="py-32 px-4 scroll-mt-24">
-        <div className="max-w-7xl mx-auto bg-white rounded-[3rem] overflow-hidden shadow-[0_30px_80px_rgba(15,23,42,0.08)] border border-gray-100 flex flex-col md:flex-row">
-          <div className="bg-brand-section p-10 md:p-14 text-white md:w-[35%]">
-            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-gray-400 mb-4">BOOKING SUPPORT</p>
-            <h2 className="text-3xl md:text-4xl font-black mb-8 leading-tight">Dental Advice. Booking Support.</h2>
-            <div className="space-y-6 text-sm text-white/70 font-medium">
-              <div className="flex gap-4 items-start">
-                <span className="mt-1.5 w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
-                <p>Tell us what treatment you need.</p>
-              </div>
-              <div className="flex gap-4 items-start">
-                <span className="mt-1.5 w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
-                <p>We’ll suggest suitable clinics and next steps.</p>
-              </div>
-              <div className="flex gap-4 items-start">
-                <span className="mt-1.5 w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
-                <p>We’ll help you book a time that works.</p>
-              </div>
+      {/* Footer Form - 2-Step Wizard Design */}
+      <section id="booking" className="py-16 md:py-28 px-3 sm:px-4 scroll-mt-24">
+        <div className="max-w-xl md:max-w-2xl mx-auto bg-gray-50/50 sm:bg-white rounded-2xl sm:rounded-[2rem] overflow-hidden shadow-xl border border-gray-100 p-3.5 sm:p-6 md:p-8">
+          
+          {/* Top Progress Indicator Header */}
+          <div className="mb-3 text-left">
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">
+                STEP {currentStep} OF 2
+              </span>
+              <span className="text-[10px] font-bold text-gray-700">
+                {currentStep === 1 ? 'Personal Details' : 'Appointment Info'}
+              </span>
             </div>
-
+            <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gray-400 transition-all duration-300 rounded-full"
+                style={{ width: currentStep === 1 ? '50%' : '100%' }}
+              />
+            </div>
           </div>
 
-          <div className="p-10 md:p-14 bg-brand-bg flex-grow">
-            <form onSubmit={handleFooterSubmit} className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2 text-left">FULL NAME *</label>
-                  <input 
-                    type="text" 
-                    required
-                    value={fullName}
-                    onChange={e => setFullName(e.target.value)}
-                    placeholder="Enter your full name"
-                    className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm" 
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2 text-left">NATIONALITY</label>
-                  <input 
-                    type="text" 
-                    value={nationality}
-                    onChange={e => setNationality(e.target.value)}
-                    placeholder="Country of passport"
-                    className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm" 
-                  />
+          {/* Step Switcher Tabs Bar */}
+          <div className="bg-[#f0f3f6] p-1 rounded-xl flex gap-1 mb-4 sm:mb-5">
+            <button
+              type="button"
+              onClick={() => setCurrentStep(1)}
+              className={`flex-1 py-2 px-2.5 sm:px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+                currentStep === 1
+                  ? 'bg-gray-200 text-gray-900 border border-gray-300/80 shadow-xs'
+                  : 'bg-transparent text-gray-500 hover:text-gray-800 font-medium'
+              }`}
+            >
+              Personal Details
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentStep(2)}
+              className={`flex-1 py-2 px-2.5 sm:px-3 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+                currentStep === 2
+                  ? 'bg-gray-200 text-gray-900 border border-gray-300/80 shadow-xs'
+                  : 'bg-transparent text-gray-500 hover:text-gray-800 font-medium'
+              }`}
+            >
+              Appointment Info
+            </button>
+          </div>
+
+          <form onSubmit={handleFooterSubmit} className="space-y-3.5">
+            {/* STEP 1: Personal Details */}
+            {currentStep === 1 && (
+              <div className="space-y-3.5 text-left">
+                <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200/80 p-3.5 sm:p-5 shadow-xs space-y-3">
+                  <div className="flex items-center gap-2 border-b border-gray-100 pb-2.5">
+                    <User className="w-4 h-4 text-gray-700" />
+                    <h3 className="font-bold text-gray-900 text-xs sm:text-sm">Personal Details</h3>
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5">
+                      FULL NAME <span className="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      required
+                      value={fullName}
+                      onChange={e => setFullName(e.target.value)}
+                      placeholder="Enter your full name"
+                      className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-3 py-2.5 text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 font-medium" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5">
+                      WHATSAPP / PHONE <span className="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      required
+                      value={whatsappPhone}
+                      onChange={e => setWhatsappPhone(e.target.value)}
+                      placeholder="+1 (555) 000-0000"
+                      className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-3 py-2.5 text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 font-medium" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5">
+                      EMAIL ADDRESS <span className="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="email" 
+                      required
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="john@example.com"
+                      className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-3 py-2.5 text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 font-medium" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5">
+                      NATIONALITY <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select 
+                        value={nationality}
+                        onChange={e => setNationality(e.target.value)}
+                        className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl pl-3 pr-8 py-2.5 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800 appearance-none cursor-pointer font-medium"
+                      >
+                        {NATIONALITIES_LIST.map((nat, idx) => (
+                          <option key={idx} value={idx === 0 ? '' : nat} disabled={idx === 0}>
+                            {nat}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="text-left">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2">TREATMENT NEEDED *</label>
-                <select 
-                  value={treatment}
-                  onChange={e => setTreatment(e.target.value)}
-                  className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm appearance-none"
-                >
-                  <option disabled value="Choose your treatment">Choose your treatment</option>
-                  {TREATMENTS.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
-                </select>
-              </div>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="text-left">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2">PREFERRED DATE *</label>
-                  <input 
-                    type="text" 
-                    required
-                    value={preferredDate}
-                    onChange={e => setPreferredDate(e.target.value)}
-                    placeholder="Flexible or exact date" 
-                    className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm" 
-                  />
+            )}
+
+            {/* STEP 2: Appointment Info & Treatment */}
+            {currentStep === 2 && (
+              <div className="space-y-3.5 text-left">
+                {/* Card 1: Appointment Info */}
+                <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200/80 p-3.5 sm:p-5 shadow-xs space-y-3">
+                  <div className="flex items-center gap-2 border-b border-gray-100 pb-2.5">
+                    <Calendar className="w-4 h-4 text-gray-700" />
+                    <h3 className="font-bold text-gray-900 text-xs sm:text-sm">Appointment Info</h3>
+                  </div>
+
+                  {/* PREFERRED DATE & HOUR on same row on all screen sizes */}
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                    <div>
+                      <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5 truncate">
+                        PREFERRED DATE <span className="text-red-500">*</span>
+                      </label>
+                      <input 
+                        type="date"
+                        required
+                        min={new Date().toISOString().split('T')[0]}
+                        value={preferredDate}
+                        onChange={e => setPreferredDate(e.target.value)}
+                        className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-2.5 sm:px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800 cursor-pointer"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5 truncate">
+                        HOUR <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Clock className="w-3.5 h-3.5 text-gray-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <select
+                          value={confirmedHour}
+                          onChange={e => setConfirmedHour(e.target.value)}
+                          className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl pl-8 pr-6 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800 appearance-none cursor-pointer"
+                        >
+                          <option value="">Select Priority</option>
+                          <option value="08:00 AM">08:00 AM</option>
+                          <option value="09:00 AM">09:00 AM</option>
+                          <option value="10:00 AM">10:00 AM</option>
+                          <option value="11:00 AM">11:00 AM</option>
+                          <option value="01:30 PM">01:30 PM</option>
+                          <option value="02:00 PM">02:00 PM</option>
+                          <option value="02:30 PM">02:30 PM</option>
+                          <option value="03:00 PM">03:00 PM</option>
+                          <option value="04:00 PM">04:00 PM</option>
+                        </select>
+                        <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* PREFERRED CITY & CLINIC on same row on all screen sizes */}
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                    <div>
+                      <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5 truncate">
+                        PREFERRED CITY <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={preferredCity}
+                          onChange={e => setPreferredCity(e.target.value)}
+                          className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-2.5 sm:px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800 appearance-none cursor-pointer pr-6"
+                        >
+                          <option value="Da Nang">Da Nang</option>
+                          <option value="Ho Chi Minh">Ho Chi Minh</option>
+                        </select>
+                        <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5 truncate">
+                        CLINIC
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={clinic}
+                          onChange={e => setClinic(e.target.value)}
+                          className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-2.5 sm:px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800 appearance-none cursor-pointer pr-6 truncate"
+                        >
+                          <option value="Any Vetted Partner Clinic">Any Vetted Partner Clinic</option>
+                          <option value="East Meets West Dental (Da Nang)">East Meets West Dental (Da Nang)</option>
+                          <option value="Serenity International Dental (Da Nang)">Serenity International Dental (Da Nang)</option>
+                          <option value="Elite Dental Group (Ho Chi Minh)">Elite Dental Group (Ho Chi Minh)</option>
+                        </select>
+                        <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5">
+                      PREFERRED SESSION <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setPreferredSession('morning')}
+                        className={`py-2 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                          preferredSession === 'morning'
+                            ? 'bg-gray-200 text-gray-900 border border-gray-300 shadow-xs'
+                            : 'bg-gray-50 border border-gray-200 text-gray-500 hover:text-gray-800'
+                        }`}
+                      >
+                        MORNING
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreferredSession('afternoon')}
+                        className={`py-2 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                          preferredSession === 'afternoon'
+                            ? 'bg-gray-200 text-gray-900 border border-gray-300 shadow-xs'
+                            : 'bg-gray-50 border border-gray-200 text-gray-500 hover:text-gray-800'
+                        }`}
+                      >
+                        AFTERNOON
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2">WHATSAPP / EMAIL *</label>
-                  <input 
-                    type="text" 
-                    required
-                    value={whatsappPhone}
-                    onChange={e => setWhatsappPhone(e.target.value)}
-                    placeholder="How we should contact you" 
-                    className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm" 
+
+                {/* Card 2: Select Treatment Packages */}
+                <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200/80 p-3.5 sm:p-5 shadow-xs space-y-2.5">
+                  <div className="flex items-center gap-2 border-b border-gray-100 pb-2.5">
+                    <FileText className="w-4 h-4 text-gray-700" />
+                    <h3 className="font-bold text-gray-900 text-xs sm:text-sm">
+                      Select Treatment Packages <span className="text-red-500">*</span>
+                    </h3>
+                  </div>
+                  <div className="relative">
+                    <select
+                      value={treatment}
+                      onChange={e => setTreatment(e.target.value)}
+                      className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-3 py-2.5 text-xs text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-gray-800 appearance-none cursor-pointer pr-8"
+                    >
+                      <option disabled value="Choose your treatment">Choose your treatment</option>
+                      {TREATMENTS.map(t => (
+                        <option key={t.id} value={t.name}>{t.name}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Card 3: Additional Arrival Questions */}
+                <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200/80 p-3.5 sm:p-5 shadow-xs space-y-2">
+                  <h3 className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block">
+                    ADDITIONAL ARRIVAL QUESTIONS
+                  </h3>
+                  <textarea
+                    rows={2.5}
+                    maxLength={500}
+                    value={additionalDetails}
+                    onChange={e => setAdditionalDetails(e.target.value)}
+                    placeholder="Any specific requirements or questions?"
+                    className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl p-3 text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 resize-none font-medium"
                   />
+                  <div className="text-right">
+                    <span className="text-[9px] text-gray-400 font-mono">{additionalDetails.length}/500</span>
+                  </div>
                 </div>
               </div>
-              <div className="pb-4 text-left">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1 ml-2">FURTHER DETAILS (OPTIONAL)</label>
-                <textarea 
-                  rows={3} 
-                  value={additionalDetails}
-                  onChange={e => setAdditionalDetails(e.target.value)}
-                  placeholder="Any specific requirements or questions?" 
-                  className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-primary shadow-sm resize-none"
-                />
+            )}
+
+            {/* Bottom Footer Section (Agreement, Price Summary, Submit Button) */}
+            <div className="pt-2 space-y-2.5">
+              <p className="text-center text-[10px] text-gray-500 italic">
+                By completing booking, you agree to our Service Terms & Privacy Policy.
+              </p>
+
+              <div className="text-left pt-0.5">
+                <span className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-0.5">
+                  ESTIMATED PRICE SUMMARY
+                </span>
+                <span className="text-2xl font-serif font-extrabold text-[#FFC107] block">
+                  {getEstimatedPriceText()}
+                </span>
               </div>
 
               {formError && (
-                <div className="p-4 rounded-xl bg-red-50 border border-red-100 text-[#FF4D4D] font-semibold text-xs text-left">
+                <div className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 font-semibold text-[11px] text-center">
                   ⚠️ {formError}
                 </div>
               )}
 
-              <button className="btn-luxury w-full py-5 !shadow-brand-primary/10">
-                SUBMIT TO CONCIERGE
+              <button
+                type="submit"
+                className="w-full bg-[#FFC107] hover:bg-amber-400 text-gray-950 font-black text-[11px] sm:text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-md transition-all active:scale-[0.99] cursor-pointer"
+              >
+                SUBMIT BOOKING REQUEST
               </button>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
       </section>
 

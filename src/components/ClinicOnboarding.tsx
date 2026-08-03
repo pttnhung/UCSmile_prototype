@@ -4863,6 +4863,51 @@ function StepSubmissionReview({
   const isSubmitted = clinic?.status === 'UNDER_REVIEW' || clinic?.status === 'PENDING_REVIEW' || clinic?.status === 'APPROVED';
 
   // Helper to trigger HTML Agreement download
+  const getFullAgreementText = () => {
+    const agreementDetails = onboarding?.agreementDetails;
+    const agreementNumber = agreementDetails?.agreementNumber || `AGR-${clinicId.substring(0, 8).toUpperCase()}-2026`;
+    const legalNameStr = clinic?.legalName || onboarding?.generalInfo?.legalName || clinic?.name || 'PHÒNG KHÁM ĐỐI TÁC';
+    const tradingNameStr = clinic?.name || onboarding?.generalInfo?.tradingName || 'Phòng Khám';
+    const taxCodeStr = onboarding?.generalInfo?.taxCode || '0400000000';
+    const licenceStr = onboarding?.generalInfo?.operatingLicenceNumber || 'N/A';
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>HỢP ĐỒNG HỢP TÁC KINH DOANH - ${legalNameStr}</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; line-height: 1.6; color: #1e293b; }
+    h1, h2, h3 { text-align: center; margin-bottom: 8px; }
+    .header-box { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; pb-4; }
+    .party-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .footer-stamp { border-top: 2px solid #e2e8f0; margin-top: 40px; pt-16px; text-align: center; font-size: 12px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="header-box">
+    <h3>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h3>
+    <h4>Độc lập - Tự do - Hạnh phúc</h4>
+    <h1>HỢP ĐỒNG HỢP TÁC KINH DOANH</h1>
+    <p><em>(V/v: Cung cấp nền tảng kết nối và dịch vụ tư vấn du lịch nha khoa)</em></p>
+    <p><strong>Số:</strong> ${agreementNumber}</p>
+  </div>
+  <div class="party-box">
+    <strong>BÊN A: CÔNG TY TNHH UCTALENT LABS</strong><br/>
+    MST: 0402238274 | Đại diện: Ông Nguyễn Ngọc Dương (Giám đốc)
+  </div>
+  <div class="party-box">
+    <strong>BÊN B: ${legalNameStr.toUpperCase()}</strong><br/>
+    Tên thương mại: ${tradingNameStr} | MST: ${taxCodeStr} | GP: ${licenceStr}
+  </div>
+  <div class="footer-stamp">
+    <p>Hợp đồng được ký kết điện tử thành công qua Nền Tảng UCSmile / Da Nang Trust Shield.</p>
+    <p>Mã Bảo Mật: ${agreementDetails?.signatureHash || 'SECURE-HASH-VERIFIED'}</p>
+  </div>
+</body>
+</html>`;
+  };
+
   const downloadAgreementSnapshot = () => {
     const agreementDetails = onboarding?.agreementDetails;
     const agreementNumber = agreementDetails?.agreementNumber || `AGR-${clinicId.substring(0, 8).toUpperCase()}-2026`;
