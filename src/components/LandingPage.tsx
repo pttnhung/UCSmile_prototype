@@ -88,42 +88,42 @@ function TreatmentCard({
   return (
     <div
       onClick={onToggle}
-      className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all duration-300 cursor-pointer group relative ${
+      className={`flex items-center justify-between p-2 sm:p-2.5 rounded-lg sm:rounded-xl border transition-all duration-200 cursor-pointer group relative ${
         selected 
-        ? 'border-brand-primary bg-brand-primary/5 shadow-sm' 
-        : 'bg-[#FAF9F6] border-gray-200/80 hover:border-gray-300 text-brand-text'
+        ? 'border-[#F5A623] bg-amber-50/60 shadow-xs ring-1 ring-[#F5A623]/30' 
+        : 'bg-white hover:bg-gray-50 border-gray-200/80 text-brand-text'
       }`}
     >
-      <div className="flex flex-col flex-grow pr-2">
-        <div className={`text-[12px] sm:text-[13px] font-bold leading-tight uppercase tracking-tight transition-colors ${selected ? 'text-brand-text' : 'text-gray-800'}`}>
+      <div className="flex flex-col flex-grow pr-1.5 min-w-0">
+        <div className={`text-[11px] sm:text-[12px] font-bold leading-snug uppercase tracking-tight transition-colors line-clamp-2 ${selected ? 'text-brand-text' : 'text-gray-800'}`}>
           {t.name}
         </div>
         
         {t.hasQuantity && selected && (
           <div 
             onClick={(e) => e.stopPropagation()} 
-            className="flex items-center gap-3 mt-2 bg-white rounded-full px-2 py-0.5 self-start border border-brand-primary/30 shadow-sm"
+            className="flex items-center gap-2 mt-1.5 bg-white rounded-full px-2 py-0.5 self-start border border-[#F5A623]/40 shadow-2xs"
           >
-            <button onClick={() => onUpdateQuantity(-1)} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-              <Minus className="w-3 h-3 text-gray-600" />
+            <button onClick={() => onUpdateQuantity(-1)} className="p-0.5 hover:bg-gray-100 rounded-full transition-colors">
+              <Minus className="w-2.5 h-2.5 text-gray-600" />
             </button>
-            <span className="text-[11px] font-black min-w-[0.8rem] text-center text-brand-text">{quantity}</span>
-            <button onClick={() => onUpdateQuantity(1)} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-              <Plus className="w-3 h-3 text-gray-600" />
+            <span className="text-[10px] font-black min-w-[0.7rem] text-center text-brand-text">{quantity}</span>
+            <button onClick={() => onUpdateQuantity(1)} className="p-0.5 hover:bg-gray-100 rounded-full transition-colors">
+              <Plus className="w-2.5 h-2.5 text-gray-600" />
             </button>
           </div>
         )}
       </div>
 
-      <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 shrink-0 ${
+      <div className={`w-6 h-6 rounded-md flex items-center justify-center transition-all shrink-0 ${
         selected 
-        ? 'bg-brand-text text-white' 
+        ? 'bg-gray-900 text-white' 
         : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'
       }`}>
         {selected ? (
-          <X className="w-3.5 h-3.5" />
+          <X className="w-3 h-3" />
         ) : (
-          <Plus className="w-3.5 h-3.5" />
+          <Plus className="w-3 h-3" />
         )}
       </div>
     </div>
@@ -739,7 +739,7 @@ export default function LandingPage() {
       {/* Comparison Modal (3 Dropdown / Selection Workflow: FROM -> CATEGORY -> TREATMENTS) */}
       <AnimatePresence>
         {isComparisonModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
             {/* Backdrop */}
             <motion.div 
               initial={{ opacity: 0 }}
@@ -749,18 +749,18 @@ export default function LandingPage() {
               className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             />
 
-            {/* Modal Card */}
+            {/* Modal Card - Fixed viewport height on mobile without outer scroll */}
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 16 }}
-              className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-10 max-h-[88vh] flex flex-col text-left"
+              className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-10 max-h-[92vh] sm:max-h-[88vh] flex flex-col text-left"
             >
               {/* Modal Header */}
-              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/70">
+              <div className="px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/70 shrink-0">
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">PRICE COMPARISON</p>
-                  <h3 className="font-serif text-lg font-black text-brand-text">Compare treatments at a glance.</h3>
+                  <h3 className="font-serif text-base sm:text-lg font-black text-brand-text">Compare treatments at a glance.</h3>
                 </div>
                 <button 
                   onClick={() => setIsComparisonModalOpen(false)}
@@ -770,63 +770,63 @@ export default function LandingPage() {
                 </button>
               </div>
 
-              {/* Modal Body: Compact 2-column Dropdowns + Treatment Picker */}
-              <div className="p-4 sm:p-5 space-y-3.5 overflow-y-auto">
+              {/* Modal Body: Non-scrolling container, all scrolling isolated strictly to the Treatment list below */}
+              <div className="p-3 sm:p-5 space-y-2.5 sm:space-y-3.5 flex-1 min-h-0 flex flex-col">
                 
                 {/* 1. FROM & 2. CATEGORY (Side-by-side in grid) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 gap-2 sm:gap-2.5 shrink-0">
                   {/* 1. FROM Dropdown */}
-                  <div className="bg-gray-50/80 rounded-xl p-2.5 border border-gray-200/80">
-                    <label className="text-[9px] font-black uppercase tracking-wider text-gray-500 mb-1 block">
+                  <div className="bg-gray-50/80 rounded-xl p-2 sm:p-2.5 border border-gray-200/80">
+                    <label className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-gray-500 mb-0.5 sm:mb-1 block truncate">
                       FROM (HOME COUNTRY)
                     </label>
                     <div className="relative">
                       <select 
                         value={pricingFrom}
                         onChange={(e) => setPricingFrom(e.target.value as keyof typeof ORIGINS)}
-                        className="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400 text-xs font-bold text-gray-900 shadow-2xs"
+                        className="w-full bg-white border border-gray-200 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400 text-[11px] sm:text-xs font-bold text-gray-900 shadow-2xs"
                       >
                         {Object.entries(ORIGINS).map(([key, val]) => (
                           <option key={key} value={key}>{val.label}</option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
                     </div>
                   </div>
 
                   {/* 2. CATEGORY Dropdown */}
-                  <div className="bg-gray-50/80 rounded-xl p-2.5 border border-gray-200/80">
-                    <label className="text-[9px] font-black uppercase tracking-wider text-gray-500 mb-1 block">
+                  <div className="bg-gray-50/80 rounded-xl p-2 sm:p-2.5 border border-gray-200/80">
+                    <label className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-gray-500 mb-0.5 sm:mb-1 block truncate">
                       CATEGORY
                     </label>
                     <div className="relative">
                       <select 
                         value={activeCategory}
                         onChange={(e) => setActiveCategory(e.target.value)}
-                        className="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400 text-xs font-bold text-gray-900 shadow-2xs"
+                        className="w-full bg-white border border-gray-200 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400 text-[11px] sm:text-xs font-bold text-gray-900 shadow-2xs"
                       >
                         {CATEGORIES.map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
                     </div>
                   </div>
                 </div>
 
-                {/* 3. TREATMENTS Selection */}
-                <div className="bg-gray-50/80 rounded-xl p-3 border border-gray-200/80">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-[9px] font-black uppercase tracking-wider text-gray-500 block">
+                {/* 3. TREATMENTS Selection (Takes all remaining flex height and handles the ONLY scrollbar) */}
+                <div className="bg-gray-50/80 rounded-xl p-2.5 sm:p-3 border border-gray-200/80 flex-1 min-h-0 flex flex-col">
+                  <div className="flex items-center justify-between mb-1.5 sm:mb-2 shrink-0">
+                    <label className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-gray-500 block truncate">
                       TREATMENTS ({activeCategory})
                     </label>
-                    <span className="text-[9px] font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+                    <span className="text-[8px] sm:text-[9px] font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full shrink-0">
                       {selectedTreatments.length} SELECTED
                     </span>
                   </div>
 
                   {/* Search inside popup */}
-                  <div className="relative mb-2">
+                  <div className="relative mb-2 shrink-0">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                     <input 
                       type="text"
@@ -837,8 +837,8 @@ export default function LandingPage() {
                     />
                   </div>
 
-                  {/* Treatment Cards Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1">
+                  {/* ONLY THIS CONTAINER SCROLLS: Treatment Cards Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1 overflow-y-auto pr-1.5 visible-scrollbar min-h-[140px]">
                     {filteredTreatments.length > 0 ? (
                       filteredTreatments.map(t => (
                         <TreatmentCard 
@@ -860,8 +860,8 @@ export default function LandingPage() {
 
               </div>
 
-              {/* Modal Footer: Action Button */}
-              <div className="px-5 py-3 border-t border-gray-100 bg-gray-50/70 flex items-center justify-between gap-3">
+              {/* Modal Footer: Action Button (Always fixed at bottom of modal) */}
+              <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-t border-gray-100 bg-gray-50/70 flex items-center justify-between gap-3 shrink-0">
                 <div className="text-left">
                   <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">Selected</span>
                   <span className="text-xs font-black text-gray-900">
