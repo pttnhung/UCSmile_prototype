@@ -88,42 +88,42 @@ function TreatmentCard({
   return (
     <div
       onClick={onToggle}
-      className={`flex items-center justify-between p-2 sm:p-2.5 rounded-lg sm:rounded-xl border transition-all duration-200 cursor-pointer group relative ${
+      className={`flex items-center justify-between p-2 rounded-lg border transition-all duration-150 cursor-pointer group relative ${
         selected 
-        ? 'border-[#F5A623] bg-amber-50/60 shadow-xs ring-1 ring-[#F5A623]/30' 
-        : 'bg-white hover:bg-gray-50 border-gray-200/80 text-brand-text'
+        ? 'border-[#F5A623] bg-[#F5A623]/10 shadow-2xs' 
+        : 'bg-white/80 hover:bg-white border-gray-200/70 hover:border-gray-300 text-gray-700'
       }`}
     >
       <div className="flex flex-col flex-grow pr-1.5 min-w-0">
-        <div className={`text-[11px] sm:text-[12px] font-bold leading-snug uppercase tracking-tight transition-colors line-clamp-2 ${selected ? 'text-brand-text' : 'text-gray-800'}`}>
+        <div className={`text-[10.5px] sm:text-[11.5px] font-semibold leading-snug tracking-tight transition-colors line-clamp-2 ${selected ? 'text-gray-900 font-bold' : 'text-gray-600'}`}>
           {t.name}
         </div>
         
         {t.hasQuantity && selected && (
           <div 
             onClick={(e) => e.stopPropagation()} 
-            className="flex items-center gap-2 mt-1.5 bg-white rounded-full px-2 py-0.5 self-start border border-[#F5A623]/40 shadow-2xs"
+            className="flex items-center gap-1.5 mt-1 bg-white rounded-full px-1.5 py-0.5 self-start border border-[#F5A623]/40 shadow-2xs"
           >
             <button onClick={() => onUpdateQuantity(-1)} className="p-0.5 hover:bg-gray-100 rounded-full transition-colors">
-              <Minus className="w-2.5 h-2.5 text-gray-600" />
+              <Minus className="w-2.5 h-2.5 text-gray-500" />
             </button>
-            <span className="text-[10px] font-black min-w-[0.7rem] text-center text-brand-text">{quantity}</span>
+            <span className="text-[9.5px] font-bold min-w-[0.6rem] text-center text-gray-900">{quantity}</span>
             <button onClick={() => onUpdateQuantity(1)} className="p-0.5 hover:bg-gray-100 rounded-full transition-colors">
-              <Plus className="w-2.5 h-2.5 text-gray-600" />
+              <Plus className="w-2.5 h-2.5 text-gray-500" />
             </button>
           </div>
         )}
       </div>
 
-      <div className={`w-6 h-6 rounded-md flex items-center justify-center transition-all shrink-0 ${
+      <div className={`w-5 h-5 rounded flex items-center justify-center transition-all shrink-0 ${
         selected 
         ? 'bg-gray-900 text-white' 
-        : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600'
+        : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-500'
       }`}>
         {selected ? (
-          <X className="w-3 h-3" />
+          <X className="w-2.5 h-2.5" />
         ) : (
-          <Plus className="w-3 h-3" />
+          <Plus className="w-2.5 h-2.5" />
         )}
       </div>
     </div>
@@ -774,53 +774,53 @@ export default function LandingPage() {
               <div className="p-3 sm:p-5 space-y-2.5 sm:space-y-3.5 flex-1 min-h-0 flex flex-col">
                 
                 {/* 1. FROM & 2. CATEGORY (Side-by-side in grid) */}
-                <div className="grid grid-cols-2 gap-2 sm:gap-2.5 shrink-0">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 shrink-0">
                   {/* 1. FROM Dropdown */}
-                  <div className="bg-gray-50/80 rounded-xl p-2 sm:p-2.5 border border-gray-200/80">
-                    <label className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-gray-500 mb-0.5 sm:mb-1 block truncate">
+                  <div className="bg-gray-50/90 rounded-xl p-2.5 sm:p-3 border border-gray-200/90 shadow-2xs">
+                    <label className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-gray-800 mb-1.5 block truncate">
                       FROM (HOME COUNTRY)
                     </label>
                     <div className="relative">
                       <select 
                         value={pricingFrom}
                         onChange={(e) => setPricingFrom(e.target.value as keyof typeof ORIGINS)}
-                        className="w-full bg-white border border-gray-200 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400 text-[11px] sm:text-xs font-bold text-gray-900 shadow-2xs"
+                        className="w-full bg-white border border-gray-200 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#F5A623] text-xs sm:text-[13px] font-semibold text-gray-700 shadow-2xs"
                       >
                         {Object.entries(ORIGINS).map(([key, val]) => (
                           <option key={key} value={key}>{val.label}</option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                     </div>
                   </div>
 
                   {/* 2. CATEGORY Dropdown */}
-                  <div className="bg-gray-50/80 rounded-xl p-2 sm:p-2.5 border border-gray-200/80">
-                    <label className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-gray-500 mb-0.5 sm:mb-1 block truncate">
+                  <div className="bg-gray-50/90 rounded-xl p-2.5 sm:p-3 border border-gray-200/90 shadow-2xs">
+                    <label className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-gray-800 mb-1.5 block truncate">
                       CATEGORY
                     </label>
                     <div className="relative">
                       <select 
                         value={activeCategory}
                         onChange={(e) => setActiveCategory(e.target.value)}
-                        className="w-full bg-white border border-gray-200 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400 text-[11px] sm:text-xs font-bold text-gray-900 shadow-2xs"
+                        className="w-full bg-white border border-gray-200 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#F5A623] text-xs sm:text-[13px] font-semibold text-gray-700 shadow-2xs"
                       >
                         {CATEGORIES.map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                     </div>
                   </div>
                 </div>
 
                 {/* 3. TREATMENTS Selection (Takes all remaining flex height and handles the ONLY scrollbar) */}
-                <div className="bg-gray-50/80 rounded-xl p-2.5 sm:p-3 border border-gray-200/80 flex-1 min-h-0 flex flex-col">
-                  <div className="flex items-center justify-between mb-1.5 sm:mb-2 shrink-0">
-                    <label className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-gray-500 block truncate">
+                <div className="bg-gray-50/90 rounded-xl p-2.5 sm:p-3.5 border border-gray-200/90 shadow-2xs flex-1 min-h-0 flex flex-col">
+                  <div className="flex items-center justify-between mb-2 shrink-0">
+                    <label className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-gray-700 block truncate">
                       TREATMENTS ({activeCategory})
                     </label>
-                    <span className="text-[8px] sm:text-[9px] font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full shrink-0">
+                    <span className="text-[9px] sm:text-[10px] font-black text-amber-900 bg-[#F5A623]/25 border border-[#F5A623]/40 px-2.5 py-0.5 rounded-full shrink-0">
                       {selectedTreatments.length} SELECTED
                     </span>
                   </div>
@@ -833,7 +833,7 @@ export default function LandingPage() {
                       placeholder={`Search ${activeCategory} treatments...`}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-white border border-gray-200 rounded-lg pl-8 pr-2.5 py-1.5 text-xs font-medium text-brand-text focus:outline-none focus:ring-1 focus:ring-amber-400 shadow-2xs placeholder:text-gray-400"
+                      className="w-full bg-white border border-gray-200 rounded-lg pl-8 pr-2.5 py-1.5 text-xs font-medium text-brand-text focus:outline-none focus:ring-1 focus:ring-[#F5A623] shadow-2xs placeholder:text-gray-400"
                     />
                   </div>
 
