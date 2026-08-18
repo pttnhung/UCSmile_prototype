@@ -21,7 +21,21 @@ import {
   ChevronDown,
   ChevronUp,
   Info,
-  Camera
+  Camera,
+  ShieldCheck,
+  DollarSign,
+  Headphones,
+  Building2,
+  Sparkles,
+  ArrowDown,
+  ArrowRight,
+  Users,
+  CheckCircle2,
+  TrendingUp,
+  HeartHandshake,
+  Zap,
+  Globe2,
+  Shield
 } from 'lucide-react';
 import Logo from './Logo';
 
@@ -265,7 +279,7 @@ function saveReferrersList(list: ReferrerAccount[]) {
 }
 
 // -----------------------------------------------------------------------------
-// Component 1: Become a Referrer Page
+// Component 1: Become a Referrer Landing Page (with concise benefits & registration)
 // -----------------------------------------------------------------------------
 export function BecomeReferrerPage() {
   const navigate = useNavigate();
@@ -276,12 +290,32 @@ export function BecomeReferrerPage() {
   const [membershipLevel, setMembershipLevel] = useState('Standard (10% commission)');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [showFloatingCta, setShowFloatingCta] = useState(true);
 
   useEffect(() => {
     // Seed initial referrer & bookings database 
     getReferrersList();
     seedReferrerBookings();
+
+    const handleScroll = () => {
+      const formEl = document.getElementById('register-form');
+      if (formEl) {
+        const rect = formEl.getBoundingClientRect();
+        // Hide floating button when the form is visible in viewport
+        setShowFloatingCta(rect.top > window.innerHeight - 100);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const scrollToForm = () => {
+    const el = document.getElementById('register-form');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
@@ -310,7 +344,7 @@ export function BecomeReferrerPage() {
     const randNum = Math.floor(10 + Math.random() * 90);
     const referralCode = `${initials}${randNum}`;
 
-    // Elegant predefined beautiful avatar presets
+    // Elegant predefined avatar presets
     const girlAvatar = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop';
     const guyAvatar = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop';
     const randomAvatar = Math.random() > 0.5 ? girlAvatar : guyAvatar;
@@ -340,149 +374,340 @@ export function BecomeReferrerPage() {
     }, 1200);
   };
 
-  return (
-    <div className="pt-24 pb-16 min-h-[90vh] flex items-center justify-center px-4">
-      <div className="w-full max-w-lg bg-white rounded-3xl border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 md:p-10 relative overflow-hidden">
-        
-        {/* Subtle decorative background gradient */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-100/30 rounded-full blur-2xl -z-10" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-yellow-100/20 rounded-full blur-2xl -z-10" />
+  const steps = [
+    {
+      num: '1',
+      title: 'Join as a Referrer',
+      desc: 'Sign up for free in seconds and get your personal referral code and invite link.',
+      icon: User
+    },
+    {
+      num: '2',
+      title: 'Share With Your Network',
+      desc: 'Share your link with friends, expat groups, travelers, coworkers, or online communities.',
+      icon: Share2
+    },
+    {
+      num: '3',
+      title: 'Client Submits Booking',
+      desc: 'Your contacts submit a dental request. The referral is tracked automatically with your code.',
+      icon: Calendar
+    },
+    {
+      num: '4',
+      title: 'UCSmile Supports Client',
+      desc: 'Our team connects them with vetted clinics and handles all appointment logistics.',
+      icon: Headphones
+    },
+    {
+      num: '5',
+      title: 'Earn Referral Rewards',
+      desc: 'Once their dental visit is completed, your commission reward is confirmed and tracked.',
+      icon: Award
+    }
+  ];
 
-        <div className="flex justify-center mb-5 mt-2">
-          <Logo size="md" variant="full" />
+  const benefits = [
+    {
+      title: 'Easy Extra Income',
+      desc: 'Earn lucrative commission rewards by simply recommending trusted dental care to your network.',
+      icon: DollarSign,
+      color: 'bg-amber-50 text-amber-600 border-amber-200'
+    },
+    {
+      title: 'No Sales Pressure',
+      desc: 'You do not need dental knowledge or selling skills. UCSmile & partner clinics handle everything.',
+      icon: ShieldCheck,
+      color: 'bg-blue-50 text-blue-600 border-blue-200'
+    },
+    {
+      title: 'Help Your Community',
+      desc: 'Many foreigners struggle to find vetted, English-speaking dentists in Vietnam. You give them peace of mind.',
+      icon: HeartHandshake,
+      color: 'bg-emerald-50 text-emerald-600 border-emerald-200'
+    },
+    {
+      title: 'Flexible to Share',
+      desc: 'Use your link in chats, social media, coworking spaces, travel blogs, or casual word-of-mouth.',
+      icon: Globe2,
+      color: 'bg-purple-50 text-purple-600 border-purple-200'
+    },
+    {
+      title: 'Tracked & Transparent',
+      desc: 'Real-time dashboard tracking every click, booking status, verified arrival, and reward balance.',
+      icon: TrendingUp,
+      color: 'bg-rose-50 text-rose-600 border-rose-200'
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-slate-50/40 text-gray-900 pt-20 pb-20">
+      
+      {/* 1. WELCOME HEADER (Warm, inviting, concise) */}
+      <section className="px-4 pt-6 pb-2 max-w-4xl mx-auto">
+        <div className="bg-white border border-gray-200/90 rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-xs relative overflow-hidden text-center">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-amber-100/30 rounded-full blur-3xl -z-10" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-50/50 rounded-full blur-3xl -z-10" />
+          
+          <div className="max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-400/30 px-3 py-1 rounded-full mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-800">
+                Welcome to UCSmile Partner Program
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-gray-900 mb-2.5">
+              Turn your recommendations into <span className="text-amber-500">rewards</span>.
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-600 font-medium leading-relaxed">
+              Connect friends, travelers, and your community with trusted, English-speaking dental clinics in Vietnam. Earn commission on every completed booking while UCSmile handles the rest.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. HOW WE WORK TOGETHER (5 Steps from PDF Page 2) */}
+      <section className="px-4 py-8 max-w-4xl mx-auto">
+        <div className="text-center mb-6">
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 block mb-1">
+            Simple 5-Step Process
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+            How We Work Together
+          </h2>
         </div>
 
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-2">
-            Become a Referrer
-          </h1>
-          <p className="text-gray-500 text-sm font-medium max-w-sm mx-auto">
-            Join our referral program and earn commission on successful bookings.
+        <div className="bg-white border border-gray-200/80 rounded-2xl p-4 sm:p-6 shadow-xs divide-y divide-gray-100">
+          {steps.map((s, idx) => {
+            const IconComponent = s.icon;
+            return (
+              <div key={idx} className="flex items-start gap-3.5 py-4 first:pt-1 last:pb-1">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-400 text-gray-950 font-black text-sm sm:text-base flex items-center justify-center shrink-0 shadow-xs border border-amber-500/20">
+                  {s.num}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <IconComponent className="w-4 h-4 text-gray-500" />
+                    <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 uppercase tracking-wide">
+                      {s.title}
+                    </h3>
+                  </div>
+                  <p className="text-xs text-gray-600 font-medium leading-relaxed">
+                    {s.desc}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 3. WHY BECOME A REFERRER (5 Core Benefits from PDF Page 3) */}
+      <section className="px-4 py-6 max-w-4xl mx-auto">
+        <div className="text-center mb-6">
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 block mb-1">
+            Partner Advantages
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+            Why Become a UCSmile Referrer
+          </h2>
+          <p className="text-xs sm:text-sm text-gray-500 font-medium max-w-lg mx-auto mt-1.5">
+            Designed for anyone—expats, digital nomads, travelers, content creators, and local connectors.
           </p>
         </div>
 
-        <form onSubmit={handleRegister} className="space-y-5">
-          <div>
-            <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block mb-2 ml-1">
-              Full Name
-            </label>
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="John Doe"
-                className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl pl-12 pr-4 py-3.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/15 focus:border-brand-secondary transition-all font-sans font-medium text-gray-900 placeholder:text-gray-400"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block mb-2 ml-1">
-              Phone Number
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1234567890"
-                className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl pl-12 pr-4 py-3.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/15 focus:border-brand-secondary transition-all font-sans font-medium text-gray-900 placeholder:text-gray-400"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block mb-2 ml-1">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl pl-12 pr-4 py-3.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/15 focus:border-brand-secondary transition-all font-sans font-medium text-gray-900 placeholder:text-gray-400"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block mb-2 ml-1">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Min. 8 characters"
-                className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl pl-12 pr-4 py-3.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/15 focus:border-brand-secondary transition-all font-sans font-medium text-gray-900 placeholder:text-gray-400"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block mb-2 ml-1">
-              Membership Level
-            </label>
-            <div className="relative">
-              <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              <select
-                value={membershipLevel}
-                onChange={(e) => setMembershipLevel(e.target.value)}
-                className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl pl-12 pr-8 py-3.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/15 focus:border-brand-secondary transition-all font-sans font-bold text-gray-700 appearance-none cursor-pointer"
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          {benefits.map((b, idx) => {
+            const IconCmp = b.icon;
+            return (
+              <div 
+                key={idx} 
+                className="bg-white border border-gray-200/80 rounded-xl p-4 sm:p-5 shadow-xs hover:border-amber-300 transition-all flex flex-col justify-between"
               >
-                <option value="Standard (10% commission)">Standard (10% commission)</option>
-                <option value="Premium (15% commission)">Premium (15% commission)</option>
-              </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                <ChevronRight className="w-4 h-4 rotate-90 text-gray-400" />
+                <div>
+                  <div className={`w-9 h-9 rounded-lg border flex items-center justify-center mb-3 ${b.color}`}>
+                    <IconCmp className="w-4.5 h-4.5" />
+                  </div>
+                  <h3 className="text-xs sm:text-sm font-bold text-gray-900 mb-1.5">
+                    {b.title}
+                  </h3>
+                  <p className="text-xs text-gray-500 font-medium leading-relaxed">
+                    {b.desc}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 4. REGISTRATION FORM SECTION */}
+      <section id="register-form" className="px-4 py-10 sm:py-14 max-w-xl mx-auto scroll-mt-24">
+        <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-200 shadow-md p-6 sm:p-8 md:p-10 relative overflow-hidden">
+          
+          <div className="flex justify-center mb-4">
+            <Logo size="md" variant="full" />
+          </div>
+
+          <div className="text-center mb-6">
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 mb-1.5">
+              Become a Referrer
+            </h2>
+            <p className="text-gray-500 text-xs sm:text-sm font-medium">
+              Create your account to receive your personal referral code and start earning.
+            </p>
+          </div>
+
+          {/* Membership tier info pill */}
+          <div className="mb-6 bg-amber-50/70 border border-amber-200/80 rounded-xl p-3 text-xs text-amber-900 font-medium">
+            ✨ All new partners start at <span className="font-bold text-gray-900">Standard (10% commission)</span> with instant automated tracking.
+          </div>
+
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1.5 ml-1">
+                Full Name <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="e.g. John Doe"
+                  className="w-full bg-gray-50/50 border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 sm:py-3 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 transition-all font-medium text-gray-900 placeholder:text-gray-400"
+                />
               </div>
             </div>
+
+            <div>
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1.5 ml-1">
+                Phone Number / WhatsApp <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+84905123456"
+                  className="w-full bg-gray-50/50 border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 sm:py-3 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 transition-all font-medium text-gray-900 placeholder:text-gray-400"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1.5 ml-1">
+                Email Address <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full bg-gray-50/50 border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 sm:py-3 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 transition-all font-medium text-gray-900 placeholder:text-gray-400"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1.5 ml-1">
+                Password <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Min. 8 characters"
+                  className="w-full bg-gray-50/50 border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 sm:py-3 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 transition-all font-medium text-gray-900 placeholder:text-gray-400"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1.5 ml-1">
+                Membership Level
+              </label>
+              <div className="relative">
+                <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <select
+                  value={membershipLevel}
+                  onChange={(e) => setMembershipLevel(e.target.value)}
+                  className="w-full bg-gray-50/50 border border-gray-200 rounded-xl pl-10 pr-8 py-2.5 sm:py-3 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 transition-all font-bold text-gray-700 appearance-none cursor-pointer"
+                >
+                  <option value="Standard (10% commission)">Standard (10% commission)</option>
+                  <option value="Premium (15% commission)">Premium (15% commission)</option>
+                </select>
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                </div>
+              </div>
+            </div>
+
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-xs text-red-500 font-bold bg-red-50/50 border border-red-100 rounded-xl p-3"
+              >
+                ⚠️ {error}
+              </motion.div>
+            )}
+
+            {success && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-xs text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center"
+              >
+                🎉 Account created! Redirecting to your dashboard...
+              </motion.div>
+            )}
+
+            <button
+              type="submit"
+              className="w-full bg-brand-primary hover:bg-[#FFB800] active:scale-[0.99] text-gray-900 border border-amber-300 font-extrabold py-3.5 sm:py-4 px-6 rounded-xl text-xs tracking-widest uppercase transition-all shadow-[0_10px_20px_rgba(255,184,0,0.2)] cursor-pointer"
+            >
+              Create Account & Get Referral Link
+            </button>
+          </form>
+
+          <div className="mt-6 pt-5 border-t border-gray-100 text-center">
+            <p className="text-xs text-gray-500 font-medium">
+              Already registered as a referrer?{' '}
+              <Link to="/referrer" className="text-amber-600 hover:text-amber-700 font-black tracking-wide ml-0.5 underline">
+                Sign in
+              </Link>
+            </p>
           </div>
-
-          {error && (
-            <motion.div 
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-xs text-red-500 font-bold bg-red-50/50 border border-red-100 rounded-xl p-3"
-            >
-              ⚠️ {error}
-            </motion.div>
-          )}
-
-          {success && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-xs text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center"
-            >
-              🎉 Success! Redirecting to your dashboard...
-            </motion.div>
-          )}
-
-          <button
-            type="submit"
-            className="w-full bg-brand-primary hover:bg-[#FFB800] active:scale-[0.99] text-gray-900 border border-amber-300 font-bold py-4 px-6 rounded-2xl text-[13px] tracking-widest uppercase transition-all shadow-[0_12px_24px_rgba(255,209,81,0.18)]"
-          >
-            Create Account
-          </button>
-        </form>
-
-        <div className="mt-6 pt-5 border-t border-gray-100 text-center">
-          <p className="text-xs text-gray-500 font-medium">
-            Already have an account?{' '}
-            <Link to="/referrer" className="text-[#FFB800] hover:text-amber-600 font-black tracking-wide ml-0.5 underline">
-              Sign in
-            </Link>
-          </p>
         </div>
-      </div>
+      </section>
+
+      {/* 5. FLOATING QUICK CTA BUTTON */}
+      <AnimatePresence>
+        {showFloatingCta && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 30 }}
+            className="fixed bottom-6 left-6 z-40"
+          >
+            <button
+              onClick={scrollToForm}
+              className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-amber-400 border border-amber-400/40 px-4 sm:px-5 py-3 rounded-full text-xs font-black uppercase tracking-wider shadow-xl transition-all active:scale-95 cursor-pointer hover:shadow-2xl"
+            >
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>Become a Referrer</span>
+              <ArrowDown className="w-3.5 h-3.5 ml-0.5" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

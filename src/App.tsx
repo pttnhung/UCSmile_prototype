@@ -20,6 +20,7 @@ import {
 import Logo from './components/Logo';
 
 import LandingPage from './components/LandingPage';
+import ComparisonPage from './components/ComparisonPage';
 import BlogPage from './components/BlogPage';
 import BookingPage from './components/BookingPage';
 import VerifyPage from './components/VerifyPage';
@@ -108,6 +109,7 @@ function Layout() {
       
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/comparison" element={<ComparisonPage />} />
         <Route path="/blogs" element={<BlogPage />} />
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/booking/internal" element={<BookingPage />} />
@@ -116,6 +118,8 @@ function Layout() {
         <Route path="/verify" element={<VerifyPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/register" element={<BecomeReferrerPage />} />
+        <Route path="/become-a-referrer" element={<BecomeReferrerPage />} />
+        <Route path="/partner" element={<BecomeReferrerPage />} />
         <Route path="/referrer" element={<ReferrerLoginPage />} />
         <Route path="/referrer/dashboard" element={<ReferrerDashboardPage />} />
         <Route path="/dashboard" element={<ReferrerDashboardPage />} />

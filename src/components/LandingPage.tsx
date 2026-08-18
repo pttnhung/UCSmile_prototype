@@ -10,298 +10,32 @@ import {
   Stethoscope,
   Star,
   Plus,
+  PlusCircle,
   Minus,
   X,
+  Trash2,
   Plane,
   Search,
   User,
   Calendar,
   Clock,
   FileText,
-  Check
+  Check,
+  ArrowRight
 } from 'lucide-react';
 import { blogData, BlogPost } from '../constants/blogData';
 import BlogModal from './BlogModal';
+import { 
+  TREATMENTS, 
+  CATEGORIES, 
+  ORIGINS, 
+  NATIONALITIES_LIST,
+  Treatment, 
+  PriceRange 
+} from '../constants/treatmentData';
 
-// Types
-export interface PriceRange {
-  min: number;
-  max: number;
-}
-
-export interface Treatment {
-  id: string;
-  name: string;
-  prices: Record<string, PriceRange>;
-  hasQuantity?: boolean;
-  category: string;
-  secondaryCategory?: string;
-}
-
-const NATIONALITIES_LIST = [
-  'Enter your nationality',
-  'Australia',
-  'United States',
-  'Singapore',
-  'New Zealand',
-  'United Kingdom',
-  'Canada',
-  'Vietnam',
-  'Germany',
-  'France',
-  'Japan',
-  'South Korea',
-  'Russia',
-  'Thailand',
-  'Other'
-];
-
-export const TREATMENTS: Treatment[] = [
-  { 
-    id: 'cleaning', 
-    name: 'Cleaning + Exam', 
-    category: 'General',
-    prices: {
-      vn: { min: 10, max: 40 },
-      th: { min: 90, max: 120 },
-      au: { min: 270, max: 300 },
-      sg: { min: 220, max: 250 },
-      kr: { min: 120, max: 150 },
-      jp: { min: 150, max: 180 },
-      cn: { min: 145, max: 175 },
-      ru: { min: 60, max: 90 },
-      us: { min: 370, max: 400 },
-    }
-  },
-  { 
-    id: 'whitening', 
-    name: 'Professional Whitening', 
-    category: 'General',
-    prices: {
-      vn: { min: 60, max: 180 },
-      th: { min: 480, max: 600 },
-      au: { min: 880, max: 1000 },
-      sg: { min: 1080, max: 1200 },
-      kr: { min: 580, max: 700 },
-      jp: { min: 780, max: 900 },
-      cn: { min: 365, max: 485 },
-      ru: { min: 380, max: 500 },
-      us: { min: 1080, max: 1200 },
-    }
-  },
-  { 
-    id: 'filling', 
-    name: 'Composite Filling', 
-    hasQuantity: true, 
-    category: 'General',
-    prices: {
-      vn: { min: 10, max: 60 },
-      th: { min: 130, max: 180 },
-      au: { min: 400, max: 450 },
-      sg: { min: 300, max: 350 },
-      kr: { min: 170, max: 220 },
-      jp: { min: 250, max: 300 },
-      cn: { min: 95, max: 145 },
-      ru: { min: 130, max: 180 },
-      us: { min: 650, max: 700 },
-    }
-  },
-  { 
-    id: 'extraction', 
-    name: 'Simple Extraction', 
-    hasQuantity: true, 
-    category: 'General',
-    prices: {
-      vn: { min: 12, max: 98 },
-      th: { min: 94, max: 180 },
-      au: { min: 264, max: 350 },
-      sg: { min: 214, max: 300 },
-      kr: { min: 94, max: 180 },
-      jp: { min: 134, max: 220 },
-      cn: { min: 132, max: 218 },
-      ru: { min: 34, max: 120 },
-      us: { min: 414, max: 500 },
-    }
-  },
-  { 
-    id: 'surgical-extraction', 
-    name: 'Surgical Extraction', 
-    hasQuantity: true, 
-    category: 'General',
-    prices: {
-      vn: { min: 40, max: 200 },
-      th: { min: 290, max: 450 },
-      au: { min: 640, max: 800 },
-      sg: { min: 740, max: 900 },
-      kr: { min: 340, max: 500 },
-      jp: { min: 490, max: 650 },
-      cn: { min: 345, max: 505 },
-      ru: { min: 190, max: 350 },
-      us: { min: 1040, max: 1200 },
-    }
-  },
-  { 
-    id: 'root-canal', 
-    name: 'Root Canal + Crown', 
-    category: 'Restorative',
-    prices: {
-      vn: { min: 80, max: 925 },
-      th: { min: 955, max: 1800 },
-      au: { min: 3155, max: 4000 },
-      sg: { min: 2655, max: 3500 },
-      kr: { min: 1355, max: 2200 },
-      jp: { min: 1955, max: 2800 },
-      cn: { min: 1378, max: 2223 },
-      ru: { min: 655, max: 1500 },
-      us: { min: 4155, max: 5000 },
-    }
-  },
-  { 
-    id: 'porcelain-crown', 
-    name: 'Porcelain Crown (Zirconia)', 
-    hasQuantity: true, 
-    category: 'Restorative',
-    prices: {
-      vn: { min: 157, max: 394 },
-      th: { min: 663, max: 900 },
-      au: { min: 1963, max: 2200 },
-      sg: { min: 1763, max: 2000 },
-      kr: { min: 763, max: 1000 },
-      jp: { min: 1263, max: 1500 },
-      cn: { min: 682, max: 919 },
-      ru: { min: 563, max: 800 },
-      us: { min: 2763, max: 3000 },
-    }
-  },
-  { 
-    id: 'veneer', 
-    name: 'Premium Veneers (per tooth)', 
-    hasQuantity: true, 
-    category: 'Cosmetic',
-    prices: {
-      vn: { min: 394, max: 551 },
-      th: { min: 1043, max: 1200 },
-      au: { min: 2343, max: 2500 },
-      sg: { min: 2043, max: 2200 },
-      kr: { min: 1043, max: 1200 },
-      jp: { min: 1343, max: 1500 },
-      cn: { min: 722, max: 879 },
-      ru: { min: 643, max: 800 },
-      us: { min: 2843, max: 3000 },
-    }
-  },
-  { 
-    id: 'implant', 
-    name: 'Implant', 
-    hasQuantity: true, 
-    category: 'Implants',
-    secondaryCategory: 'General',
-    prices: {
-      vn: { min: 670, max: 2285 },
-      th: { min: 2385, max: 4000 },
-      au: { min: 5385, max: 7000 },
-      sg: { min: 4885, max: 6500 },
-      kr: { min: 1885, max: 3500 },
-      jp: { min: 3885, max: 5500 },
-      cn: { min: 2043, max: 3658 },
-      ru: { min: 1385, max: 3000 },
-      us: { min: 6385, max: 8000 },
-    }
-  },
-  { 
-    id: 'all-on-4', 
-    name: 'All-on-4 Full Arch', 
-    category: 'Implants',
-    prices: {
-      vn: { min: 4724, max: 7874 },
-      th: { min: 14850, max: 18000 },
-      au: { min: 36850, max: 40000 },
-      sg: { min: 34850, max: 38000 },
-      kr: { min: 14850, max: 18000 },
-      jp: { min: 31850, max: 35000 },
-      cn: { min: 11425, max: 14575 },
-      ru: { min: 14850, max: 18000 },
-      us: { min: 41850, max: 45000 },
-    }
-  },
-  { 
-    id: 'invisalign', 
-    name: 'Invisalign (Full Package)', 
-    category: 'Orthodontics',
-    prices: {
-      vn: { min: 4724, max: 5905 },
-      th: { min: 5819, max: 7000 },
-      au: { min: 7819, max: 9000 },
-      sg: { min: 8819, max: 10000 },
-      kr: { min: 5319, max: 6500 },
-      jp: { min: 7319, max: 8500 },
-      cn: { min: 5910, max: 7091 },
-      ru: { min: 4819, max: 6000 },
-      us: { min: 7819, max: 9000 },
-    }
-  },
-  { 
-    id: 'braces', 
-    name: 'Braces / Orthodontics', 
-    category: 'Orthodontics',
-    prices: {
-      vn: { min: 984, max: 2755 },
-      th: { min: 2729, max: 4500 },
-      au: { min: 6229, max: 8000 },
-      sg: { min: 6229, max: 8000 },
-      kr: { min: 3229, max: 5000 },
-      jp: { min: 5229, max: 7000 },
-      cn: { min: 3315, max: 5086 },
-      ru: { min: 2229, max: 4000 },
-      us: { min: 6229, max: 8000 },
-    }
-  },
-  { 
-    id: 'smile-makeover', 
-    name: 'Full Smile Makeover', 
-    category: 'Cosmetic',
-    prices: {
-      vn: { min: 3780, max: 11020 },
-      th: { min: 17760, max: 25000 },
-      au: { min: 52760, max: 60000 },
-      sg: { min: 47760, max: 55000 },
-      kr: { min: 17760, max: 25000 },
-      jp: { min: 37760, max: 45000 },
-      cn: { min: 17380, max: 24620 },
-      ru: { min: 10760, max: 18000 },
-      us: { min: 62760, max: 70000 },
-    }
-  },
-  { 
-    id: 'sinus-lift', 
-    name: 'Sinus Lift (Support)', 
-    category: 'Implants',
-    prices: {
-      vn: { min: 197, max: 590 },
-      th: { min: 807, max: 1200 },
-      au: { min: 2607, max: 3000 },
-      sg: { min: 2107, max: 2500 },
-      kr: { min: 1107, max: 1500 },
-      jp: { min: 1407, max: 1800 },
-      cn: { min: 1204, max: 1597 },
-      ru: { min: 507, max: 900 },
-      us: { min: 3607, max: 4000 },
-    }
-  },
-];
-
-const CATEGORIES = ['General', 'Restorative', 'Implants', 'Orthodontics', 'Cosmetic'];
-
-const ORIGINS = {
-  au: { label: 'Australia', short: 'AUS' },
-  us: { label: 'USA', short: 'USA' },
-  th: { label: 'Thailand', short: 'THA' },
-  sg: { label: 'Singapore', short: 'SGP' },
-  kr: { label: 'South Korea', short: 'KOR' },
-  jp: { label: 'Japan', short: 'JPN' },
-  cn: { label: 'China', short: 'CHN' },
-  ru: { label: 'Russia', short: 'RUS' },
-};
+export type { Treatment, PriceRange };
+export { TREATMENTS };
 
 interface TreatmentCardProps {
   key?: string;
@@ -325,7 +59,7 @@ function TreatmentCard({
       className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all duration-300 cursor-pointer group relative ${
         selected 
         ? 'border-brand-primary bg-brand-primary/5 shadow-sm' 
-        : 'bg-white border-gray-100 hover:border-gray-200 text-brand-text'
+        : 'bg-[#FAF9F6] border-gray-200/80 hover:border-gray-300 text-brand-text'
       }`}
     >
       <div className="flex flex-col flex-grow pr-2">
@@ -368,9 +102,10 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [selectedTreatments, setSelectedTreatments] = useState<string[]>(['cleaning', 'whitening']);
+  const [selectedTreatments, setSelectedTreatments] = useState<string[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [pricingFrom, setPricingFrom] = useState<keyof typeof ORIGINS>('au');
+  const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [activeCategory, setActiveCategory] = useState('General');
   const [searchQuery, setSearchQuery] = useState('');
@@ -406,18 +141,29 @@ export default function LandingPage() {
     return '$0';
   };
 
-  // Handle routing state-based smooth scrolling on initial mount or path change
+  // Handle routing state-based smooth scrolling and data passing on initial mount or path change
   useEffect(() => {
-    if (location.state && (location.state as any).scrollTo === 'booking') {
-      const element = document.getElementById('booking');
-      if (element) {
-        setTimeout(() => {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }, 150);
+    if (location.state) {
+      const st = location.state as any;
+      if (st.selectedTreatments) {
+        setSelectedTreatments(st.selectedTreatments);
       }
-      navigate('/', { replace: true, state: {} });
+      if (st.pricingFrom) {
+        setPricingFrom(st.pricingFrom);
+      }
+      if (st.quantities) {
+        setQuantities(st.quantities);
+      }
+      if (st.scrollTo) {
+        const element = document.getElementById(st.scrollTo);
+        if (element) {
+          setTimeout(() => {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }, 150);
+        }
+      }
     }
-  }, [location.state, navigate]);
+  }, [location.state]);
 
   const handleFooterSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -661,13 +407,29 @@ export default function LandingPage() {
 
       {/* Calculator Section */}
       <section id="price-comparison" className="pb-32 px-4 max-w-7xl mx-auto">
-        <div className="bg-white rounded-[3rem] overflow-hidden flex flex-col lg:flex-row shadow-[0_40px_100px_rgba(0,0,0,0.03)] border border-gray-100">
-          {/* Selector Pane */}
-          <div className="p-6 md:p-10 lg:w-3/5 bg-gray-50/30">
+        <div className="bg-[#FAF9F6] rounded-[3rem] overflow-hidden flex flex-col lg:flex-row shadow-[0_40px_100px_rgba(0,0,0,0.03)] border border-gray-200/80">
+          
+          {/* Mobile Selector View: 1 Button Flow */}
+          <div className="p-6 block md:hidden bg-gray-50/30 text-left">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-2">PRICE COMPARISON</p>
+            <h2 className="font-serif text-2xl font-black mb-4 leading-tight text-brand-text">Compare treatments at a glance.</h2>
+            <p className="text-xs text-gray-500 font-medium mb-5">Select your home country and desired treatments to calculate your estimated savings.</p>
+            
+            <Link 
+              to="/comparison"
+              className="w-full bg-[#FFC107] hover:bg-amber-400 text-gray-950 font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2 text-xs uppercase tracking-wider shadow-md transition-all active:scale-[0.98]"
+            >
+              <span>Let's Start Comparing</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* Desktop Selector Pane */}
+          <div className="p-6 md:p-10 lg:w-3/5 bg-gray-50/30 hidden md:block text-left">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-3">PRICE COMPARISON</p>
             <h2 className="font-serif text-2xl md:text-4xl font-black mb-6 leading-tight text-brand-text">Compare treatments at a glance.</h2>
             
-            <div className="space-y-4 bg-white p-5 rounded-[1.5rem] border border-gray-100 shadow-sm">
+            <div className="space-y-4 bg-[#FAF9F6] p-5 rounded-[1.5rem] border border-gray-200/60 shadow-xs">
               <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-100 shadow-sm">
                 <label className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-500 mb-1.5 block">FROM</label>
                 <div className="relative">
@@ -692,7 +454,7 @@ export default function LandingPage() {
                       <span className="text-[9px] font-bold text-gray-400">{selectedTreatments.length} SELECTED</span>
                     </div>
                   </div>
-                  {/* Category Selection - Grid for clarity on mobile */}
+                  {/* Category Selection */}
                   <div className="grid grid-cols-2 xs:grid-cols-3 sm:flex sm:flex-wrap gap-1.5">
                     {CATEGORIES.map(cat => {
                       const count = selectedTreatments.filter(id => {
@@ -757,93 +519,130 @@ export default function LandingPage() {
           </div>
 
           {/* Breakdown Pane */}
-          <div ref={comparisonRef} id="comparison-details" className="p-6 md:p-8 lg:w-[42%] md:border-l border-gray-100 bg-white text-left">
-            <div className="lg:mt-32 h-full rounded-[1.5rem] bg-gray-50/20 p-5 sm:p-6 border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.01)]">
-              <div className="flex items-center justify-between mb-6">
+          <div ref={comparisonRef} id="comparison-details" className="p-6 md:p-8 lg:w-[45%] md:border-l border-gray-200/60 bg-[#FAF9F6] text-left flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">ESTIMATED COMPARISON</span>
                 <span className="text-[10px] bg-gray-100 px-2.5 py-0.5 rounded-full uppercase font-black text-gray-500">APPROXIMATE</span>
               </div>
 
-              <div className="space-y-4 mb-8">
-                <div className="grid grid-cols-12 text-[9px] sm:text-[10px] font-black text-gray-400 pb-2 border-b border-gray-100 uppercase tracking-widest gap-2">
-                  <div className="col-span-3 text-left">TREATMENT</div>
-                  <div className="col-span-9 grid grid-cols-2 gap-2 text-right">
-                    <div className="truncate">~{ORIGINS[pricingFrom].short}</div>
-                    <div>~VIETNAM</div>
-                  </div>
-                </div>
-                
-                {selectedTreatments.length === 0 ? (
-                  <p className="text-center py-12 text-gray-400 font-bold uppercase tracking-widest text-[10px]">Pick your services to compare</p>
-                ) : (
-                  <div className="space-y-0">
-                    {selectedTreatments.map(id => {
-                      const t = TREATMENTS.find(item => item.id === id);
-                      if (!t) return null;
-                      return (
-                        <div key={id} className="grid grid-cols-12 items-center gap-2 group py-3 border-b border-gray-50 last:border-0 relative">
-                          <div className="col-span-3 flex items-start gap-1.5 min-w-0 text-left">
-                            <button 
-                              onClick={() => toggleTreatment(id)}
-                              className="w-4 h-4 flex-shrink-0 mt-0.5 flex items-center justify-center rounded-md bg-gray-100 text-gray-400 transition-all hover:bg-red-50 hover:text-red-500"
-                              title="Remove"
-                            >
-                              <X className="w-2.5 h-2.5" />
-                            </button>
-                            <div className="min-w-0 pr-0.5">
-                                <div className="text-[11px] sm:text-[13px] font-bold text-gray-900 leading-tight">
-                                  {t.name}
-                                </div>
-                                {(quantities[id] > 1) && <p className="text-[8px] text-gray-400 font-bold uppercase tracking-wider mt-0.5 text-left">Qty: {quantities[id]}</p>}
-                            </div>
-                          </div>
-                          <div className="col-span-9 grid grid-cols-2 gap-2 text-right">
-                            <span className="text-[10px] sm:text-[12px] md:text-[13px] font-bold text-gray-400 leading-tight block whitespace-nowrap">
-                              ${Math.round((t.prices[originKey]?.min || 0) * (quantities[id] || 1)).toLocaleString()} - ${Math.round((t.prices[originKey]?.max || 0) * (quantities[id] || 1)).toLocaleString()}
-                            </span>
-                            <span className="text-[10px] sm:text-[12px] md:text-[13px] font-black text-brand-text tracking-tight block whitespace-nowrap">
-                              ${Math.round((t.prices.vn.min || 0) * (quantities[id] || 1)).toLocaleString()} - ${Math.round((t.prices.vn.max || 0) * (quantities[id] || 1)).toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+              {/* Itemized Breakdown Content (only shown when treatments are selected) */}
+              {selectedTreatments.length > 0 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setIsBreakdownOpen(!isBreakdownOpen)}
+                    className="w-full flex items-center justify-between text-xs font-bold text-gray-700 bg-gray-50 hover:bg-gray-100 px-4 py-2.5 rounded-xl transition-all border border-gray-200/60 cursor-pointer"
+                  >
+                    <span>{isBreakdownOpen ? 'Hide Details' : 'Show Details'}</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isBreakdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
 
-              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-brand-primary/5 rounded-full -mr-12 -mt-12" />
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] block mb-2 relative z-10">ESTIMATED SAVINGS</span>
-                <div className="flex items-end gap-2 mb-4 relative z-10">
-                  <span className="text-4xl font-black tracking-tight text-brand-secondary">~${Math.round(totalSavings).toLocaleString()}</span>
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-widest pb-1">USD</span>
-                </div>
-                {totalSavings > 0 && (
-                  <div className="relative z-10 mb-6 group">
-                    <div className="absolute -inset-2 bg-brand-primary/10 rounded-2xl blur-lg transition-all group-hover:bg-brand-primary/20" />
-                    <div className="relative bg-white/60 backdrop-blur-sm border border-brand-primary/20 rounded-xl p-4 shadow-sm">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-brand-primary flex items-center justify-center shrink-0">
-                          <Plane className="w-4 h-4 text-brand-text" />
+                  {isBreakdownOpen && (
+                    <div className="space-y-4 pt-2 border-t border-gray-100">
+                      <div className="grid grid-cols-12 text-[9px] sm:text-[10px] font-black text-gray-400 pb-2 border-b border-gray-100 uppercase tracking-widest gap-2">
+                        <div className="col-span-4 text-left">TREATMENT</div>
+                        <div className="col-span-8 grid grid-cols-2 gap-2 text-right">
+                          <div className="truncate">~{ORIGINS[pricingFrom].short}</div>
+                          <div>~VIETNAM</div>
                         </div>
-                        <p className="text-[12px] text-brand-text font-bold leading-snug italic">
-                          {totalSavings < 100 && "Enough for an ocean-view stay or a luxury spa experience in Vietnam."}
-                          {totalSavings >= 100 && totalSavings < 300 && "Enough for 1–2 days of spa treatments, fine dining, and premium local experiences in Vietnam."}
-                          {totalSavings >= 300 && totalSavings < 800 && "Enough for a 2–4 night beachfront resort escape in Da Nang or Nha Trang."}
-                          {totalSavings >= 800 && totalSavings < 1500 && "Enough for a 4–7 day Vietnam getaway with flights and luxury hotel stays included."}
-                          {totalSavings >= 1500 && totalSavings < 3000 && "Enough to cover most of a 1–2 week Vietnam vacation with beachfront resorts and unforgettable experiences."}
-                          {totalSavings >= 3000 && totalSavings < 5000 && "Enough for a 2–3 week luxury journey across Vietnam with premium resorts and private tours."}
-                          {totalSavings >= 5000 && totalSavings < 10000 && "Enough for a 3–4 week luxury Southeast Asia holiday across multiple destinations."}
-                          {totalSavings >= 10000 && "Enough for a once-in-a-lifetime luxury Asia travel experience."}
-                        </p>
+                      </div>
+                      
+                      <div className="space-y-0">
+                        {selectedTreatments.map(id => {
+                          const t = TREATMENTS.find(item => item.id === id);
+                          if (!t) return null;
+                          return (
+                            <div key={id} className="grid grid-cols-12 items-center gap-2 group py-2 border-b border-gray-50 last:border-0 relative">
+                              <div className="col-span-4 flex items-start gap-1.5 min-w-0 text-left">
+                                <button 
+                                  onClick={() => toggleTreatment(id)}
+                                  className="p-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                                  title="Remove"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                                <div className="min-w-0 pr-0.5">
+                                    <div className="text-[11px] font-bold text-gray-900 leading-tight">
+                                      {t.name}
+                                    </div>
+                                    {(quantities[id] > 1) && <p className="text-[8px] text-gray-400 font-bold uppercase tracking-wider mt-0.5 text-left">Qty: {quantities[id]}</p>}
+                                </div>
+                              </div>
+                              <div className="col-span-8 grid grid-cols-2 gap-2 text-right">
+                                <span className="text-[10px] sm:text-[11px] font-bold text-gray-400 leading-tight block whitespace-nowrap">
+                                  ${Math.round((t.prices[pricingFrom]?.min || 0) * (quantities[id] || 1)).toLocaleString()} - ${Math.round((t.prices[pricingFrom]?.max || 0) * (quantities[id] || 1)).toLocaleString()}
+                                </span>
+                                <span className="text-[10px] sm:text-[11px] font-black text-brand-text tracking-tight block whitespace-nowrap">
+                                  ${Math.round((t.prices.vn.min || 0) * (quantities[id] || 1)).toLocaleString()} - ${Math.round((t.prices.vn.max || 0) * (quantities[id] || 1)).toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                  </div>
+                  )}
+                </>
+              )}
+
+              {/* Prominent Estimated Savings Box */}
+              <div className="bg-gray-50/60 rounded-2xl p-5 sm:p-6 border border-gray-100 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-brand-primary/5 rounded-full -mr-12 -mt-12 pointer-events-none" />
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] block mb-2 relative z-10">ESTIMATED SAVINGS</span>
+                {selectedTreatments.length === 0 ? (
+                  <p className="text-xs font-medium text-gray-500 py-2 relative z-10 leading-relaxed">
+                    <span className="hidden md:inline">Select treatments on the left to calculate savings.</span>
+                    <span className="md:hidden">Tap "Let's Start Comparing" above to select treatments.</span>
+                  </p>
+                ) : (
+                  <>
+                    <div className="flex items-end gap-2 mb-4 relative z-10">
+                      <span className="text-4xl font-black tracking-tight text-brand-secondary">~${Math.round(totalSavings).toLocaleString()}</span>
+                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest pb-1">USD</span>
+                    </div>
+                    {totalSavings > 0 && (
+                      <div className="relative z-10 mb-4 group">
+                        <div className="absolute -inset-2 bg-brand-primary/10 rounded-2xl blur-lg transition-all group-hover:bg-brand-primary/20" />
+                        <div className="relative bg-white/80 backdrop-blur-sm border border-brand-primary/20 rounded-xl p-3.5 shadow-xs">
+                          <div className="flex items-start gap-3">
+                            <div className="w-7 h-7 rounded-full bg-brand-primary flex items-center justify-center shrink-0 mt-0.5">
+                              <Plane className="w-3.5 h-3.5 text-brand-text" />
+                            </div>
+                            <p className="text-[11px] text-gray-500 font-normal leading-snug italic">
+                              {totalSavings < 100 && "Enough for an ocean-view stay or a luxury spa experience in Vietnam."}
+                              {totalSavings >= 100 && totalSavings < 300 && "Enough for 1–2 days of spa treatments, fine dining, and premium local experiences in Vietnam."}
+                              {totalSavings >= 300 && totalSavings < 800 && "Enough for a 2–4 night beachfront resort escape in Da Nang or Nha Trang."}
+                              {totalSavings >= 800 && totalSavings < 1500 && "Enough for a 4–7 day Vietnam getaway with flights and luxury hotel stays included."}
+                              {totalSavings >= 1500 && totalSavings < 3000 && "Enough to cover most of a 1–2 week Vietnam vacation with beachfront resorts and unforgettable experiences."}
+                              {totalSavings >= 3000 && totalSavings < 5000 && "Enough for a 2–3 week luxury journey across Vietnam with premium resorts and private tours."}
+                              {totalSavings >= 5000 && totalSavings < 10000 && "Enough for a 3–4 week luxury Southeast Asia holiday across multiple destinations."}
+                              {totalSavings >= 10000 && "Enough for a once-in-a-lifetime luxury Asia travel experience."}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
-                <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest leading-tight border-t border-gray-50 pt-3 italic">
+                <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest leading-tight border-t border-gray-100 pt-3 italic">
                   * Market average estimates. Final costs vary by materials and clinical complexity.
                 </p>
+
+                {/* Book Consultation Button - Only shown when treatments are selected */}
+                {selectedTreatments.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = document.getElementById('booking');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="w-full bg-gray-200 hover:bg-gray-300 text-gray-900 font-black text-xs sm:text-sm uppercase tracking-wider py-4 rounded-2xl shadow-xs border border-gray-300/80 transition-all active:scale-[0.98] cursor-pointer mt-4 flex items-center justify-center gap-2"
+                  >
+                    <span>Book Your Consultation</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -884,7 +683,7 @@ export default function LandingPage() {
             <motion.div 
               key={idx}
               whileHover={{ y: -8 }}
-              className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all group text-left"
+              className="bg-[#FAF9F6] p-10 rounded-[2.5rem] border border-gray-200/60 shadow-xs hover:shadow-xl transition-all group text-left"
             >
               <div className={`w-14 h-14 ${feature.color} rounded-2xl flex items-center justify-center mb-8 border border-white/10 transition-colors group-hover:bg-gray-900 group-hover:text-white`}>
                 <feature.icon className="w-7 h-7" />
@@ -928,7 +727,7 @@ export default function LandingPage() {
                   element.scrollIntoView({ behavior: 'smooth' });
                 }
               }}
-              className="bg-white rounded-[2.5rem] overflow-hidden group border border-gray-100 shadow-sm hover:shadow-2xl hover:border-brand-primary/20 transition-all cursor-pointer"
+              className="bg-[#FAF9F6] rounded-[2.5rem] overflow-hidden group border border-gray-200/60 shadow-xs hover:shadow-2xl hover:border-brand-primary/20 transition-all cursor-pointer"
             >
                 <div className="h-64 bg-gray-100 relative overflow-hidden p-3">
                 <img 
@@ -1061,7 +860,7 @@ export default function LandingPage() {
 
       {/* Footer Form - 2-Step Wizard Design */}
       <section id="booking" className="py-16 md:py-28 px-3 sm:px-4 scroll-mt-24">
-        <div className="max-w-xl md:max-w-2xl mx-auto bg-gray-50/50 sm:bg-white rounded-2xl sm:rounded-[2rem] overflow-hidden shadow-xl border border-gray-100 p-3.5 sm:p-6 md:p-8">
+        <div className="max-w-xl md:max-w-2xl mx-auto bg-[#FAF9F6] rounded-2xl sm:rounded-[2rem] overflow-hidden shadow-xl border border-gray-200/80 p-3.5 sm:p-6 md:p-8">
           
           {/* Top Progress Indicator Header */}
           <div className="mb-3 text-left">
@@ -1127,7 +926,7 @@ export default function LandingPage() {
                       value={fullName}
                       onChange={e => setFullName(e.target.value)}
                       placeholder="Enter your full name"
-                      className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-3 py-2.5 text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 font-medium" 
+                      className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-3 py-2.5 text-xs text-gray-600 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 font-medium" 
                     />
                   </div>
 
@@ -1141,7 +940,7 @@ export default function LandingPage() {
                       value={whatsappPhone}
                       onChange={e => setWhatsappPhone(e.target.value)}
                       placeholder="+1 (555) 000-0000"
-                      className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-3 py-2.5 text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 font-medium" 
+                      className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-3 py-2.5 text-xs text-gray-600 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 font-medium" 
                     />
                   </div>
 
@@ -1155,7 +954,7 @@ export default function LandingPage() {
                       value={email}
                       onChange={e => setEmail(e.target.value)}
                       placeholder="john@example.com"
-                      className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-3 py-2.5 text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 font-medium" 
+                      className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-3 py-2.5 text-xs text-gray-600 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 font-medium" 
                     />
                   </div>
 
@@ -1167,10 +966,12 @@ export default function LandingPage() {
                       <select 
                         value={nationality}
                         onChange={e => setNationality(e.target.value)}
-                        className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl pl-3 pr-8 py-2.5 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800 appearance-none cursor-pointer font-medium"
+                        className={`w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl pl-3 pr-8 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-gray-800 appearance-none cursor-pointer font-medium ${
+                          nationality ? 'text-gray-600' : 'text-gray-400'
+                        }`}
                       >
                         {NATIONALITIES_LIST.map((nat, idx) => (
-                          <option key={idx} value={idx === 0 ? '' : nat} disabled={idx === 0}>
+                          <option key={idx} value={idx === 0 ? '' : nat} disabled={idx === 0} className="text-gray-700">
                             {nat}
                           </option>
                         ))}
@@ -1184,15 +985,15 @@ export default function LandingPage() {
 
             {/* STEP 2: Appointment Info & Treatment */}
             {currentStep === 2 && (
-              <div className="space-y-3.5 text-left">
-                {/* Card 1: Appointment Info */}
-                <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200/80 p-3.5 sm:p-5 shadow-xs space-y-3">
+              <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200/80 shadow-xs divide-y divide-gray-100 overflow-hidden text-left">
+                {/* Section 1: Appointment Info */}
+                <div className="p-3.5 sm:p-5 space-y-3">
                   <div className="flex items-center gap-2 border-b border-gray-100 pb-2.5">
                     <Calendar className="w-4 h-4 text-gray-700" />
                     <h3 className="font-bold text-gray-900 text-xs sm:text-sm">Appointment Info</h3>
                   </div>
 
-                  {/* PREFERRED DATE & HOUR on same row on all screen sizes */}
+                  {/* PREFERRED DATE & PREFERRED CITY on top row */}
                   <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <div>
                       <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5 truncate">
@@ -1204,39 +1005,12 @@ export default function LandingPage() {
                         min={new Date().toISOString().split('T')[0]}
                         value={preferredDate}
                         onChange={e => setPreferredDate(e.target.value)}
-                        className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-2.5 sm:px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800 cursor-pointer"
+                        className={`w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-2.5 sm:px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-800 cursor-pointer ${
+                          preferredDate ? 'text-gray-600' : 'text-gray-400'
+                        }`}
                       />
                     </div>
 
-                    <div>
-                      <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5 truncate">
-                        HOUR <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <Clock className="w-3.5 h-3.5 text-gray-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <select
-                          value={confirmedHour}
-                          onChange={e => setConfirmedHour(e.target.value)}
-                          className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl pl-8 pr-6 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800 appearance-none cursor-pointer"
-                        >
-                          <option value="">Select Priority</option>
-                          <option value="08:00 AM">08:00 AM</option>
-                          <option value="09:00 AM">09:00 AM</option>
-                          <option value="10:00 AM">10:00 AM</option>
-                          <option value="11:00 AM">11:00 AM</option>
-                          <option value="01:30 PM">01:30 PM</option>
-                          <option value="02:00 PM">02:00 PM</option>
-                          <option value="02:30 PM">02:30 PM</option>
-                          <option value="03:00 PM">03:00 PM</option>
-                          <option value="04:00 PM">04:00 PM</option>
-                        </select>
-                        <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* PREFERRED CITY & CLINIC on same row on all screen sizes */}
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <div>
                       <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5 truncate">
                         PREFERRED CITY <span className="text-red-500">*</span>
@@ -1245,35 +1019,41 @@ export default function LandingPage() {
                         <select
                           value={preferredCity}
                           onChange={e => setPreferredCity(e.target.value)}
-                          className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-2.5 sm:px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800 appearance-none cursor-pointer pr-6"
+                          className={`w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-2.5 sm:px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-800 appearance-none cursor-pointer pr-6 ${
+                            preferredCity ? 'text-gray-600' : 'text-gray-400'
+                          }`}
                         >
-                          <option value="Da Nang">Da Nang</option>
-                          <option value="Ho Chi Minh">Ho Chi Minh</option>
-                        </select>
-                        <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5 truncate">
-                        CLINIC
-                      </label>
-                      <div className="relative">
-                        <select
-                          value={clinic}
-                          onChange={e => setClinic(e.target.value)}
-                          className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-2.5 sm:px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800 appearance-none cursor-pointer pr-6 truncate"
-                        >
-                          <option value="Any Vetted Partner Clinic">Any Vetted Partner Clinic</option>
-                          <option value="East Meets West Dental (Da Nang)">East Meets West Dental (Da Nang)</option>
-                          <option value="Serenity International Dental (Da Nang)">Serenity International Dental (Da Nang)</option>
-                          <option value="Elite Dental Group (Ho Chi Minh)">Elite Dental Group (Ho Chi Minh)</option>
+                          <option value="Da Nang" className="text-gray-700">Da Nang</option>
+                          <option value="Ho Chi Minh" className="text-gray-700">Ho Chi Minh</option>
                         </select>
                         <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                       </div>
                     </div>
                   </div>
 
+                  {/* PREFERRED CLINIC */}
+                  <div>
+                    <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5 truncate">
+                      PREFERRED CLINIC
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={clinic}
+                        onChange={e => setClinic(e.target.value)}
+                        className={`w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-2.5 sm:px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-800 appearance-none cursor-pointer pr-6 truncate ${
+                          clinic ? 'text-gray-600' : 'text-gray-400'
+                        }`}
+                      >
+                        <option value="Any Vetted Partner Clinic" className="text-gray-700">Any Vetted Partner Clinic</option>
+                        <option value="East Meets West Dental (Da Nang)" className="text-gray-700">East Meets West Dental (Da Nang)</option>
+                        <option value="Serenity International Dental (Da Nang)" className="text-gray-700">Serenity International Dental (Da Nang)</option>
+                        <option value="Elite Dental Group (Ho Chi Minh)" className="text-gray-700">Elite Dental Group (Ho Chi Minh)</option>
+                      </select>
+                      <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* PREFERRED SESSION */}
                   <div>
                     <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5">
                       PREFERRED SESSION <span className="text-red-500">*</span>
@@ -1303,10 +1083,39 @@ export default function LandingPage() {
                       </button>
                     </div>
                   </div>
+
+                  {/* PREFERRED HOUR (moved below PREFERRED SESSION) */}
+                  <div>
+                    <label className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-1 ml-0.5 truncate">
+                      PREFERRED HOUR <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Clock className="w-3.5 h-3.5 text-gray-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <select
+                        value={confirmedHour}
+                        onChange={e => setConfirmedHour(e.target.value)}
+                        className={`w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl pl-8 pr-6 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-800 appearance-none cursor-pointer ${
+                          confirmedHour ? 'text-gray-600' : 'text-gray-400'
+                        }`}
+                      >
+                        <option value="" className="text-gray-400">Select Priority</option>
+                        <option value="08:00 AM" className="text-gray-700">08:00 AM</option>
+                        <option value="09:00 AM" className="text-gray-700">09:00 AM</option>
+                        <option value="10:00 AM" className="text-gray-700">10:00 AM</option>
+                        <option value="11:00 AM" className="text-gray-700">11:00 AM</option>
+                        <option value="01:30 PM" className="text-gray-700">01:30 PM</option>
+                        <option value="02:00 PM" className="text-gray-700">02:00 PM</option>
+                        <option value="02:30 PM" className="text-gray-700">02:30 PM</option>
+                        <option value="03:00 PM" className="text-gray-700">03:00 PM</option>
+                        <option value="04:00 PM" className="text-gray-700">04:00 PM</option>
+                      </select>
+                      <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </div>
                 </div>
 
-                {/* Card 2: Select Treatment Packages */}
-                <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200/80 p-3.5 sm:p-5 shadow-xs space-y-2.5">
+                {/* Section 2: Select Treatment Packages */}
+                <div className="p-3.5 sm:p-5 space-y-2.5">
                   <div className="flex items-center gap-2 border-b border-gray-100 pb-2.5">
                     <FileText className="w-4 h-4 text-gray-700" />
                     <h3 className="font-bold text-gray-900 text-xs sm:text-sm">
@@ -1317,19 +1126,21 @@ export default function LandingPage() {
                     <select
                       value={treatment}
                       onChange={e => setTreatment(e.target.value)}
-                      className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-3 py-2.5 text-xs text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-gray-800 appearance-none cursor-pointer pr-8"
+                      className={`w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl px-3 py-2.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-800 appearance-none cursor-pointer pr-8 ${
+                        treatment && treatment !== 'Choose your treatment' ? 'text-gray-600' : 'text-gray-400'
+                      }`}
                     >
-                      <option disabled value="Choose your treatment">Choose your treatment</option>
+                      <option disabled value="Choose your treatment" className="text-gray-400">Choose your treatment</option>
                       {TREATMENTS.map(t => (
-                        <option key={t.id} value={t.name}>{t.name}</option>
+                        <option key={t.id} value={t.name} className="text-gray-700">{t.name}</option>
                       ))}
                     </select>
                     <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 </div>
 
-                {/* Card 3: Additional Arrival Questions */}
-                <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200/80 p-3.5 sm:p-5 shadow-xs space-y-2">
+                {/* Section 3: Additional Arrival Questions */}
+                <div className="p-3.5 sm:p-5 space-y-2">
                   <h3 className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block">
                     ADDITIONAL ARRIVAL QUESTIONS
                   </h3>
@@ -1339,7 +1150,7 @@ export default function LandingPage() {
                     value={additionalDetails}
                     onChange={e => setAdditionalDetails(e.target.value)}
                     placeholder="Any specific requirements or questions?"
-                    className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl p-3 text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 resize-none font-medium"
+                    className="w-full bg-white border border-gray-300 rounded-lg sm:rounded-xl p-3 text-xs text-gray-600 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-800 resize-none font-medium"
                   />
                   <div className="text-right">
                     <span className="text-[9px] text-gray-400 font-mono">{additionalDetails.length}/500</span>

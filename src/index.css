@@ -8,7 +8,8 @@
   /* Updated colors for a brighter, fresher 'smile' feel */
   --color-brand-primary: #FFD151;      /* Bright Fresh Gold */
   --color-brand-secondary: #FFB800;    /* Vibrant Amber */
-  --color-brand-bg: #fdfdfd;          /* Brighter off-white background */
+  --color-brand-bg: #f2f3f6;          /* Elegant Light Gray background */
+  --color-brand-surface: #FAF9F6;     /* Soft Porcelain Off-White for cards */
   --color-brand-section: #1a1c1e;     /* Deep Charcoal background */
   --color-brand-text: #1a1c1e;        /* Deep Slate for text on light */
 }
@@ -31,11 +32,13 @@
 
 @layer base {
   body {
-    @apply bg-brand-bg text-brand-text font-sans antialiased;
-    /* Brighter background gradient */
-    background: linear-gradient(180deg, #fdfdfd 0%, #f9f9f9 100%);
+    background-color: #f2f3f6;
+    color: #1a1c1e;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
   }
 }
+
 
 .text-gold-gradient {
   background: linear-gradient(135deg, #f7e8ac 0%, #c5a059 52%, #fff3c9 100%);
