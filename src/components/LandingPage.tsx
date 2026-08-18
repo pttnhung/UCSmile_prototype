@@ -453,8 +453,8 @@ export default function LandingPage() {
                 className="w-full h-full object-cover object-top sm:object-center md:object-right"
               />
               {/* Soft, crisp white gradient overlays with solid backing under text and smooth fade into photo */}
-              {/* Mobile: Rich white fade covering the text area */}
-              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/95 via-40% via-white/40 via-60% to-transparent sm:hidden" />
+              {/* Mobile: Compact, subtle white fade covering just the lower text area (~30-40%) */}
+              <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/80 via-25% via-white/20 via-40% to-transparent sm:hidden" />
               
               {/* Desktop & Tablet: Solid white under text fading smoothly into photo with a slightly wider, airy spread */}
               <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-white via-white/95 via-38% via-white/70 via-50% via-white/20 via-58% to-transparent sm:w-[64%] md:w-[58%] lg:w-[54%]" />
