@@ -51,7 +51,7 @@ export default function Logo({ className = '', size = 'md', variant = 'full' }: 
         <div className="flex items-center gap-2">
           {/* Beaming smile sparkling tooth icon */}
           <svg 
-            className={`${iconSizes[size]} text-[#FFB800]`} 
+            className={`${iconSizes[size]} text-[#F5A623]`} 
             viewBox="0 0 24 24" 
             fill="none" 
             stroke="currentColor" 
@@ -68,7 +68,7 @@ export default function Logo({ className = '', size = 'md', variant = 'full' }: 
           </svg>
           {variant === 'full' && (
             <span className={`${textSizes[size]} font-serif font-black text-[#1a1c1e] uppercase`}>
-              UC<span className="text-[#FFB800]">Smile</span>
+              UC<span className="text-[#F5A623]">Smile</span>
             </span>
           )}
         </div>

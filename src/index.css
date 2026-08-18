@@ -5,9 +5,9 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Cormorant Garamond", serif;
 
-  /* Updated colors for a brighter, fresher 'smile' feel */
-  --color-brand-primary: #FFD151;      /* Bright Fresh Gold */
-  --color-brand-secondary: #FFB800;    /* Vibrant Amber */
+  /* Unified single yellow tone across entire app */
+  --color-brand-primary: #F5A623;      /* Single Signature Warm Gold */
+  --color-brand-secondary: #F5A623;    /* Single Signature Warm Gold */
   --color-brand-bg: #f2f3f6;          /* Elegant Light Gray background */
   --color-brand-surface: #FAF9F6;     /* Soft Porcelain Off-White for cards */
   --color-brand-section: #1a1c1e;     /* Deep Charcoal background */

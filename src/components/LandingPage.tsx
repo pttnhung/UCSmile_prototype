@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   ChevronDown, 
+  ChevronLeft,
+  ChevronRight,
   ShieldCheck, 
   DollarSign, 
   Headset, 
@@ -21,7 +23,12 @@ import {
   Clock,
   FileText,
   Check,
-  ArrowRight
+  ArrowRight,
+  Sparkles,
+  Heart,
+  Globe2,
+  Shield,
+  CheckCircle2
 } from 'lucide-react';
 import { blogData, BlogPost } from '../constants/blogData';
 import BlogModal from './BlogModal';
@@ -36,6 +43,30 @@ import {
 
 export type { Treatment, PriceRange };
 export { TREATMENTS };
+
+// 4 Hero Carousel Slides (Nomad working on beach vacation, Senior couple walking with luggage/traveling, Clinic Arrival, Dental Suite)
+const HERO_SLIDES = [
+  {
+    id: 1,
+    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=80",
+    alt: "Person working on laptop while traveling and on vacation",
+  },
+  {
+    id: 2,
+    image: "https://images.unsplash.com/photo-1777904257177-f520bc1b10c3?q=80&w=1373&auto=format&fit=crop&ixlib=rb-4.1.0",
+    alt: "Travel holiday vacation with luggage",
+  },
+  {
+    id: 3,
+    image: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1600&q=80",
+    alt: "Modern clinic reception welcoming international patients",
+  },
+  {
+    id: 4,
+    image: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=1600&q=80",
+    alt: "Modern dental treatment room with advanced equipment",
+  }
+];
 
 interface TreatmentCardProps {
   key?: string;
@@ -106,12 +137,45 @@ export default function LandingPage() {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [pricingFrom, setPricingFrom] = useState<keyof typeof ORIGINS>('au');
   const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
+  const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [activeCategory, setActiveCategory] = useState('General');
   const [searchQuery, setSearchQuery] = useState('');
   const [travelCity, setTravelCity] = useState<'danang' | 'hcm'>('danang');
   const [isComparisonVisible, setIsComparisonVisible] = useState(false);
   const comparisonRef = useRef<HTMLDivElement>(null);
+
+  // Lock body scroll when modal is open to prevent background scrolling
+  useEffect(() => {
+    if (isComparisonModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isComparisonModalOpen]);
+  // Hero interactive auto-carousel state
+  const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
+  const [isHeroPaused, setIsHeroPaused] = useState(false);
+
+  // Auto slide timer (every 4.5 seconds)
+  useEffect(() => {
+    if (isHeroPaused) return;
+    const timer = setInterval(() => {
+      setCurrentHeroSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, [isHeroPaused, currentHeroSlide]);
+
+  const handleNextHeroSlide = () => {
+    setCurrentHeroSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+  };
+
+  const handlePrevHeroSlide = () => {
+    setCurrentHeroSlide((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+  };
 
   // States for 2-step wizard booking form
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
@@ -365,215 +429,218 @@ export default function LandingPage() {
 
   return (
     <>
-      {/* Hero Section */}
-      <section className="pt-40 pb-32 px-4 text-center max-w-6xl mx-auto bg-gradient-to-tr from-brand-primary/5 via-transparent to-brand-secondary/5">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+      {/* Hero Section - Matching exact reference design with seamless background image & text */}
+      <section className="pt-24 sm:pt-32 pb-16 sm:pb-24 px-4 max-w-7xl mx-auto">
+        <div 
+          className="relative rounded-3xl overflow-hidden border border-gray-200/90 shadow-[0_20px_60px_rgba(0,0,0,0.06)] bg-slate-900 min-h-[460px] sm:min-h-[520px] md:min-h-[580px] flex items-center"
+          onMouseEnter={() => setIsHeroPaused(true)}
+          onMouseLeave={() => setIsHeroPaused(false)}
         >
-          <h1 className="font-serif text-5xl md:text-[84px] leading-[0.98] mb-8 tracking-tighter text-brand-text">
-            Expert Dental Care. <br className="hidden md:block" />
-            Designed for <span className="text-brand-text border-b-4 border-brand-primary/20">Travel.</span>
-          </h1>
-          <p className="text-gray-500 max-w-xl mx-auto mb-12 text-lg md:text-xl font-medium leading-relaxed">
-            Premium care in Da Nang. We connect international patients with JCI-standard clinics and local concierge support.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a 
-              href="#booking" 
-              className="btn-luxury px-10 py-5"
-              onClick={(e) => {
-                e.preventDefault();
-                const element = document.getElementById('booking');
-                if (element) {
-                  element.scrollIntoView({ behavior: 'smooth' });
-                }
-              }}
+          {/* Background Carousel Images */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={HERO_SLIDES[currentHeroSlide].id}
+              initial={{ opacity: 0, scale: 1.04 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="absolute inset-0 z-0"
             >
-              Send Your Request
-            </a>
-            <a 
-              href="https://wa.me/84905000000" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="bg-white/95 backdrop-blur border border-gray-200 px-10 py-5 rounded-2xl font-bold text-lg text-brand-text hover:bg-gray-100 transition-all flex items-center gap-2 uppercase tracking-[0.1em]"
-            >
-              Chat Now
-            </a>
+              <img 
+                src={HERO_SLIDES[currentHeroSlide].image} 
+                alt={HERO_SLIDES[currentHeroSlide].alt}
+                className="w-full h-full object-cover object-top sm:object-center md:object-right"
+              />
+              {/* Desktop left gradient + Mobile bottom-to-top white gradient (transparent at top, solid white blur at bottom under text) */}
+              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent sm:hidden" />
+              <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-white/95 via-white/85 to-transparent sm:w-[65%] md:w-[58%] lg:w-[50%]" />
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Left Text Content Floating on Top */}
+          <div className="relative z-10 p-5 sm:p-10 md:p-14 max-w-xl text-left flex flex-col justify-end sm:justify-between h-full min-h-[520px] sm:min-h-auto pt-36 sm:pt-10">
+            
+            {/* Text Content (Anchored towards bottom on mobile so top photo is visible) */}
+            <div className="mt-auto sm:mt-0">
+              {/* Main Title */}
+              <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-[54px] font-black tracking-tight text-gray-950 leading-[1.15] mb-2 sm:mb-4">
+                Expert Dental Care. <br />
+                <span className="text-amber-600">Designed for Travel.</span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className="text-gray-700 sm:text-gray-800 text-xs sm:text-base font-medium leading-relaxed mb-3 sm:mb-7 max-w-md">
+                Our vetted dental clinics offer premium care in Vietnam. We connect international travelers with accredited specialists, transparent pricing, and dedicated concierge support.
+              </p>
+            </div>
+
+            {/* Desktop Action Button */}
+            <div className="hidden sm:block">
+              <a 
+                href="#booking"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="bg-[#F5A623] hover:brightness-105 active:scale-95 text-gray-950 font-extrabold px-8 py-3.5 rounded-xl text-xs uppercase tracking-widest transition-all shadow-[0_10px_25px_rgba(245,166,35,0.35)] inline-flex items-center gap-2 cursor-pointer"
+              >
+                <span>Book Now</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
+
+            {/* Mobile Bottom Bar: Book Now on Left, Carousel Dots on Right */}
+            <div className="sm:hidden flex items-center justify-between gap-3 pt-3 border-t border-gray-200/60 mt-1">
+              <a 
+                href="#booking"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="bg-[#F5A623] hover:brightness-105 active:scale-95 text-gray-950 font-black px-5 py-2.5 rounded-lg text-[11px] uppercase tracking-wider transition-all shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>Book Now</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </a>
+
+              {/* Mobile Slide Dots */}
+              <div className="bg-black/40 backdrop-blur-md rounded-full px-2.5 py-1.5 border border-white/20 flex items-center gap-1 shadow-sm">
+                {HERO_SLIDES.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentHeroSlide(idx)}
+                    aria-label={`Slide ${idx + 1}`}
+                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                      idx === currentHeroSlide 
+                        ? 'w-4 bg-[#F5A623]' 
+                        : 'w-1.5 bg-white/50 hover:bg-white/80'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
           </div>
-        </motion.div>
+
+          {/* Prev & Next Arrows (Clean center alignment with good contrast) */}
+          <button 
+            onClick={handlePrevHeroSlide}
+            aria-label="Previous slide"
+            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-white text-gray-900 flex items-center justify-center shadow-md backdrop-blur-sm transition-all active:scale-95 cursor-pointer border border-gray-200"
+          >
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-900" />
+          </button>
+
+          <button 
+            onClick={handleNextHeroSlide}
+            aria-label="Next slide"
+            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-white text-gray-900 flex items-center justify-center shadow-md backdrop-blur-sm transition-all active:scale-95 cursor-pointer border border-gray-200"
+          >
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-900" />
+          </button>
+
+          {/* Desktop-only Bottom Right Slide Indicators */}
+          <div className="hidden sm:flex absolute bottom-6 right-6 z-20 bg-black/40 backdrop-blur-md rounded-full px-3 py-1.5 border border-white/20 items-center gap-1.5 shadow-lg">
+            {HERO_SLIDES.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentHeroSlide(idx)}
+                aria-label={`Slide ${idx + 1}`}
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                  idx === currentHeroSlide 
+                    ? 'w-5 bg-[#F5A623]' 
+                    : 'w-1.5 bg-white/50 hover:bg-white/80'
+                }`}
+              />
+            ))}
+          </div>
+
+        </div>
       </section>
 
       {/* Calculator Section */}
-      <section id="price-comparison" className="pb-32 px-4 max-w-7xl mx-auto">
-        <div className="bg-[#FAF9F6] rounded-[3rem] overflow-hidden flex flex-col lg:flex-row shadow-[0_40px_100px_rgba(0,0,0,0.03)] border border-gray-200/80">
+      <section id="price-comparison" className="pb-16 sm:pb-24 px-3 sm:px-4 max-w-7xl mx-auto">
+        <div className="bg-[#FAF9F6] rounded-3xl sm:rounded-[2.5rem] overflow-hidden flex flex-col lg:flex-row shadow-[0_20px_60px_rgba(0,0,0,0.04)] border border-gray-200/80">
           
-          {/* Mobile Selector View: 1 Button Flow */}
-          <div className="p-6 block md:hidden bg-gray-50/30 text-left">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-2">PRICE COMPARISON</p>
-            <h2 className="font-serif text-2xl font-black mb-4 leading-tight text-brand-text">Compare treatments at a glance.</h2>
-            <p className="text-xs text-gray-500 font-medium mb-5">Select your home country and desired treatments to calculate your estimated savings.</p>
-            
-            <Link 
-              to="/comparison"
-              className="w-full bg-[#FFC107] hover:bg-amber-400 text-gray-950 font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2 text-xs uppercase tracking-wider shadow-md transition-all active:scale-[0.98]"
-            >
-              <span>Let's Start Comparing</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+          {/* Left Pane: Simple Clean Trigger Pane */}
+          <div className="p-5 sm:p-8 lg:p-10 lg:w-1/2 bg-gray-50/40 text-left flex flex-col justify-between">
+            <div>
+              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-gray-400 mb-2">PRICE COMPARISON</p>
+              <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-black mb-2.5 leading-tight text-brand-text">Compare treatments at a glance.</h2>
+              <p className="text-xs sm:text-sm text-gray-500 font-medium mb-5 leading-relaxed max-w-md">
+                Choose your country and treatments to view instant price comparisons and estimated savings.
+              </p>
+            </div>
 
-          {/* Desktop Selector Pane */}
-          <div className="p-6 md:p-10 lg:w-3/5 bg-gray-50/30 hidden md:block text-left">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-3">PRICE COMPARISON</p>
-            <h2 className="font-serif text-2xl md:text-4xl font-black mb-6 leading-tight text-brand-text">Compare treatments at a glance.</h2>
-            
-            <div className="space-y-4 bg-[#FAF9F6] p-5 rounded-[1.5rem] border border-gray-200/60 shadow-xs">
-              <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-100 shadow-sm">
-                <label className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-500 mb-1.5 block">FROM</label>
-                <div className="relative">
-                  <select 
-                    value={pricingFrom}
-                    onChange={(e) => setPricingFrom(e.target.value as keyof typeof ORIGINS)}
-                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-3 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm font-semibold text-brand-text"
-                  >
-                    {Object.entries(ORIGINS).map(([key, val]) => (
-                      <option key={key} value={key}>{val.label}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-                </div>
-              </div>
-
-              <div className="bg-gray-50/80 rounded-xl p-4 border border-gray-100 shadow-sm">
-                <div className="flex flex-col gap-3 mb-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-[9px] font-black uppercase tracking-[0.18em] text-gray-500 block mb-0.5">TREATMENTS</label>
-                      <span className="text-[9px] font-bold text-gray-400">{selectedTreatments.length} SELECTED</span>
-                    </div>
-                  </div>
-                  {/* Category Selection */}
-                  <div className="grid grid-cols-2 xs:grid-cols-3 sm:flex sm:flex-wrap gap-1.5">
-                    {CATEGORIES.map(cat => {
-                      const count = selectedTreatments.filter(id => {
-                        const t = TREATMENTS.find(item => item.id === id);
-                        return t?.category === cat || t?.secondaryCategory === cat;
-                      }).length;
-
-                      return (
-                        <button
-                          key={cat}
-                          onClick={() => setActiveCategory(cat)}
-                          className={`px-3 py-2 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-[0.05em] transition-all duration-300 text-center flex items-center justify-center gap-2 ${
-                            activeCategory === cat 
-                            ? 'bg-brand-text text-white border-2 border-brand-text shadow-md transform scale-[1.01]' 
-                            : 'bg-white text-gray-400 hover:text-gray-600 border border-gray-100'
-                          }`}
-                        >
-                          <span>{cat}</span>
-                          {count > 0 && (
-                            <span className="w-4 h-4 rounded-full bg-brand-primary text-brand-text flex items-center justify-center text-[8px] font-bold">
-                              {count}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Search Bar */}
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-                    <input 
-                      type="text"
-                      placeholder="Search dental treatments..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-white border-2 border-gray-50 rounded-xl pl-9 pr-3 py-2 text-xs font-bold text-brand-text focus:outline-none focus:border-brand-primary/30 transition-all shadow-sm placeholder:text-gray-300"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-full">
-                  {filteredTreatments.length > 0 ? (
-                    filteredTreatments.map(t => (
-                      <TreatmentCard 
-                        key={t.id} 
-                        t={t} 
-                        selected={selectedTreatments.includes(t.id)}
-                        onToggle={() => toggleTreatment(t.id)}
-                        quantity={quantities[t.id] || 1}
-                        onUpdateQuantity={(val) => updateQuantity(t.id, val)}
-                      />
-                    ))
-                  ) : (
-                    <div className="col-span-full py-12 text-center text-gray-400 text-[10px] font-black uppercase tracking-widest bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-100">
-                      No matches found
-                    </div>
-                  )}
-                </div>
-              </div>
+            {/* Launch Popup Button */}
+            <div className="mt-2">
+              <button 
+                type="button"
+                onClick={() => setIsComparisonModalOpen(true)}
+                className="w-full sm:w-auto bg-brand-primary hover:bg-brand-secondary text-gray-950 font-black py-3 sm:py-3.5 px-6 sm:px-8 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 text-xs sm:text-sm uppercase tracking-wider shadow-sm hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <span>{selectedTreatments.length > 0 ? 'Edit Comparison / Add Treatments' : "Let's Start Comparing"}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
-          {/* Breakdown Pane */}
-          <div ref={comparisonRef} id="comparison-details" className="p-6 md:p-8 lg:w-[45%] md:border-l border-gray-200/60 bg-[#FAF9F6] text-left flex flex-col justify-between">
-            <div className="space-y-4">
+          {/* Breakdown Pane: Right Side */}
+          <div ref={comparisonRef} id="comparison-details" className="p-4 sm:p-6 lg:p-8 lg:w-1/2 border-t lg:border-t-0 lg:border-l border-gray-200/60 bg-[#FAF9F6] text-left flex flex-col justify-between">
+            <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">ESTIMATED COMPARISON</span>
-                <span className="text-[10px] bg-gray-100 px-2.5 py-0.5 rounded-full uppercase font-black text-gray-500">APPROXIMATE</span>
+                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">ESTIMATED COMPARISON</span>
+                <span className="text-[9px] bg-gray-200/70 px-2 py-0.5 rounded-full uppercase font-black text-gray-600">APPROXIMATE</span>
               </div>
 
               {/* Itemized Breakdown Content (only shown when treatments are selected) */}
               {selectedTreatments.length > 0 && (
-                <>
+                <div className="space-y-2">
                   <button
                     type="button"
                     onClick={() => setIsBreakdownOpen(!isBreakdownOpen)}
-                    className="w-full flex items-center justify-between text-xs font-bold text-gray-700 bg-gray-50 hover:bg-gray-100 px-4 py-2.5 rounded-xl transition-all border border-gray-200/60 cursor-pointer"
+                    className="w-full flex items-center justify-between text-[11px] sm:text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 px-3.5 py-2 sm:py-2.5 rounded-xl transition-all border border-gray-200/70 shadow-2xs cursor-pointer"
                   >
-                    <span>{isBreakdownOpen ? 'Hide Details' : 'Show Details'}</span>
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isBreakdownOpen ? 'rotate-180' : ''}`} />
+                    <span>{isBreakdownOpen ? 'Hide Itemized Details' : 'Show Itemized Details'}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isBreakdownOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {isBreakdownOpen && (
-                    <div className="space-y-4 pt-2 border-t border-gray-100">
-                      <div className="grid grid-cols-12 text-[9px] sm:text-[10px] font-black text-gray-400 pb-2 border-b border-gray-100 uppercase tracking-widest gap-2">
-                        <div className="col-span-4 text-left">TREATMENT</div>
-                        <div className="col-span-8 grid grid-cols-2 gap-2 text-right">
+                    <div className="bg-white rounded-xl p-3 border border-gray-200/70 shadow-2xs space-y-2 max-h-48 overflow-y-auto">
+                      <div className="grid grid-cols-12 text-[8px] sm:text-[9px] font-black text-gray-400 pb-1.5 border-b border-gray-100 uppercase tracking-wider gap-1">
+                        <div className="col-span-5 text-left">TREATMENT</div>
+                        <div className="col-span-7 grid grid-cols-2 gap-1 text-right">
                           <div className="truncate">~{ORIGINS[pricingFrom].short}</div>
                           <div>~VIETNAM</div>
                         </div>
                       </div>
                       
-                      <div className="space-y-0">
+                      <div className="space-y-1.5">
                         {selectedTreatments.map(id => {
                           const t = TREATMENTS.find(item => item.id === id);
                           if (!t) return null;
                           return (
-                            <div key={id} className="grid grid-cols-12 items-center gap-2 group py-2 border-b border-gray-50 last:border-0 relative">
-                              <div className="col-span-4 flex items-start gap-1.5 min-w-0 text-left">
+                            <div key={id} className="grid grid-cols-12 items-center gap-1 py-1 border-b border-gray-50 last:border-0">
+                              <div className="col-span-5 flex items-start gap-1 min-w-0 text-left">
                                 <button 
                                   onClick={() => toggleTreatment(id)}
-                                  className="p-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                                  className="text-gray-300 hover:text-red-500 transition-colors p-0.5 cursor-pointer"
                                   title="Remove"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <Trash2 className="w-3 h-3" />
                                 </button>
-                                <div className="min-w-0 pr-0.5">
-                                    <div className="text-[11px] font-bold text-gray-900 leading-tight">
-                                      {t.name}
-                                    </div>
-                                    {(quantities[id] > 1) && <p className="text-[8px] text-gray-400 font-bold uppercase tracking-wider mt-0.5 text-left">Qty: {quantities[id]}</p>}
+                                <div className="min-w-0">
+                                  <div className="text-[10px] sm:text-[11px] font-bold text-gray-900 leading-snug truncate">
+                                    {t.name}
+                                  </div>
+                                  {(quantities[id] > 1) && <p className="text-[8px] text-gray-400 font-bold uppercase">Qty: {quantities[id]}</p>}
                                 </div>
                               </div>
-                              <div className="col-span-8 grid grid-cols-2 gap-2 text-right">
-                                <span className="text-[10px] sm:text-[11px] font-bold text-gray-400 leading-tight block whitespace-nowrap">
+                              <div className="col-span-7 grid grid-cols-2 gap-1 text-right">
+                                <span className="text-[9px] sm:text-[10px] font-bold text-gray-400 whitespace-nowrap">
                                   ${Math.round((t.prices[pricingFrom]?.min || 0) * (quantities[id] || 1)).toLocaleString()} - ${Math.round((t.prices[pricingFrom]?.max || 0) * (quantities[id] || 1)).toLocaleString()}
                                 </span>
-                                <span className="text-[10px] sm:text-[11px] font-black text-brand-text tracking-tight block whitespace-nowrap">
+                                <span className="text-[9px] sm:text-[10px] font-black text-brand-text whitespace-nowrap">
                                   ${Math.round((t.prices.vn.min || 0) * (quantities[id] || 1)).toLocaleString()} - ${Math.round((t.prices.vn.max || 0) * (quantities[id] || 1)).toLocaleString()}
                                 </span>
                               </div>
@@ -583,50 +650,46 @@ export default function LandingPage() {
                       </div>
                     </div>
                   )}
-                </>
+                </div>
               )}
 
               {/* Prominent Estimated Savings Box */}
-              <div className="bg-gray-50/60 rounded-2xl p-5 sm:p-6 border border-gray-100 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-brand-primary/5 rounded-full -mr-12 -mt-12 pointer-events-none" />
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] block mb-2 relative z-10">ESTIMATED SAVINGS</span>
+              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-xs relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-brand-primary/10 rounded-full -mr-10 -mt-10 pointer-events-none" />
+                <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] block mb-1 relative z-10">ESTIMATED SAVINGS</span>
                 {selectedTreatments.length === 0 ? (
-                  <p className="text-xs font-medium text-gray-500 py-2 relative z-10 leading-relaxed">
-                    <span className="hidden md:inline">Select treatments on the left to calculate savings.</span>
-                    <span className="md:hidden">Tap "Let's Start Comparing" above to select treatments.</span>
+                  <p className="text-xs font-medium text-gray-500 py-1.5 relative z-10 leading-relaxed">
+                    Click "Let's Start Comparing" on the left to calculate your savings.
                   </p>
                 ) : (
                   <>
-                    <div className="flex items-end gap-2 mb-4 relative z-10">
-                      <span className="text-4xl font-black tracking-tight text-brand-secondary">~${Math.round(totalSavings).toLocaleString()}</span>
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest pb-1">USD</span>
+                    <div className="flex items-baseline gap-1.5 mb-2.5 relative z-10">
+                      <span className="text-3xl sm:text-4xl font-black tracking-tight text-brand-secondary">~${Math.round(totalSavings).toLocaleString()}</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider">USD</span>
                     </div>
                     {totalSavings > 0 && (
-                      <div className="relative z-10 mb-4 group">
-                        <div className="absolute -inset-2 bg-brand-primary/10 rounded-2xl blur-lg transition-all group-hover:bg-brand-primary/20" />
-                        <div className="relative bg-white/80 backdrop-blur-sm border border-brand-primary/20 rounded-xl p-3.5 shadow-xs">
-                          <div className="flex items-start gap-3">
-                            <div className="w-7 h-7 rounded-full bg-brand-primary flex items-center justify-center shrink-0 mt-0.5">
-                              <Plane className="w-3.5 h-3.5 text-brand-text" />
-                            </div>
-                            <p className="text-[11px] text-gray-500 font-normal leading-snug italic">
-                              {totalSavings < 100 && "Enough for an ocean-view stay or a luxury spa experience in Vietnam."}
-                              {totalSavings >= 100 && totalSavings < 300 && "Enough for 1–2 days of spa treatments, fine dining, and premium local experiences in Vietnam."}
-                              {totalSavings >= 300 && totalSavings < 800 && "Enough for a 2–4 night beachfront resort escape in Da Nang or Nha Trang."}
-                              {totalSavings >= 800 && totalSavings < 1500 && "Enough for a 4–7 day Vietnam getaway with flights and luxury hotel stays included."}
-                              {totalSavings >= 1500 && totalSavings < 3000 && "Enough to cover most of a 1–2 week Vietnam vacation with beachfront resorts and unforgettable experiences."}
-                              {totalSavings >= 3000 && totalSavings < 5000 && "Enough for a 2–3 week luxury journey across Vietnam with premium resorts and private tours."}
-                              {totalSavings >= 5000 && totalSavings < 10000 && "Enough for a 3–4 week luxury Southeast Asia holiday across multiple destinations."}
-                              {totalSavings >= 10000 && "Enough for a once-in-a-lifetime luxury Asia travel experience."}
-                            </p>
+                      <div className="relative z-10 mb-3 bg-amber-50/70 border border-amber-200/50 rounded-lg sm:rounded-xl p-2.5 sm:p-3">
+                        <div className="flex items-start gap-2.5">
+                          <div className="w-6 h-6 rounded-full bg-brand-primary flex items-center justify-center shrink-0 mt-0.5">
+                            <Plane className="w-3 h-3 text-brand-text" />
                           </div>
+                          <p className="text-[10px] sm:text-[11px] text-gray-600 font-medium leading-tight italic">
+                            {totalSavings < 100 && "Enough for an ocean-view stay or a luxury spa experience in Vietnam."}
+                            {totalSavings >= 100 && totalSavings < 300 && "Enough for 1–2 days of spa treatments, fine dining, and premium local experiences in Vietnam."}
+                            {totalSavings >= 300 && totalSavings < 800 && "Enough for a 2–4 night beachfront resort escape in Da Nang or Nha Trang."}
+                            {totalSavings >= 800 && totalSavings < 1500 && "Enough for a 4–7 day Vietnam getaway with flights and luxury hotel stays included."}
+                            {totalSavings >= 1500 && totalSavings < 3000 && "Enough to cover most of a 1–2 week Vietnam vacation with beachfront resorts and unforgettable experiences."}
+                            {totalSavings >= 3000 && totalSavings < 5000 && "Enough for a 2–3 week luxury journey across Vietnam with premium resorts and private tours."}
+                            {totalSavings >= 5000 && totalSavings < 10000 && "Enough for a 3–4 week luxury Southeast Asia holiday across multiple destinations."}
+                            {totalSavings >= 10000 && "Enough for a once-in-a-lifetime luxury Asia travel experience."}
+                          </p>
                         </div>
                       </div>
                     )}
                   </>
                 )}
-                <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest leading-tight border-t border-gray-100 pt-3 italic">
-                  * Market average estimates. Final costs vary by materials and clinical complexity.
+                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider leading-tight border-t border-gray-100 pt-2 italic">
+                  * Estimated prices only. Exact quote provided after dentist consultation.
                 </p>
 
                 {/* Book Consultation Button - Only shown when treatments are selected */}
@@ -637,10 +700,10 @@ export default function LandingPage() {
                       const el = document.getElementById('booking');
                       if (el) el.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="w-full bg-gray-200 hover:bg-gray-300 text-gray-900 font-black text-xs sm:text-sm uppercase tracking-wider py-4 rounded-2xl shadow-xs border border-gray-300/80 transition-all active:scale-[0.98] cursor-pointer mt-4 flex items-center justify-center gap-2"
+                    className="w-full bg-brand-primary hover:bg-brand-secondary text-gray-950 font-black text-xs uppercase tracking-wider py-3 rounded-xl shadow-xs border border-amber-400/80 transition-all active:scale-[0.98] cursor-pointer mt-3 flex items-center justify-center gap-2"
                   >
                     <span>Book Your Consultation</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
@@ -648,6 +711,167 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Comparison Modal (3 Dropdown / Selection Workflow: FROM -> CATEGORY -> TREATMENTS) */}
+      <AnimatePresence>
+        {isComparisonModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsComparisonModalOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            {/* Modal Card */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-10 max-h-[88vh] flex flex-col text-left"
+            >
+              {/* Modal Header */}
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/70">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">PRICE COMPARISON</p>
+                  <h3 className="font-serif text-lg font-black text-brand-text">Compare treatments at a glance.</h3>
+                </div>
+                <button 
+                  onClick={() => setIsComparisonModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-gray-900 flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Modal Body: Compact 2-column Dropdowns + Treatment Picker */}
+              <div className="p-4 sm:p-5 space-y-3.5 overflow-y-auto">
+                
+                {/* 1. FROM & 2. CATEGORY (Side-by-side in grid) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* 1. FROM Dropdown */}
+                  <div className="bg-gray-50/80 rounded-xl p-2.5 border border-gray-200/80">
+                    <label className="text-[9px] font-black uppercase tracking-wider text-gray-500 mb-1 block">
+                      FROM (HOME COUNTRY)
+                    </label>
+                    <div className="relative">
+                      <select 
+                        value={pricingFrom}
+                        onChange={(e) => setPricingFrom(e.target.value as keyof typeof ORIGINS)}
+                        className="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400 text-xs font-bold text-gray-900 shadow-2xs"
+                      >
+                        {Object.entries(ORIGINS).map(([key, val]) => (
+                          <option key={key} value={key}>{val.label}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* 2. CATEGORY Dropdown */}
+                  <div className="bg-gray-50/80 rounded-xl p-2.5 border border-gray-200/80">
+                    <label className="text-[9px] font-black uppercase tracking-wider text-gray-500 mb-1 block">
+                      CATEGORY
+                    </label>
+                    <div className="relative">
+                      <select 
+                        value={activeCategory}
+                        onChange={(e) => setActiveCategory(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400 text-xs font-bold text-gray-900 shadow-2xs"
+                      >
+                        {CATEGORIES.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. TREATMENTS Selection */}
+                <div className="bg-gray-50/80 rounded-xl p-3 border border-gray-200/80">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[9px] font-black uppercase tracking-wider text-gray-500 block">
+                      TREATMENTS ({activeCategory})
+                    </label>
+                    <span className="text-[9px] font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+                      {selectedTreatments.length} SELECTED
+                    </span>
+                  </div>
+
+                  {/* Search inside popup */}
+                  <div className="relative mb-2">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                    <input 
+                      type="text"
+                      placeholder={`Search ${activeCategory} treatments...`}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-white border border-gray-200 rounded-lg pl-8 pr-2.5 py-1.5 text-xs font-medium text-brand-text focus:outline-none focus:ring-1 focus:ring-amber-400 shadow-2xs placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  {/* Treatment Cards Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1">
+                    {filteredTreatments.length > 0 ? (
+                      filteredTreatments.map(t => (
+                        <TreatmentCard 
+                          key={t.id} 
+                          t={t} 
+                          selected={selectedTreatments.includes(t.id)}
+                          onToggle={() => toggleTreatment(t.id)}
+                          quantity={quantities[t.id] || 1}
+                          onUpdateQuantity={(val) => updateQuantity(t.id, val)}
+                        />
+                      ))
+                    ) : (
+                      <div className="col-span-full py-5 text-center text-gray-400 text-xs font-bold bg-white rounded-lg border border-dashed border-gray-200">
+                        No treatments found in {activeCategory}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Modal Footer: Action Button */}
+              <div className="px-5 py-3 border-t border-gray-100 bg-gray-50/70 flex items-center justify-between gap-3">
+                <div className="text-left">
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">Selected</span>
+                  <span className="text-xs font-black text-gray-900">
+                    {selectedTreatments.length} {selectedTreatments.length === 1 ? 'treatment' : 'treatments'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button 
+                    type="button"
+                    onClick={() => setIsComparisonModalOpen(false)}
+                    className="px-4 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setIsComparisonModalOpen(false);
+                      const el = document.getElementById('price-comparison');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="bg-[#F5A623] hover:brightness-105 text-gray-950 font-black px-6 py-2 rounded-lg text-xs uppercase tracking-wider transition-all shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>Compare</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <section id="why-us" className="py-32 px-4 max-w-7xl mx-auto text-center">
         <span className="text-gray-400 font-bold tracking-[0.2em] mb-4 block uppercase text-sm">THE PLATFORM ADVANTAGE</span>
