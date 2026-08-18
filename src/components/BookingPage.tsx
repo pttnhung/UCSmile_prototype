@@ -1774,7 +1774,7 @@ export default function BookingPage() {
               <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div className="text-left w-full sm:w-auto">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">ESTIMATED PRICE SUMMARY</p>
-                  <p className="text-4xl font-extrabold text-amber-500 mt-1">
+                  <p className="text-4xl font-extrabold text-[#F5A623] mt-1">
                     {min === 0 ? '$0' : `$${min} - $${max}`}
                   </p>
                 </div>
@@ -1786,7 +1786,7 @@ export default function BookingPage() {
                     isSubmitting 
                       ? 'bg-gray-100 border border-gray-150 text-gray-400 cursor-not-allowed animate-pulse'
                       : (isInternal ? isInternalFormValid : isPublicFormValid)
-                        ? 'bg-gradient-to-r from-amber-400 to-[#FFB800] hover:from-amber-300 hover:to-[#efa500] text-gray-900 shadow-md shadow-brand-primary/10 active:scale-[0.98]'
+                        ? 'bg-[#F5A623] hover:brightness-105 text-gray-950 shadow-md active:scale-[0.98]'
                         : 'bg-gray-100 border border-gray-100 text-gray-300 cursor-not-allowed'
                   }`}
                 >

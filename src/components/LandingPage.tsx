@@ -28,7 +28,8 @@ import {
   Heart,
   Globe2,
   Shield,
-  CheckCircle2
+  CheckCircle2,
+  MessageCircle
 } from 'lucide-react';
 import { blogData, BlogPost } from '../constants/blogData';
 import BlogModal from './BlogModal';
@@ -451,9 +452,12 @@ export default function LandingPage() {
                 alt={HERO_SLIDES[currentHeroSlide].alt}
                 className="w-full h-full object-cover object-top sm:object-center md:object-right"
               />
-              {/* Desktop left gradient (wider, smoother transition) + Mobile bottom-to-top white gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent sm:hidden" />
-              <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-white via-white/95 via-45% via-white/80 via-60% to-transparent sm:w-[75%] md:w-[70%] lg:w-[62%]" />
+              {/* Soft, crisp white gradient overlays with solid backing under text and smooth fade into photo */}
+              {/* Mobile: Rich white fade covering the text area */}
+              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/95 via-40% via-white/40 via-60% to-transparent sm:hidden" />
+              
+              {/* Desktop & Tablet: Solid white under text fading smoothly into photo with a slightly wider, airy spread */}
+              <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-white via-white/95 via-38% via-white/70 via-50% via-white/20 via-58% to-transparent sm:w-[64%] md:w-[58%] lg:w-[54%]" />
             </motion.div>
           </AnimatePresence>
 
@@ -465,7 +469,7 @@ export default function LandingPage() {
               {/* Main Title */}
               <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-[54px] font-black tracking-tight text-gray-950 leading-[1.15] mb-2 sm:mb-4">
                 Expert Dental Care. <br />
-                <span className="text-amber-600">Designed for Travel.</span>
+                <span className="text-[#F5A623]">Designed for Travel.</span>
               </h1>
 
               {/* Subtitle */}
@@ -474,37 +478,57 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* Desktop Action Button */}
-            <div className="hidden sm:block">
+            {/* Desktop Action Buttons: Book Now + Chat Now */}
+            <div className="hidden sm:flex items-center gap-3.5">
               <a 
                 href="#booking"
                 onClick={(e) => {
                   e.preventDefault();
                   document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="bg-[#F5A623] hover:brightness-105 active:scale-95 text-gray-950 font-extrabold px-8 py-3.5 rounded-xl text-xs uppercase tracking-widest transition-all shadow-[0_10px_25px_rgba(245,166,35,0.35)] inline-flex items-center gap-2 cursor-pointer"
+                className="bg-[#F5A623] hover:brightness-105 active:scale-95 text-gray-950 font-extrabold px-7 py-3.5 rounded-xl text-xs uppercase tracking-widest transition-all shadow-[0_10px_25px_rgba(245,166,35,0.35)] inline-flex items-center gap-2 cursor-pointer"
               >
                 <span>Book Now</span>
                 <ArrowRight className="w-4 h-4" />
               </a>
+
+              <a 
+                href="https://wa.me/84905000000"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white hover:bg-gray-50 active:scale-95 text-gray-900 font-extrabold px-6 py-3.5 rounded-xl text-xs uppercase tracking-widest transition-all border border-gray-200 shadow-sm hover:shadow inline-flex items-center justify-center cursor-pointer"
+              >
+                <span>Chat Now</span>
+              </a>
             </div>
 
-            {/* Mobile Bottom Bar: Book Now on Left, Carousel Dots on Right */}
-            <div className="sm:hidden flex items-center justify-between gap-3 pt-3 border-t border-gray-200/60 mt-1">
-              <a 
-                href="#booking"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="bg-[#F5A623] hover:brightness-105 active:scale-95 text-gray-950 font-black px-5 py-2.5 rounded-lg text-[11px] uppercase tracking-wider transition-all shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>Book Now</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </a>
+            {/* Mobile Bottom Bar: Book Now & Chat Now on Left, Carousel Dots on Right */}
+            <div className="sm:hidden flex items-center justify-between gap-2 pt-3 border-t border-gray-200/60 mt-1">
+              <div className="flex items-center gap-2">
+                <a 
+                  href="#booking"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="bg-[#F5A623] hover:brightness-105 active:scale-95 text-gray-950 font-black px-3.5 py-2.5 rounded-lg text-[10px] uppercase tracking-wider transition-all shadow-sm inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                >
+                  <span>Book Now</span>
+                  <ArrowRight className="w-3 h-3" />
+                </a>
+
+                <a 
+                  href="https://wa.me/84905000000"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white hover:bg-gray-50 active:scale-95 text-gray-900 font-black px-3 py-2.5 rounded-lg text-[10px] uppercase tracking-wider transition-all border border-gray-200 shadow-xs inline-flex items-center justify-center cursor-pointer whitespace-nowrap"
+                >
+                  <span>Chat Now</span>
+                </a>
+              </div>
 
               {/* Mobile Slide Dots */}
-              <div className="bg-black/40 backdrop-blur-md rounded-full px-2.5 py-1.5 border border-white/20 flex items-center gap-1 shadow-sm">
+              <div className="bg-black/40 backdrop-blur-md rounded-full px-2 py-1.5 border border-white/20 flex items-center gap-1 shadow-sm shrink-0">
                 {HERO_SLIDES.map((_, idx) => (
                   <button
                     key={idx}
@@ -512,7 +536,7 @@ export default function LandingPage() {
                     aria-label={`Slide ${idx + 1}`}
                     className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                       idx === currentHeroSlide 
-                        ? 'w-4 bg-[#F5A623]' 
+                        ? 'w-3.5 bg-[#F5A623]' 
                         : 'w-1.5 bg-white/50 hover:bg-white/80'
                     }`}
                   />
@@ -1393,7 +1417,7 @@ export default function LandingPage() {
                 <span className="text-[9px] font-extrabold text-gray-500 uppercase tracking-widest block mb-0.5">
                   ESTIMATED PRICE SUMMARY
                 </span>
-                <span className="text-2xl font-serif font-extrabold text-[#FFC107] block">
+                <span className="text-2xl font-serif font-extrabold text-[#F5A623] block">
                   {getEstimatedPriceText()}
                 </span>
               </div>
@@ -1406,7 +1430,7 @@ export default function LandingPage() {
 
               <button
                 type="submit"
-                className="w-full bg-[#FFC107] hover:bg-amber-400 text-gray-950 font-black text-[11px] sm:text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-md transition-all active:scale-[0.99] cursor-pointer"
+                className="w-full bg-[#F5A623] hover:brightness-105 text-gray-950 font-black text-[11px] sm:text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-md transition-all active:scale-[0.99] cursor-pointer"
               >
                 SUBMIT BOOKING REQUEST
               </button>
