@@ -451,9 +451,9 @@ export default function LandingPage() {
                 alt={HERO_SLIDES[currentHeroSlide].alt}
                 className="w-full h-full object-cover object-top sm:object-center md:object-right"
               />
-              {/* Desktop left gradient + Mobile bottom-to-top white gradient (transparent at top, solid white blur at bottom under text) */}
+              {/* Desktop left gradient (wider, smoother transition) + Mobile bottom-to-top white gradient */}
               <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent sm:hidden" />
-              <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-white/95 via-white/85 to-transparent sm:w-[65%] md:w-[58%] lg:w-[50%]" />
+              <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-white via-white/95 via-45% via-white/80 via-60% to-transparent sm:w-[75%] md:w-[70%] lg:w-[62%]" />
             </motion.div>
           </AnimatePresence>
 
